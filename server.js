@@ -201,7 +201,7 @@ app.post('/api/bugs', async (req, res) => {
 app.patch('/api/bugs/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = { ...req.body };
+    const updates = { ...req.body, updatedAt: new Date().toISOString() };
     if (updates.status === 'Fixed' && !updates.resolvedAt) updates.resolvedAt = new Date().toISOString();
     if (updates._retested) { updates.retestedAt = new Date().toISOString(); delete updates._retested; }
     const src = updates._source; delete updates._source;

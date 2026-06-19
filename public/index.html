@@ -1191,7 +1191,10 @@ body { transition: background .3s ease, color .3s ease; }
         <div class="form-group"><label>Priority</label><select id="f-priority"><option>Low</option><option>Medium</option><option selected>High</option><option>Critical</option></select></div>
       </div>
       <div class="form-row">
+        <div class="form-group"><label>Repro Rate</label><select id="f-repro-rate"><option value="">— Select —</option><option>100%</option><option>80%</option><option>60%</option><option>40%</option><option>20%</option><option>10%</option><option>Once</option></select></div>
         <div class="form-group"><label>Assign To (Dev)</label><select id="f-assignee"><option value="">— Unassigned —</option></select></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label>Reporter</label><input type="text" id="f-reporter" readonly style="background:var(--g5)"></div>
       </div>
     </div>
@@ -1756,7 +1759,39 @@ function renderDashboard(){
       </select>
       <button id="dash-clear-btn" class="clear-btn" onclick="clearDash()" style="display:${hasFilter?'inline-block':'none'}">✕ Clear</button>
     </div>
-    <div class="table-wrap"><div class="table-toolbar"><h3>${filtered.length} bug${filtered.length!==1?'s':''}</h3></div><div class="table-scroll">${tableHTML(filtered,role==='superadmin'||role==='manager')}</div></div>`;
+    <div class="table-wrap"><div class="table-toolbar"><h3>${filtered.length} bug${filtered.length!==1?'s':''}</h3></div><div class="table-scroll">${tableHTML(filtered,role==='superadmin'||role==='manager')}</div></div>
+    ${role==='developer'?(()=>{
+      const myAll=bugs.filter(b=>b.assignee===currentUser.name);
+      const reopened=myAll.filter(b=>(b.audit||[]).some(a=>a.action==='Reopened after retest'));
+      const closedByTester=myAll.filter(b=>b.status==='Closed');
+      function resolutionTable(list){
+        if(!list.length) return '<div style="padding:12px 16px;font-size:13px;color:var(--g3);font-style:italic">None</div>';
+        return `<div class="table-scroll"><table><thead><tr><th>ID</th><th>Title</th><th class="hide-mobile">Component</th><th>Status</th><th class="hide-mobile">Tester Action</th><th class="hide-mobile">When</th></tr></thead><tbody>${
+          list.map(b=>{
+            const testerEntry=(b.audit||[]).filter(a=>a.action==='Reopened after retest'||a.action==='Verified & Closed').pop();
+            return `<tr onclick="viewBug('${b.id}')" style="cursor:pointer">
+              <td style="color:var(--g3);font-size:11px;white-space:nowrap">${b.id}</td>
+              <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.title}</td>
+              <td class="hide-mobile">${b.component}</td>
+              <td><span class="${badgeClass('status',b.status)}">${b.status}</span></td>
+              <td class="hide-mobile" style="font-size:12px">${testerEntry?testerEntry.action+' by '+testerEntry.who:'—'}</td>
+              <td class="hide-mobile" style="font-size:11px;color:var(--g3)">${testerEntry?fmt(testerEntry.when).split(',')[0]:'—'}</td>
+            </tr>`;
+          }).join('')
+        }</tbody></table></div>`;
+      }
+      return `
+        <div style="margin-top:20px">
+          <div class="table-wrap" style="margin-bottom:16px">
+            <div class="table-toolbar"><h3 style="color:var(--red)">↩ Reopened by Tester <span style="font-weight:400;color:var(--g3)">(${reopened.length})</span></h3></div>
+            ${resolutionTable(reopened)}
+          </div>
+          <div class="table-wrap">
+            <div class="table-toolbar"><h3 style="color:#27AE60">✓ Closed by Tester <span style="font-weight:400;color:var(--g3)">(${closedByTester.length})</span></h3></div>
+            ${resolutionTable(closedByTester)}
+          </div>
+        </div>`;
+    })():''}`;
 }
 function setDashFilter(v){dashFilter=dashFilter===v?null:v;renderDashboard();}
 function onDashSearch(v){
@@ -1798,7 +1833,7 @@ function tableHTML(data,showProject=false){
     ${showProject?'<th class="hide-mobile">Project</th>':''}
     <th>Severity</th><th>Status</th>
     <th class="hide-mobile">Reporter</th><th class="hide-mobile">Assigned</th>
-    <th class="hide-mobile">Created</th>
+    <th class="hide-mobile">Created</th><th class="hide-mobile">Updated</th>
   </tr></thead><tbody>
     ${data.map(b=>`<tr onclick="viewBug('${b.id}')" style="cursor:pointer">
       <td style="color:var(--g3);font-size:11px;white-space:nowrap">${b.id}</td>
@@ -1810,6 +1845,7 @@ function tableHTML(data,showProject=false){
       <td class="hide-mobile">${b.reporter}</td>
       <td class="hide-mobile">${b.assignee||'<span style="color:var(--g4)">—</span>'}</td>
       <td class="hide-mobile" style="font-size:11px;color:var(--g3)">${fmt(b.createdAt).split(',')[0]}</td>
+      <td class="hide-mobile" style="font-size:11px;color:var(--g3)">${b.updatedAt?fmt(b.updatedAt).split(',')[0]:'<span style="color:var(--g4)">—</span>'}</td>
     </tr>`).join('')}
   </tbody></table>`;
 }
@@ -2100,6 +2136,7 @@ async function changeUserRole(userId){
 // ── New Bug ───────────────────────────────────────────────────────────────────
 function openNewBugModal(){
   ['f-title','f-desc','f-steps','f-expected','f-actual','f-component'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-repro-rate').value='';
   document.getElementById('f-severity').value='High';
   document.getElementById('f-priority').value='High';
   document.getElementById('f-reporter').value=currentUser.name;
@@ -2121,6 +2158,7 @@ async function saveBug(){
     actual:document.getElementById('f-actual').value,
     severity:document.getElementById('f-severity').value,
     priority:document.getElementById('f-priority').value,
+    reproRate:document.getElementById('f-repro-rate').value,
     assignee:document.getElementById('f-assignee').value,
     reporter:currentUser.name,
     projectId:currentProject?.id||'default',
@@ -2153,6 +2191,7 @@ function viewBug(id){
         <div class="detail-field"><div class="dl">Component</div><div class="dv">${bug.component}</div></div>
         <div class="detail-field"><div class="dl">Assigned To</div><div class="dv">${bug.assignee||'Unassigned'}</div></div>
         <div class="detail-field"><div class="dl">Reporter</div><div class="dv">${bug.reporter}</div></div>
+        <div class="detail-field"><div class="dl">Repro Rate</div><div class="dv">${role==='tester'?`<select onchange="patchBug('${bug.id}',{reproRate:this.value,updatedAt:new Date().toISOString()})" style="padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px"><option value="">— Select —</option>${['100%','80%','60%','40%','20%','10%','Once'].map(o=>`<option${bug.reproRate===o?' selected':''}>${o}</option>`).join('')}</select>`:bug.reproRate||'<span style="color:var(--g4)">—</span>'}</div></div>
         <div class="detail-field"><div class="dl">Created</div><div class="dv" style="font-size:12px">${fmt(bug.createdAt)}</div></div>
         ${bug.resolvedAt?`<div class="detail-field"><div class="dl">Resolved</div><div class="dv" style="font-size:12px">${fmt(bug.resolvedAt)}</div></div>`:''}
         ${bug.retestedAt?`<div class="detail-field"><div class="dl">Retested</div><div class="dv" style="font-size:12px">${fmt(bug.retestedAt)}</div></div>`:''}
@@ -2182,6 +2221,15 @@ function viewBug(id){
       </div>
       ${canComment?`<div style="margin-top:8px;display:flex;gap:8px"><input type="text" id="further-change-input" placeholder="Add a comment..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:0"><button class="btn btn-ghost btn-sm" onclick="addFurtherChange('${bug.id}')">Post</button></div>`:''}
     </div>
+    ${role==='developer'?`<div class="detail-section"><h4>Developer Notes</h4>
+      <div class="changes-box">
+        ${(bug.developerNotes||[]).length
+          ?(bug.developerNotes||[]).map(n=>`<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e0e0e0"><div style="font-size:12px;font-weight:500">${n.who} <span style="font-size:10px;background:#eaf0fb;color:#1a5276;border-radius:3px;padding:1px 4px;margin-left:4px">developer</span> <span style="font-weight:400;color:var(--g3)">· ${fmt(n.when)}</span></div><div style="font-size:13px;margin-top:2px">${n.note}</div></div>`).join('')
+          :'<span style="color:var(--g3);font-style:italic">No developer notes yet</span>'}
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px"><input type="text" id="dev-note-input" placeholder="Add a developer note..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:0"><button class="btn btn-ghost btn-sm" onclick="addDeveloperNote('${bug.id}')">Post</button></div>
+    </div>`:''}
+
     <div class="detail-section"><h4>Activity log</h4>
       ${(bug.audit||[]).map(a=>`<div class="audit-item"><div class="audit-dot ${a.action.includes('Fixed')||a.action.includes('Resolved')?'dark':a.action.includes('raised')||a.action.includes('Reopened')?'red':''}"></div><div class="audit-content"><div class="who">${a.who}</div><div class="what">${a.action}${a.note?' — <em>'+a.note+'</em>':''}</div><div class="when">${fmt(a.when)}</div></div></div>`).join('')}
     </div>`;
@@ -2278,16 +2326,39 @@ document.addEventListener('click',function(e){
 
 async function resolveAs(id, resolution){
   closeResolveMenu();
+  const requiresComment = resolution==='Not a Bug'||resolution==='Wont Fix'||resolution==='Expected Behavior';
+  if(requiresComment){
+    const commentInput=document.getElementById('further-change-input');
+    const comment=commentInput?.value?.trim();
+    if(!comment){showToast(`Please add a comment explaining why before marking as "${resolution}"`, 'alert');return;}
+    const bug=bugs.find(b=>b.id===id);
+    const now=new Date().toISOString();
+    const entry={who:currentUser.name,role:currentUser.role,note:comment,when:now};
+    const actionMap={'Not a Bug':'Marked as Not a Bug','Wont Fix':'Marked as Won\'t Fix','Expected Behavior':'Marked as Expected Behavior'};
+    const action=actionMap[resolution];
+    await patchBug(id,{status:resolution,furtherChanges:[...(bug.furtherChanges||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Comment added',when:now,note:comment},{who:currentUser.name,action,when:now,note:''}],_furtherChange:comment});
+    showToast(`Bug marked: ${resolution}`,'success');
+    return;
+  }
   const bug=bugs.find(b=>b.id===id);
-  const actionMap={'Not a Bug':'Marked as Not a Bug','Expected Behavior':'Marked as Expected Behavior','Wont Fix':'Marked as Won\'t Fix'};
+  const actionMap={'Expected Behavior':'Marked as Expected Behavior'};
   const action=actionMap[resolution]||`Marked as ${resolution}`;
   await patchBug(id,{status:resolution,audit:[...(bug.audit||[]),{who:currentUser.name,action,when:new Date().toISOString(),note:''}]});
   showToast(`Bug marked: ${resolution}`,'success');
 }
 async function retestedStatus(id,result){
+  const commentInput=document.getElementById('further-change-input');
+  const comment=commentInput?.value?.trim();
+  if(!comment){
+    const label=result==='Closed'?'closing':'reopening';
+    showToast(`Please add a comment before ${label} this bug`,'alert');
+    return;
+  }
   const bug=bugs.find(b=>b.id===id);
+  const now=new Date().toISOString();
+  const entry={who:currentUser.name,role:currentUser.role,note:comment,when:now};
   const action=result==='Closed'?'Verified & Closed':'Reopened after retest';
-  await patchBug(id,{status:result,_retested:true,_source:'retest',audit:[...(bug.audit||[]),{who:currentUser.name,action,when:new Date().toISOString(),note:''}]});
+  await patchBug(id,{status:result,_retested:true,_source:'retest',furtherChanges:[...(bug.furtherChanges||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Comment added',when:now,note:comment},{who:currentUser.name,action,when:now,note:''}],_furtherChange:comment});
   showToast(result==='Closed'?'Bug closed':'Bug reopened','success');
 }
 async function addFurtherChange(id){
@@ -2296,6 +2367,13 @@ async function addFurtherChange(id){
   const bug=bugs.find(b=>b.id===id);
   const entry={who:currentUser.name,role:currentUser.role,note,when:new Date().toISOString()};
   await patchBug(id,{furtherChanges:[...(bug.furtherChanges||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Comment added',when:entry.when,note}],_furtherChange:note});
+}
+async function addDeveloperNote(id){
+  const input=document.getElementById('dev-note-input');
+  const note=input?.value?.trim();if(!note)return;
+  const bug=bugs.find(b=>b.id===id);
+  const entry={who:currentUser.name,note,when:new Date().toISOString()};
+  await patchBug(id,{developerNotes:[...(bug.developerNotes||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Developer note added',when:entry.when,note}]});
 }
 function confirmDelete(id){
   const bug = bugs.find(b => b.id === id);
@@ -2326,7 +2404,6 @@ function renderHistory(){
   let allEntries=[];
   bugs.forEach(bug=>{
     (bug.audit||[]).forEach(e=>allEntries.push({...e,bugId:bug.id,bugTitle:bug.title,bugStatus:bug.status,bugComponent:bug.component,projectName:bug.projectName}));
-    (bug.furtherChanges||[]).forEach(fc=>allEntries.push({who:fc.who,action:'Further change noted',note:fc.note,when:fc.when,bugId:bug.id,bugTitle:bug.title,bugStatus:bug.status,bugComponent:bug.component,projectName:bug.projectName}));
   });
   allEntries.sort((a,b)=>new Date(b.when)-new Date(a.when));
   if(histSearch){const q=histSearch.toLowerCase();allEntries=allEntries.filter(e=>[e.bugId,e.bugTitle,e.who,e.action,e.bugComponent,e.note,e.projectName].some(v=>v?.toLowerCase().includes(q)));}
