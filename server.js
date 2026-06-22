@@ -573,6 +573,100 @@ app.delete('/api/roles/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── CLIENTS ──────────────────────────────────────────────────────────────────
+app.get('/api/clients', async (req, res) => {
+  try {
+    const snap = await db.collection('clients').get();
+    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/clients', async (req, res) => {
+  try {
+    const client = { ...req.body, createdAt: new Date().toISOString(), status: 'active' };
+    const ref = await db.collection('clients').add(client);
+    const saved = { id: ref.id, ...client };
+    io.emit('client:created', saved);
+    res.json(saved);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.patch('/api/clients/:id', async (req, res) => {
+  try {
+    await db.collection('clients').doc(req.params.id).update(req.body);
+    const snap = await db.collection('clients').doc(req.params.id).get();
+    const saved = { id: snap.id, ...snap.data() };
+    io.emit('client:updated', saved);
+    res.json(saved);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/clients/:id', async (req, res) => {
+  try {
+    await db.collection('clients').doc(req.params.id).delete();
+    io.emit('client:deleted', { id: req.params.id });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── TIME ENTRIES ──────────────────────────────────────────────────────────────
+app.get('/api/time-entries', async (req, res) => {
+  try {
+    const snap = await db.collection('timeEntries').get();
+    let entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const { accountantId, date } = req.query;
+    if (accountantId) entries = entries.filter(e => e.accountantId === accountantId);
+    if (date) entries = entries.filter(e => e.date === date);
+    res.json(entries);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/time-entries', async (req, res) => {
+  try {
+    const entry = { ...req.body, createdAt: new Date().toISOString() };
+    const ref = await db.collection('timeEntries').add(entry);
+    const saved = { id: ref.id, ...entry };
+    io.emit('timeEntry:created', saved);
+    res.json(saved);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.patch('/api/time-entries/:id', async (req, res) => {
+  try {
+    await db.collection('timeEntries').doc(req.params.id).update(req.body);
+    const snap = await db.collection('timeEntries').doc(req.params.id).get();
+    const saved = { id: snap.id, ...snap.data() };
+    io.emit('timeEntry:updated', saved);
+    res.json(saved);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── EOD REPORTS ───────────────────────────────────────────────────────────────
+app.get('/api/eod-reports', async (req, res) => {
+  try {
+    const snap = await db.collection('eodReports').get();
+    let reports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const { accountantId, date, status } = req.query;
+    if (accountantId) reports = reports.filter(r => r.accountantId === accountantId);
+    if (date) reports = reports.filter(r => r.date === date);
+    if (status) reports = reports.filter(r => r.status === status);
+    res.json(reports);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/eod-reports', async (req, res) => {
+  try {
+    const report = { ...req.body, createdAt: new Date().toISOString() };
+    const ref = await db.collection('eodReports').add(report);
+    const saved = { id: ref.id, ...report };
+    io.emit('eodReport:submitted', saved);
+    res.json(saved);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.patch('/api/eod-reports/:id', async (req, res) => {
+  try {
+    await db.collection('eodReports').doc(req.params.id).update(req.body);
+    const snap = await db.collection('eodReports').doc(req.params.id).get();
+    const saved = { id: snap.id, ...snap.data() };
+    io.emit('eodReport:updated', saved);
+    res.json(saved);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Socket ────────────────────────────────────────────────────────────────────
 io.on('connection', socket => {
   console.log('Client connected:', socket.id);

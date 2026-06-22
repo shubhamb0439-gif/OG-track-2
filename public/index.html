@@ -282,6 +282,34 @@ tr:hover td{background:#fafafa;}tr[onclick]{cursor:pointer;}tr[onclick]:hover td
 .form-group input:not([type="checkbox"]),.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:14px;background:var(--white);color:var(--dark);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--red);}
 .form-group input[readonly]{background:var(--bg);cursor:not-allowed;color:var(--g3);}
+/* ── Accountant module ── */
+.acc-running-banner{display:flex;align-items:center;justify-content:space-between;background:rgba(231,76,60,.07);border:1.5px solid var(--red);border-radius:10px;padding:12px 16px;margin-bottom:16px;cursor:pointer;gap:12px;flex-wrap:wrap;}
+.acc-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;margin-bottom:8px;}
+.acc-client-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.acc-client-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.acc-client-name{font-weight:700;font-size:15px;}
+.acc-client-badge{font-size:11px;background:var(--bg);color:var(--g3);padding:2px 8px;border-radius:10px;}
+.acc-client-desc{font-size:13px;color:var(--g2);margin-bottom:6px;}
+.acc-client-meta{font-size:12px;color:var(--g3);margin-bottom:10px;}
+.acc-client-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.acc-running-card{background:rgba(231,76,60,.06);border:1.5px solid var(--red);border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.acc-running-left{display:flex;align-items:center;gap:12px;}
+.acc-pulse{width:12px;height:12px;border-radius:50%;background:var(--red);flex-shrink:0;animation:accPulse 1.2s infinite;}
+@keyframes accPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.5);opacity:.6;}}
+.acc-no-timer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--g3);font-size:15px;background:var(--bg);border-radius:10px;border:1px dashed var(--border);padding:48px 20px;text-align:center;}
+.acc-sessions-list{display:flex;flex-direction:column;gap:8px;}
+.acc-session-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px;}
+.acc-eod-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.acc-eod-client{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.acc-eod-client-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.acc-eod-note{font-size:13px;color:var(--g2);padding:2px 0 2px 4px;}
+.acc-eod-total{font-size:15px;color:var(--g2);font-weight:500;padding:10px 14px;background:var(--bg);border-radius:8px;text-align:right;margin-bottom:8px;}
+.acc-eod-review-list{display:flex;flex-direction:column;gap:12px;}
+.acc-eod-review-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.acc-eod-review-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.acc-eod-review-body{border-top:1px solid var(--border);padding-top:8px;}
+.role-badge.role-senior_accountant{background:#8e44ad22;color:#8E44AD;}
+.role-badge.role-accountant{background:#16a08522;color:#16A085;}
 .form-group textarea{resize:vertical;min-height:70px;}
 .modal-footer{padding:12px 18px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;bottom:0;background:var(--white);}
 
@@ -1086,7 +1114,7 @@ body { transition: background .3s ease, color .3s ease; }
       <div class="field"><label>Full Name</label><input type="text" id="r-name" placeholder="Your name"></div>
       <div class="field"><label>Email</label><input type="email" id="r-email" placeholder="you@example.com"></div>
       <div class="field"><label>Password</label><input type="password" id="r-pass" placeholder="Min 6 characters"></div>
-      <div class="field"><label>Role</label><select id="r-role"><option value="developer">Developer</option><option value="tester">Tester</option><option value="manager">Manager</option></select></div>
+      <div class="field"><label>Role</label><select id="r-role"><option value="developer">Developer</option><option value="tester">Tester</option><option value="manager">Manager</option><option value="accountant">Accountant</option><option value="senior_accountant">Senior Accountant</option></select></div>
       <button class="auth-btn" onclick="doRegister()">Request Access</button>
       <div class="pending-msg" id="pending-msg">✅ Registration submitted! Pending Super Admin approval.</div>
     </div>
@@ -1245,6 +1273,40 @@ body { transition: background .3s ease, color .3s ease; }
   </div>
 </div>
 
+<!-- Client Modal -->
+<div class="modal-overlay" id="client-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h2 id="cm-title">New Client</h2><button class="modal-close" onclick="closeModal('client-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row full"><div class="form-group"><label>Client Name *</label><input type="text" id="cm-name" placeholder="e.g. Acme Corp"></div></div>
+      <div class="form-row full"><div class="form-group"><label>Industry</label><input type="text" id="cm-industry" placeholder="e.g. Retail, Finance"></div></div>
+      <div class="form-row full"><div class="form-group"><label>Description</label><textarea id="cm-desc" placeholder="Brief description of the client" style="min-height:55px"></textarea></div></div>
+      <div class="form-row full"><div class="form-group"><label>Assign To</label><div class="multi-select" id="cm-assign"></div></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('client-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stop Timer Modal -->
+<div class="modal-overlay" id="stop-timer-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><h2>Stop Timer</h2><button class="modal-close" onclick="closeModal('stop-timer-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>What did you do for this client? *</label>
+        <textarea id="stop-note-input" placeholder="e.g. Reviewed Q3 invoices, reconciled bank statements..." style="min-height:90px"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('stop-timer-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmStopTimer()">Save &amp; Stop</button>
+    </div>
+  </div>
+</div>
+
 <!-- Delete Confirmation Modal -->
 <div class="modal-overlay" id="delete-modal">
   <div class="modal" style="max-width:400px">
@@ -1335,6 +1397,12 @@ let histSearch     = '';
 let histBugFilter  = '';
 let histWhoFilter  = '';
 let editingProjectId = null;
+let accClients      = [];
+let accTimeEntries  = [];
+let accEodReports   = [];
+let accTimerInterval = null;
+let editingClientId  = null;
+let stoppingEntryId  = null;
 
 // ── Mobile sidebar ────────────────────────────────────────────────────────────
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('open'); }
@@ -1520,9 +1588,10 @@ async function launchApp(){
   // Load custom roles so buildSidebar can use them for custom-role users
   try { allCustomRoles = await fetch('/api/roles').then(r=>r.json()); } catch(e){ allCustomRoles=[]; }
   buildSidebar();
-  // Show project switcher bar for non-superadmin
+  // Show project switcher bar only for bug-tracker roles
   const projBar=document.getElementById('sidebar-project-bar');
-  if(projBar) projBar.style.display=currentUser.role==='superadmin'?'none':'block';
+  const _hideBar=currentUser.role==='superadmin'||currentUser.role==='senior_accountant'||currentUser.role==='accountant';
+  if(projBar) projBar.style.display=_hideBar?'none':'block';
   connectSocket();
   requestNotifPermission();
 
@@ -1531,6 +1600,16 @@ async function launchApp(){
     localStorage.setItem('bt_project',JSON.stringify(currentProject));
     document.getElementById('main-app').style.display='flex';
     await loadBugs();
+  } else if(currentUser.role==='senior_accountant'||currentUser.role==='accountant'){
+    currentProject={id:'__acc__',name:'Accounting'};
+    localStorage.setItem('bt_project',JSON.stringify(currentProject));
+    document.getElementById('new-bug-btn').style.display='none';
+    document.getElementById('import-btn').style.display='none';
+    document.getElementById('main-app').style.display='flex';
+    document.getElementById('sp-name').textContent='Accounting';
+    document.getElementById('content-area').innerHTML='<div class="loading">Loading...</div>';
+    await loadAccData();
+    renderView();
   } else if(currentProject){
     document.getElementById('main-app').style.display='flex';
     document.getElementById('sp-name').textContent=currentProject.name;
@@ -1551,14 +1630,16 @@ async function launchApp(){
 
 function buildSidebar(){
   const role=currentUser.role;
-  const BUILTIN_ROLES=['superadmin','manager','developer','tester'];
+  const BUILTIN_ROLES=['superadmin','manager','developer','tester','senior_accountant','accountant'];
   let navItems;
   if(BUILTIN_ROLES.includes(role)){
     const items={
-      superadmin:[['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['admin','User Management','#D0D0D0'],['roles','Role Manager','#9B59B6'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      manager:   [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['summary','Team Summary','#D0D0D0'],['bugs','All Bugs','#4A4A4A'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      tester:    [['dashboard','Dashboard','var(--red2)'],['bugs','All Bugs','#7F7F7F'],['mybugs','My Bugs','#D0D0D0'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      developer: [['dashboard','Dashboard','var(--red2)'],['mybugs','My Bugs','#7F7F7F'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      superadmin:       [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['admin','User Management','#D0D0D0'],['roles','Role Manager','#9B59B6'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      manager:          [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['summary','Team Summary','#D0D0D0'],['bugs','All Bugs','#4A4A4A'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      tester:           [['dashboard','Dashboard','var(--red2)'],['bugs','All Bugs','#7F7F7F'],['mybugs','My Bugs','#D0D0D0'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      developer:        [['dashboard','Dashboard','var(--red2)'],['mybugs','My Bugs','#7F7F7F'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      senior_accountant:[['dashboard','Dashboard','var(--red2)'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
+      accountant:       [['dashboard','Dashboard','var(--red2)'],['acc_clients','My Clients','#16A085'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Report','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
     };
     navItems=items[role]||[];
   } else {
@@ -1701,14 +1782,18 @@ function renderView(){
   if(currentView==='history')    return renderHistory();
   if(currentView==='messages')   return renderMessages();
   if(currentView==='dashboard')  return renderDashboard();
-  if(currentView==='attendance') return renderAttendance();
-  if(currentView==='roles')      return renderRoles();
+  if(currentView==='attendance')  return renderAttendance();
+  if(currentView==='roles')       return renderRoles();
+  if(currentView==='acc_clients') return renderAccClients();
+  if(currentView==='acc_timer')   return renderAccTimer();
+  if(currentView==='acc_eod')     return renderAccEod();
   renderBugTable();
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 function renderDashboard(){
   const role=currentUser.role;
+  if(role==='senior_accountant'||role==='accountant') return renderAccDashboard();
   let base=bugs;
   if(role==='developer') base=bugs.filter(b=>b.assignee===currentUser.name);
   if(role==='tester')    base=bugs.filter(b=>b.reporter===currentUser.name);
@@ -2123,7 +2208,7 @@ function renderManagerSummary(){
 // ── Admin ─────────────────────────────────────────────────────────────────────
 function renderAdmin(){
   const users=allUsers.filter(u=>u.role!=='superadmin');
-  const builtinRoles=['manager','developer','tester'];
+  const builtinRoles=['manager','developer','tester','senior_accountant','accountant'];
   const customRoleOpts=allCustomRoles.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
   const allRoleOpts=builtinRoles.map(r=>`<option value="${r}">${r}</option>`).join('')+customRoleOpts;
   const rows=users.map(u=>{
@@ -3926,6 +4011,467 @@ function hideLoading(showAuth=false){
   if(!ls) return;
   ls.classList.add('hide');
   setTimeout(()=>{ ls.style.display='none'; if(showAuth) document.getElementById('auth-screen').style.display='flex'; }, 320);
+}
+
+// ── ACCOUNTANT MODULE ─────────────────────────────────────────────────────────
+
+async function loadAccData(){
+  try{
+    const today=todayStr();
+    const [cr,tr,er]=await Promise.all([
+      fetch('/api/clients').then(r=>r.json()),
+      fetch('/api/time-entries?accountantId='+currentUser.id+'&date='+today).then(r=>r.json()),
+      fetch('/api/eod-reports').then(r=>r.json()),
+    ]);
+    accClients=cr; accTimeEntries=tr; accEodReports=er;
+  }catch(e){ accClients=[];accTimeEntries=[];accEodReports=[]; }
+}
+
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function fmtDuration(secs){
+  if(!secs||secs<0)return '0m';
+  const h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=Math.floor(secs%60);
+  if(h>0)return h+'h '+m+'m';
+  if(m>0)return m+'m '+s+'s';
+  return s+'s';
+}
+
+function fmtTimer(secs){
+  const h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=Math.floor(secs%60);
+  return (h>0?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+
+function fmtTime(iso){
+  if(!iso)return '';
+  return new Date(iso).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function getRunningEntry(){
+  return accTimeEntries.find(e=>e.status==='in-progress'&&e.accountantId===currentUser.id);
+}
+
+function startAccTimerDisplay(){
+  clearInterval(accTimerInterval);
+  const running=getRunningEntry();
+  if(!running)return;
+  accTimerInterval=setInterval(()=>{
+    const el=document.getElementById('live-timer-display');
+    if(!el){clearInterval(accTimerInterval);return;}
+    el.textContent=fmtTimer(Math.floor((Date.now()-new Date(running.startTime).getTime())/1000));
+  },1000);
+}
+
+// ── Accountant Dashboard ──────────────────────────────────────────────────────
+function renderAccDashboard(){
+  const role=currentUser.role;
+  const today=todayStr();
+  const todayEntries=accTimeEntries.filter(e=>e.date===today);
+  const completed=todayEntries.filter(e=>e.status==='completed');
+  const running=getRunningEntry();
+  let totalSecs=completed.reduce((s,e)=>s+(e.duration||0),0);
+  if(running) totalSecs+=Math.floor((Date.now()-new Date(running.startTime).getTime())/1000);
+  const myClients=accClients.filter(c=>(c.assignedTo||[]).includes(currentUser.name));
+  let html='';
+  if(role==='senior_accountant'){
+    const pending=accEodReports.filter(r=>r.status==='submitted');
+    const reviewedToday=accEodReports.filter(r=>r.status==='reviewed'&&r.date===today);
+    const accountants=allUsers.filter(u=>u.role==='accountant'&&u.status==='active');
+    html+=`<div class="stats-grid" style="margin-bottom:20px">
+      <div class="stat-card"><div class="label">Total Clients</div><div class="value grey">${accClients.length}</div></div>
+      <div class="stat-card"><div class="label">Accountants</div><div class="value grey">${accountants.length}</div></div>
+      <div class="stat-card clickable${pending.length?' active':''}" onclick="showView('acc_eod')"><div class="label">Pending Reviews</div><div class="value red">${pending.length}</div></div>
+      <div class="stat-card"><div class="label">Reviewed Today</div><div class="value grey">${reviewedToday.length}</div></div>
+    </div><h3 style="margin:0 0 10px;font-size:13px;font-weight:600;color:var(--g2);text-transform:uppercase;letter-spacing:.5px">Your Work Today</h3>`;
+  }
+  html+=`<div class="stats-grid" style="margin-bottom:20px">
+    <div class="stat-card"><div class="label">My Clients</div><div class="value grey">${myClients.length}</div></div>
+    <div class="stat-card"><div class="label">Sessions Today</div><div class="value grey">${completed.length}</div></div>
+    <div class="stat-card"><div class="label">Time Today</div><div class="value grey">${fmtDuration(totalSecs)}</div></div>
+    <div class="stat-card${running?' clickable active':''}" onclick="${running?"showView('acc_timer')":"''"}">
+      <div class="label">Active Timer</div>
+      <div class="value ${running?'red':'grey'}">${running?'⏱ '+running.clientName:'—'}</div>
+    </div>
+  </div>`;
+  if(running){
+    html+=`<div class="acc-running-banner" onclick="showView('acc_timer')">
+      <span>⏱ Timer running: <strong>${running.clientName}</strong></span>
+      <span id="live-timer-display" style="font-size:20px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums">—</span>
+      <span style="font-size:12px;color:var(--g3)">Started ${fmtTime(running.startTime)} · tap to open Timer</span>
+    </div>`;
+  }
+  if(completed.length){
+    html+=`<h3 style="font-size:13px;font-weight:600;color:var(--g2);margin:0 0 8px;text-transform:uppercase;letter-spacing:.5px">Today's Sessions</h3>
+    <div class="acc-sessions-list">${completed.map(e=>`
+      <div class="acc-session-card">
+        <div style="display:flex;justify-content:space-between">
+          <div style="font-weight:600">${e.clientName}</div>
+          <div style="font-weight:700;color:var(--g2)">${fmtDuration(e.duration)}</div>
+        </div>
+        <div style="font-size:12px;color:var(--g3)">${fmtTime(e.startTime)} → ${fmtTime(e.endTime)}</div>
+        ${e.note?`<div style="font-size:13px;margin-top:4px;color:var(--g2)">${e.note}</div>`:''}
+      </div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('content-area').innerHTML=html;
+  startAccTimerDisplay();
+}
+
+// ── Clients Page ──────────────────────────────────────────────────────────────
+function renderAccClients(){
+  const role=currentUser.role;
+  const myClients=accClients.filter(c=>(c.assignedTo||[]).includes(currentUser.name));
+  const otherClients=accClients.filter(c=>!(c.assignedTo||[]).includes(currentUser.name));
+  const card=(c,isMine)=>`<div class="acc-client-card">
+    <div class="acc-client-header">
+      <span class="acc-client-name">${c.name}</span>
+      ${c.industry?`<span class="acc-client-badge">${c.industry}</span>`:''}
+    </div>
+    ${c.description?`<div class="acc-client-desc">${c.description}</div>`:''}
+    <div class="acc-client-meta">👤 ${(c.assignedTo||[]).join(', ')||'Unassigned'}</div>
+    <div class="acc-client-actions">
+      ${isMine?`
+        <button class="action-btn" onclick="startTimerForClient('${c.id}','${c.name.replace(/'/g,'\\'+'\'').replace(/"/g,'&quot;')}')">⏱ Start Timer</button>
+        <button class="action-btn" onclick="removeFromClient('${c.id}')">✕ Remove Me</button>
+      `:`<button class="action-btn" style="color:var(--red);border-color:var(--red)" onclick="pickClient('${c.id}')">+ Pick Up</button>`}
+      ${role==='senior_accountant'?`
+        <button class="action-btn" onclick="openClientModal('${c.id}')">Edit</button>
+        <button class="action-btn" style="color:var(--red)" onclick="deleteClient('${c.id}')">Delete</button>
+      `:''}
+    </div>
+  </div>`;
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h2 style="margin:0;font-size:18px">Clients</h2>
+      ${role==='senior_accountant'?`<button class="btn-primary" onclick="openClientModal()">+ Add Client</button>`:''}
+    </div>
+    <h3 style="font-size:12px;font-weight:600;color:var(--g3);margin:0 0 10px;text-transform:uppercase;letter-spacing:.5px">MY CLIENTS (${myClients.length})</h3>
+    ${myClients.length?`<div class="acc-cards-grid">${myClients.map(c=>card(c,true)).join('')}</div>`:
+      `<div class="empty-state" style="margin-bottom:20px"><p>No clients assigned to you. Pick one below or ask a Senior Accountant.</p></div>`}
+    ${otherClients.length?`
+      <h3 style="font-size:12px;font-weight:600;color:var(--g3);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.5px">AVAILABLE CLIENTS (${otherClients.length})</h3>
+      <div class="acc-cards-grid">${otherClients.map(c=>card(c,false)).join('')}</div>
+    `:''}
+    ${!myClients.length&&!otherClients.length?`<div class="empty-state"><p>${role==='senior_accountant'?'No clients yet. Add your first client above.':'No clients available.'}</p></div>`:''}
+  `;
+}
+
+// ── Timer Page ────────────────────────────────────────────────────────────────
+function renderAccTimer(){
+  const today=todayStr();
+  const todayDone=accTimeEntries.filter(e=>e.date===today&&e.status==='completed').sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
+  const running=getRunningEntry();
+  const myClients=accClients.filter(c=>(c.assignedTo||[]).includes(currentUser.name));
+  const availClients=myClients.filter(c=>c.id!==running?.clientId);
+  const clientOpts=availClients.map(c=>`<option value="${c.id}" data-name="${c.name.replace(/"/g,'&quot;')}">${c.name}</option>`).join('');
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <h2 style="margin:0;font-size:18px">Timer &mdash; ${new Date().toLocaleDateString([],{weekday:'long',month:'short',day:'numeric'})}</h2>
+      ${!running&&availClients.length?`<div style="display:flex;gap:8px;align-items:center">
+        <select id="timer-client-sel" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+          <option value="">— Pick client —</option>${clientOpts}
+        </select>
+        <button class="btn-primary" onclick="startTimer()">▶ Start</button>
+      </div>`:''}
+    </div>
+    ${running?`<div class="acc-running-card">
+      <div class="acc-running-left">
+        <div class="acc-pulse"></div>
+        <div><div style="font-weight:700;font-size:16px">${running.clientName}</div>
+          <div style="font-size:12px;color:var(--g3)">Started ${fmtTime(running.startTime)}</div></div>
+      </div>
+      <div style="text-align:right">
+        <div id="live-timer-display" style="font-size:30px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums">—</div>
+        <button class="btn-primary" style="margin-top:6px" onclick="openStopTimerModal('${running.id}')">⏹ Stop &amp; Note</button>
+      </div>
+    </div>`:`<div class="acc-no-timer">
+      <span style="font-size:32px">⏱</span>
+      <span>${availClients.length?'Select a client above and start tracking':'Pick a client first to start a timer'}</span>
+    </div>`}
+    <h3 style="font-size:12px;font-weight:600;color:var(--g3);margin:20px 0 8px;text-transform:uppercase;letter-spacing:.5px">TODAY'S SESSIONS (${todayDone.length})</h3>
+    ${todayDone.length?`<div class="acc-sessions-list">${todayDone.map(e=>`
+      <div class="acc-session-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div><div style="font-weight:600">${e.clientName}</div>
+            <div style="font-size:12px;color:var(--g3)">${fmtTime(e.startTime)} → ${fmtTime(e.endTime)}</div></div>
+          <div style="font-size:16px;font-weight:700;color:var(--g2)">${fmtDuration(e.duration)}</div>
+        </div>
+        ${e.note?`<div style="font-size:13px;margin-top:6px;padding:6px 8px;background:var(--bg);border-radius:6px">${e.note}</div>`:
+          `<div style="font-size:12px;color:var(--g3);margin-top:4px;font-style:italic">No note</div>`}
+      </div>`).join('')}</div>`:`<div class="empty-state"><p>No sessions yet today.</p></div>`}
+  `;
+  startAccTimerDisplay();
+}
+
+// ── EOD Report Page ───────────────────────────────────────────────────────────
+function renderAccEod(){
+  const role=currentUser.role;
+  if(role==='senior_accountant') renderSeniorEod(); else renderAccountantEod();
+}
+
+function renderAccountantEod(){
+  const today=todayStr();
+  const done=accTimeEntries.filter(e=>e.date===today&&e.status==='completed');
+  const report=accEodReports.find(r=>r.accountantId===currentUser.id&&r.date===today);
+  const byClient={};
+  done.forEach(e=>{
+    if(!byClient[e.clientId]) byClient[e.clientId]={name:e.clientName,duration:0,notes:[]};
+    byClient[e.clientId].duration+=e.duration||0;
+    if(e.note) byClient[e.clientId].notes.push(e.note);
+  });
+  const groups=Object.entries(byClient);
+  const total=Object.values(byClient).reduce((s,c)=>s+c.duration,0);
+  const statusTag=report?(report.status==='reviewed'?
+    `<span style="background:#27AE60;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600">✓ Reviewed</span>`:
+    `<span style="background:#F39C12;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600">⏳ Pending Review</span>`
+  ):'';
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px">
+      <div><h2 style="margin:0;font-size:18px">EOD Report</h2>
+        <div style="font-size:13px;color:var(--g3);margin-top:2px">${new Date().toLocaleDateString([],{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div></div>
+      ${statusTag}
+    </div>
+    ${!groups.length?`<div class="empty-state"><p>No completed sessions today.<br>Start &amp; stop timers on the Timer page to log your work.</p></div>`:`
+      <div class="acc-eod-list">
+        ${groups.map(([cid,d])=>`<div class="acc-eod-client">
+          <div class="acc-eod-client-header">
+            <span style="font-weight:700;font-size:15px">${d.name}</span>
+            <span style="font-weight:700;font-size:15px;color:var(--red)">${fmtDuration(d.duration)}</span>
+          </div>
+          ${d.notes.length?d.notes.map(n=>`<div class="acc-eod-note">→ ${n}</div>`).join(''):'<div class="acc-eod-note" style="color:var(--g3);font-style:italic">No notes</div>'}
+        </div>`).join('')}
+      </div>
+      <div class="acc-eod-total">Total time worked: <strong>${fmtDuration(total)}</strong></div>
+      ${!report?`<div style="padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-size:13px;color:var(--g2);margin-bottom:10px">Review your day before submitting to your Senior Accountant.</div>
+        <button class="btn-primary" onclick="submitEodReport()">Submit EOD Report →</button>
+      </div>`:`<div style="padding:12px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--g3)">Submitted at ${fmtTime(report.submittedAt)}</div>
+        ${report.reviewNote?`<div style="margin-top:6px;font-size:13px"><strong>Senior's note:</strong> ${report.reviewNote}</div>`:''}
+      </div>`}
+    `}
+  `;
+}
+
+function renderSeniorEod(){
+  const today=todayStr();
+  let selDate=today;
+  const existing=document.getElementById('eod-date-filter');
+  if(existing) selDate=existing.value;
+  const dates=[...new Set([today,...accEodReports.map(r=>r.date)])].sort((a,b)=>b.localeCompare(a));
+  const filtered=accEodReports.filter(r=>r.date===selDate);
+  const pendingCount=accEodReports.filter(r=>r.status==='submitted').length;
+  const done=accTimeEntries.filter(e=>e.date===today&&e.status==='completed');
+  const byClient={};
+  done.forEach(e=>{
+    if(!byClient[e.clientId]) byClient[e.clientId]={name:e.clientName,duration:0,notes:[]};
+    byClient[e.clientId].duration+=e.duration||0;
+    if(e.note) byClient[e.clientId].notes.push(e.note);
+  });
+  const ownGroups=Object.entries(byClient);
+  const ownTotal=Object.values(byClient).reduce((s,c)=>s+c.duration,0);
+  const myReport=accEodReports.find(r=>r.accountantId===currentUser.id&&r.date===today);
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div><h2 style="margin:0;font-size:18px">EOD Reports</h2>
+        <div style="font-size:13px;color:var(--g3)">${pendingCount} pending review</div></div>
+      <select id="eod-date-filter" onchange="renderAccEod()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+        ${dates.map(d=>`<option value="${d}" ${d===selDate?'selected':''}>${d}</option>`).join('')}
+      </select>
+    </div>
+    ${!filtered.length?`<div class="empty-state"><p>No EOD reports for ${selDate}.</p></div>`:`
+      <div class="acc-eod-review-list">
+        ${filtered.map(r=>`<div class="acc-eod-review-card">
+          <div class="acc-eod-review-header">
+            <div><div style="font-weight:700;font-size:15px">${r.accountantName}</div>
+              <div style="font-size:12px;color:var(--g3)">Submitted ${fmtTime(r.submittedAt)}</div></div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="background:${r.status==='reviewed'?'#27AE60':'#F39C12'};color:#fff;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600">${r.status==='reviewed'?'Reviewed':'Pending'}</span>
+              <span style="font-weight:700;color:var(--red)">${fmtDuration(r.totalDuration||0)}</span>
+            </div>
+          </div>
+          <div class="acc-eod-review-body">
+            ${(r.clientSummary||[]).map(cs=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+              <div><div style="font-weight:600;font-size:13px">${cs.clientName}</div>
+                ${(cs.notes||[]).map(n=>`<div style="font-size:12px;color:var(--g3)">→ ${n}</div>`).join('')}</div>
+              <div style="font-weight:600;font-size:13px;white-space:nowrap">${fmtDuration(cs.duration)}</div>
+            </div>`).join('')}
+          </div>
+          ${r.status==='submitted'?`<div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="text" placeholder="Review note (optional)" id="rnote-${r.id}" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;min-width:120px">
+            <button class="btn-primary" onclick="reviewEodReport('${r.id}')">✓ Mark Reviewed</button>
+          </div>`:r.reviewNote?`<div style="margin-top:8px;font-size:12px;color:var(--g3)"><strong>Your note:</strong> ${r.reviewNote}</div>`:''}
+        </div>`).join('')}
+      </div>`}
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+      <h3 style="font-size:13px;font-weight:600;color:var(--g2);margin:0 0 12px">Your Work Today</h3>
+      ${!ownGroups.length?`<div class="empty-state"><p>No sessions logged for yourself today.</p></div>`:`
+        <div class="acc-eod-list">
+          ${ownGroups.map(([,d])=>`<div class="acc-eod-client">
+            <div class="acc-eod-client-header">
+              <span style="font-weight:700">${d.name}</span>
+              <span style="font-weight:700;color:var(--red)">${fmtDuration(d.duration)}</span>
+            </div>
+            ${d.notes.map(n=>`<div class="acc-eod-note">→ ${n}</div>`).join('')}
+          </div>`).join('')}
+        </div>
+        <div class="acc-eod-total">Total: <strong>${fmtDuration(ownTotal)}</strong></div>
+        ${!myReport?`<button class="btn-primary" onclick="submitEodReport()">Submit My EOD →</button>`:
+          `<div style="font-size:12px;color:#27AE60;font-weight:600;margin-top:4px">✓ Submitted</div>`}
+      `}
+    </div>
+  `;
+}
+
+// ── Client CRUD ───────────────────────────────────────────────────────────────
+function openClientModal(id){
+  editingClientId=id||null;
+  const c=id?accClients.find(x=>x.id===id):null;
+  document.getElementById('cm-title').textContent=c?'Edit Client':'New Client';
+  document.getElementById('cm-name').value=c?.name||'';
+  document.getElementById('cm-desc').value=c?.description||'';
+  document.getElementById('cm-industry').value=c?.industry||'';
+  const accs=allUsers.filter(u=>(u.role==='accountant'||u.role==='senior_accountant')&&u.status==='active');
+  const assigned=c?.assignedTo||[];
+  document.getElementById('cm-assign').innerHTML=accs.length?
+    accs.map((u,i)=>`<label class="ms-option" for="cm-a${i}">
+      <input type="checkbox" id="cm-a${i}" value="${u.name}" ${assigned.includes(u.name)?'checked':''}>
+      <span>${u.name} <span style="font-size:11px;color:var(--g3)">(${u.role==='senior_accountant'?'Senior':'Accountant'})</span></span>
+    </label>`).join(''):
+    '<div style="font-size:12px;color:var(--g3);padding:8px">No accountants registered yet</div>';
+  document.getElementById('client-modal').classList.add('open');
+}
+
+async function saveClient(){
+  const name=document.getElementById('cm-name').value.trim();
+  if(!name){showToast('Client name is required','alert');return;}
+  const payload={
+    name,
+    description:document.getElementById('cm-desc').value.trim(),
+    industry:document.getElementById('cm-industry').value.trim(),
+    assignedTo:[...document.querySelectorAll('#cm-assign input:checked')].map(i=>i.value),
+    createdBy:currentUser.name,
+  };
+  try{
+    if(editingClientId){
+      const r=await fetch('/api/clients/'+editingClientId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const c=await r.json(); accClients=accClients.map(x=>x.id===c.id?c:x);
+    } else {
+      const r=await fetch('/api/clients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const c=await r.json(); accClients.push(c);
+    }
+    closeModal('client-modal');
+    showToast(editingClientId?'Client updated':'Client added','success');
+    renderAccClients();
+  }catch(e){showToast('Save failed','alert');}
+}
+
+async function deleteClient(id){
+  if(!confirm('Delete this client? This cannot be undone.'))return;
+  await fetch('/api/clients/'+id,{method:'DELETE'});
+  accClients=accClients.filter(c=>c.id!==id);
+  showToast('Client deleted','success');
+  renderAccClients();
+}
+
+async function pickClient(id){
+  const c=accClients.find(x=>x.id===id);if(!c)return;
+  const updated=[...new Set([...(c.assignedTo||[]),currentUser.name])];
+  const r=await fetch('/api/clients/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({assignedTo:updated})});
+  const saved=await r.json();
+  accClients=accClients.map(x=>x.id===id?saved:x);
+  showToast('Picked up '+c.name,'success');
+  renderAccClients();
+}
+
+async function removeFromClient(id){
+  const c=accClients.find(x=>x.id===id);if(!c)return;
+  const updated=(c.assignedTo||[]).filter(n=>n!==currentUser.name);
+  const r=await fetch('/api/clients/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({assignedTo:updated})});
+  const saved=await r.json();
+  accClients=accClients.map(x=>x.id===id?saved:x);
+  showToast('Removed from '+c.name,'success');
+  renderAccClients();
+}
+
+// ── Timer controls ────────────────────────────────────────────────────────────
+async function startTimerForClient(clientId,clientName){
+  const running=getRunningEntry();
+  if(running){showToast('Stop your current timer first','alert');return;}
+  const entry={clientId,clientName,accountantId:currentUser.id,accountantName:currentUser.name,
+    date:todayStr(),startTime:new Date().toISOString(),endTime:null,duration:null,note:'',status:'in-progress'};
+  const r=await fetch('/api/time-entries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)});
+  const saved=await r.json();
+  accTimeEntries.push(saved);
+  showToast('Timer started for '+clientName,'success');
+  showView('acc_timer');
+}
+
+async function startTimer(){
+  const sel=document.getElementById('timer-client-sel');
+  if(!sel||!sel.value){showToast('Select a client first','alert');return;}
+  const opt=sel.options[sel.selectedIndex];
+  await startTimerForClient(sel.value,opt.dataset.name||opt.text);
+}
+
+function openStopTimerModal(entryId){
+  stoppingEntryId=entryId;
+  document.getElementById('stop-note-input').value='';
+  document.getElementById('stop-timer-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('stop-note-input').focus(),100);
+}
+
+async function confirmStopTimer(){
+  if(!stoppingEntryId)return;
+  const entry=accTimeEntries.find(e=>e.id===stoppingEntryId);if(!entry)return;
+  const note=document.getElementById('stop-note-input').value.trim();
+  if(!note){showToast('Please add a note about what you did','alert');return;}
+  const endTime=new Date().toISOString();
+  const duration=Math.max(1,Math.floor((new Date(endTime)-new Date(entry.startTime))/1000));
+  const r=await fetch('/api/time-entries/'+stoppingEntryId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({endTime,duration,note,status:'completed'})});
+  const saved=await r.json();
+  accTimeEntries=accTimeEntries.map(e=>e.id===stoppingEntryId?saved:e);
+  clearInterval(accTimerInterval);
+  closeModal('stop-timer-modal');
+  stoppingEntryId=null;
+  showToast('Session saved ('+fmtDuration(duration)+') ✓','success');
+  renderAccTimer();
+}
+
+// ── EOD submit & review ───────────────────────────────────────────────────────
+async function submitEodReport(){
+  const today=todayStr();
+  const done=accTimeEntries.filter(e=>e.date===today&&e.status==='completed');
+  if(!done.length){showToast('No completed sessions to submit','alert');return;}
+  const byClient={};
+  done.forEach(e=>{
+    if(!byClient[e.clientId]) byClient[e.clientId]={clientId:e.clientId,clientName:e.clientName,duration:0,notes:[]};
+    byClient[e.clientId].duration+=e.duration||0;
+    if(e.note) byClient[e.clientId].notes.push(e.note);
+  });
+  const clientSummary=Object.values(byClient);
+  const totalDuration=clientSummary.reduce((s,c)=>s+c.duration,0);
+  const report={accountantId:currentUser.id,accountantName:currentUser.name,date:today,
+    clientSummary,totalDuration,status:'submitted',submittedAt:new Date().toISOString(),
+    reviewNote:'',reviewedBy:null,reviewedAt:null};
+  const r=await fetch('/api/eod-reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(report)});
+  const saved=await r.json();
+  accEodReports.push(saved);
+  showToast('EOD Report submitted to Senior Accountant ✓','success');
+  renderAccountantEod();
+}
+
+async function reviewEodReport(id){
+  const note=document.getElementById('rnote-'+id)?.value?.trim()||'';
+  const updates={status:'reviewed',reviewNote:note,reviewedBy:currentUser.name,reviewedAt:new Date().toISOString()};
+  const r=await fetch('/api/eod-reports/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updates)});
+  const saved=await r.json();
+  accEodReports=accEodReports.map(x=>x.id===id?saved:x);
+  showToast('Report marked as reviewed ✓','success');
+  renderSeniorEod();
 }
 </script>
 </body>
