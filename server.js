@@ -169,7 +169,7 @@ app.get('/api/bugs', async (req, res) => {
 app.post('/api/bugs', async (req, res) => {
   try {
     const projectId = req.body.projectId || 'default';
-    const counterRef = db.collection('meta').doc('counter_' + projectId);
+    const counterRef = db.collection('meta').doc('counter_global');
     const bugId = await db.runTransaction(async t => {
       const doc  = await t.get(counterRef);
       const next = doc.exists ? doc.data().count + 1 : 1;
