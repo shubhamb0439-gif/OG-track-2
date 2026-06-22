@@ -4214,13 +4214,15 @@ function renderAccEod(){
 
 function renderAccountantEod(){
   const today=todayStr();
-  const done=accTimeEntries.filter(e=>e.date===today&&e.status==='completed');
+  const done=accTimeEntries.filter(e=>e.date===today&&e.status==='completed').sort((a,b)=>new Date(a.startTime)-new Date(b.startTime));
   const report=accEodReports.find(r=>r.accountantId===currentUser.id&&r.date===today);
+  const submitted=!!report;
+  // Group entries by client preserving individual sessions
   const byClient={};
   done.forEach(e=>{
-    if(!byClient[e.clientId]) byClient[e.clientId]={name:e.clientName,duration:0,notes:[]};
+    if(!byClient[e.clientId]) byClient[e.clientId]={name:e.clientName,duration:0,entries:[]};
     byClient[e.clientId].duration+=e.duration||0;
-    if(e.note) byClient[e.clientId].notes.push(e.note);
+    byClient[e.clientId].entries.push(e);
   });
   const groups=Object.entries(byClient);
   const total=Object.values(byClient).reduce((s,c)=>s+c.duration,0);
@@ -4234,6 +4236,9 @@ function renderAccountantEod(){
         <div style="font-size:13px;color:var(--g3);margin-top:2px">${new Date().toLocaleDateString([],{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div></div>
       ${statusTag}
     </div>
+    ${!submitted&&groups.length?`<div style="font-size:13px;color:var(--g3);margin-bottom:14px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+      ✏️ Review and edit your session notes below before submitting. Changes save automatically when you click away.
+    </div>`:''}
     ${!groups.length?`<div class="empty-state"><p>No completed sessions today.<br>Start &amp; stop timers on the Timer page to log your work.</p></div>`:`
       <div class="acc-eod-list">
         ${groups.map(([cid,d])=>`<div class="acc-eod-client">
@@ -4241,12 +4246,24 @@ function renderAccountantEod(){
             <span style="font-weight:700;font-size:15px">${d.name}</span>
             <span style="font-weight:700;font-size:15px;color:var(--red)">${fmtDuration(d.duration)}</span>
           </div>
-          ${d.notes.length?d.notes.map(n=>`<div class="acc-eod-note">→ ${n}</div>`).join(''):'<div class="acc-eod-note" style="color:var(--g3);font-style:italic">No notes</div>'}
+          ${d.entries.map(e=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);last-child:border-none">
+            <div style="font-size:12px;color:var(--g3);margin-bottom:4px">${fmtTime(e.startTime)} → ${fmtTime(e.endTime)} &nbsp;·&nbsp; ${fmtDuration(e.duration)}</div>
+            ${submitted
+              ?`<div style="font-size:13px;color:var(--g2)">${e.note||'<em style="color:var(--g3)">No note</em>'}</div>`
+              :`<textarea
+                  style="width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;resize:vertical;min-height:52px;box-sizing:border-box;outline:none"
+                  placeholder="What did you do in this session? (auto-saves on blur)"
+                  onblur="saveEntryNote('${e.id}',this.value)"
+                  onfocus="this.style.borderColor='var(--red)'"
+                  onblurCapture="this.style.borderColor='var(--border)'"
+                >${e.note||''}</textarea>`
+            }
+          </div>`).join('')}
         </div>`).join('')}
       </div>
       <div class="acc-eod-total">Total time worked: <strong>${fmtDuration(total)}</strong></div>
       ${!report?`<div style="padding:16px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
-        <div style="font-size:13px;color:var(--g2);margin-bottom:10px">Review your day before submitting to your Senior Accountant.</div>
+        <div style="font-size:13px;color:var(--g2);margin-bottom:10px">Happy with your notes? Submit to your Senior Accountant.</div>
         <button class="btn-primary" onclick="submitEodReport()">Submit EOD Report →</button>
       </div>`:`<div style="padding:12px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
         <div style="font-size:12px;color:var(--g3)">Submitted at ${fmtTime(report.submittedAt)}</div>
@@ -4254,6 +4271,13 @@ function renderAccountantEod(){
       </div>`}
     `}
   `;
+}
+
+async function saveEntryNote(id,note){
+  const entry=accTimeEntries.find(e=>e.id===id);
+  if(!entry||entry.note===note)return;
+  await fetch('/api/time-entries/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({note})});
+  accTimeEntries=accTimeEntries.map(e=>e.id===id?{...e,note}:e);
 }
 
 function renderSeniorEod(){
