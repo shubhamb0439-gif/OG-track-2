@@ -1798,14 +1798,14 @@ function renderDashboard(){
     })():''}`;
 }
 function setDashFilter(v){dashFilter=dashFilter===v?null:v;renderDashboard();}
+let _dashSearchTimer;
 function onDashSearch(v){
   searchQuery=v;
-  renderDashboard();
-  // Restore focus and cursor position after re-render
-  setTimeout(()=>{
-    const inp=document.getElementById('dash-search');
-    if(inp){ inp.focus(); inp.setSelectionRange(v.length,v.length); }
-  },0);
+  clearTimeout(_dashSearchTimer);
+  _dashSearchTimer=setTimeout(()=>{
+    renderDashboard();
+    requestAnimationFrame(()=>{const i=document.getElementById('dash-search');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}});
+  },220);
 }
 function clearDash(){dashFilter=null;searchQuery='';dashSeverity='';dashStatus='';dashComponent='';renderDashboard();}
 
@@ -1827,7 +1827,24 @@ function renderBugTable(){
     </div>
     <div class="table-wrap"><div class="table-toolbar"><h3>${data.length} bug${data.length!==1?'s':''}</h3></div><div class="table-scroll">${tableHTML(data,true)}</div></div>`;
 }
-function onTableSearch(v){tableSearch=v;renderBugTable();}
+let _histSearchTimer;
+function onHistSearch(v){
+  histSearch=v;
+  clearTimeout(_histSearchTimer);
+  _histSearchTimer=setTimeout(()=>{
+    renderHistory();
+    requestAnimationFrame(()=>{const i=document.getElementById('hist-search-inp');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}});
+  },220);
+}
+let _tableSearchTimer;
+function onTableSearch(v){
+  tableSearch=v;
+  clearTimeout(_tableSearchTimer);
+  _tableSearchTimer=setTimeout(()=>{
+    renderBugTable();
+    requestAnimationFrame(()=>{const i=document.getElementById('table-search');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}});
+  },220);
+}
 function clearTable(){tableSearch='';renderBugTable();}
 
 function tableHTML(data,showProject=false){
@@ -2537,7 +2554,7 @@ function renderHistory(){
 
   document.getElementById('content-area').innerHTML=`
     <div class="history-filters">
-      <input type="text" placeholder="Search activity..." value="${histSearch}" oninput="histSearch=this.value;renderHistory()">
+      <input type="text" id="hist-search-inp" placeholder="Search activity..." value="${histSearch}" oninput="onHistSearch(this.value)">
       <select onchange="histBugFilter=this.value;renderHistory()">
         <option value="">All Bugs</option>
         ${allBugIds.map(id=>`<option value="${id}" ${histBugFilter===id?'selected':''}>${id}</option>`).join('')}
