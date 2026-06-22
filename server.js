@@ -122,6 +122,10 @@ app.get('/api/projects', async (req, res) => {
 app.post('/api/projects', async (req, res) => {
   try {
     const project = { ...req.body, createdAt: new Date().toISOString(), status: 'active' };
+    if (project.shortCode) {
+      const existing = await db.collection('projects').where('shortCode', '==', project.shortCode).get();
+      if (!existing.empty) return res.status(400).json({ error: `Short code "${project.shortCode}" is already used by another project.` });
+    }
     const ref = await db.collection('projects').add(project);
     const saved = { id: ref.id, ...project };
     io.emit('project:created', saved);
@@ -131,6 +135,11 @@ app.post('/api/projects', async (req, res) => {
 
 app.patch('/api/projects/:id', async (req, res) => {
   try {
+    if (req.body.shortCode) {
+      const existing = await db.collection('projects').where('shortCode', '==', req.body.shortCode).get();
+      const conflict = existing.docs.find(d => d.id !== req.params.id);
+      if (conflict) return res.status(400).json({ error: `Short code "${req.body.shortCode}" is already used by another project.` });
+    }
     await db.collection('projects').doc(req.params.id).update(req.body);
     const snap = await db.collection('projects').doc(req.params.id).get();
     const saved = { id: snap.id, ...snap.data() };
@@ -169,12 +178,19 @@ app.get('/api/bugs', async (req, res) => {
 app.post('/api/bugs', async (req, res) => {
   try {
     const projectId = req.body.projectId || 'default';
-    const counterRef = db.collection('meta').doc('counter_global');
+    let shortCode = 'BUG';
+    if (projectId !== 'default') {
+      const projectDoc = await db.collection('projects').doc(projectId).get();
+      if (projectDoc.exists && projectDoc.data().shortCode) {
+        shortCode = projectDoc.data().shortCode;
+      }
+    }
+    const counterRef = db.collection('meta').doc('counter_' + shortCode);
     const bugId = await db.runTransaction(async t => {
       const doc  = await t.get(counterRef);
       const next = doc.exists ? doc.data().count + 1 : 1;
       t.set(counterRef, { count: next });
-      return 'BUG-' + String(next).padStart(3,'0');
+      return shortCode + '-' + String(next).padStart(3,'0');
     });
     const silent = req.body._silent === true; // true for bulk imports
     delete req.body._silent;

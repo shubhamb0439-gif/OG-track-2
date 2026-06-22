@@ -281,6 +281,7 @@ tr:hover td{background:#fafafa;}tr[onclick]{cursor:pointer;}tr[onclick]:hover td
 .form-group label{display:block;font-size:12px;font-weight:500;color:var(--g2);margin-bottom:4px;}
 .form-group input:not([type="checkbox"]),.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:14px;background:var(--white);color:var(--dark);font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--red);}
+.form-group input[readonly]{background:var(--bg);cursor:not-allowed;color:var(--g3);}
 .form-group textarea{resize:vertical;min-height:70px;}
 .modal-footer{padding:12px 18px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;bottom:0;background:var(--white);}
 
@@ -1219,7 +1220,10 @@ body { transition: background .3s ease, color .3s ease; }
   <div class="modal">
     <div class="modal-header"><h2 id="pm-title">New Project</h2><button class="modal-close" onclick="closeModal('project-modal')">×</button></div>
     <div class="modal-body">
-      <div class="form-row full"><div class="form-group"><label>Project Name *</label><input type="text" id="pm-name" placeholder="e.g. CRM Portal"></div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Project Name *</label><input type="text" id="pm-name" placeholder="e.g. CRM Portal" oninput="autoFillShortCode(this.value)"></div>
+        <div class="form-group" style="max-width:140px"><label>Short Code * <span style="font-size:11px;color:var(--g3)">(used in Bug IDs)</span></label><input type="text" id="pm-code" placeholder="e.g. XR" maxlength="5" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');this.dataset.userEdited='true'"></div>
+      </div>
       <div class="form-row full"><div class="form-group"><label>Description</label><textarea id="pm-desc" placeholder="What is this project about?" style="min-height:55px"></textarea></div></div>
       <!-- Managers always shown -->
       <div class="form-row full"><div class="form-group"><label>Assign Managers</label><div class="multi-select" id="pm-managers"></div></div></div>
@@ -1892,10 +1896,23 @@ function renderProjects(){
     ${myProjects.length?`<div class="project-cards">${cards}</div>`:`<div class="empty-state"><p>${canCreate?'No projects yet. Create one above.':'No projects assigned to you.'}</p></div>`}`;
 }
 
+function autoFillShortCode(name){
+  const el=document.getElementById('pm-code');
+  if(!el||el.dataset.userEdited==='true')return;
+  const words=name.trim().split(/\s+/).filter(Boolean);
+  let code='';
+  if(words.length===1) code=words[0].substring(0,4).toUpperCase().replace(/[^A-Z0-9]/g,'');
+  else code=words.map(w=>w[0]).join('').substring(0,4).toUpperCase().replace(/[^A-Z0-9]/g,'');
+  el.value=code;
+}
 function openProjectModal(){
   editingProjectId=null;
   document.getElementById('pm-title').textContent='New Project';
   document.getElementById('pm-name').value='';
+  const codeEl=document.getElementById('pm-code');
+  codeEl.value='';
+  codeEl.removeAttribute('data-user-edited');
+  codeEl.readOnly=false;
   document.getElementById('pm-desc').value='';
   setupProjectModalForRole([],[],[]);
   document.getElementById('project-modal').classList.add('open');
@@ -1905,6 +1922,10 @@ function editProject(id){
   editingProjectId=id;
   document.getElementById('pm-title').textContent='Edit / Assign Members';
   document.getElementById('pm-name').value=p.name;
+  const codeEl=document.getElementById('pm-code');
+  codeEl.value=p.shortCode||'';
+  codeEl.dataset.userEdited='true';
+  codeEl.readOnly=!!p.shortCode; // lock if already set (bugs use this prefix)
   document.getElementById('pm-desc').value=p.description||'';
   setupProjectModalForRole(p.developers||[],p.testers||[],p.managers||[]);
   document.getElementById('project-modal').classList.add('open');
@@ -1976,6 +1997,8 @@ function getChecked(cid){return[...document.querySelectorAll(`#${cid} input:chec
 async function saveProject(){
   const name=document.getElementById('pm-name').value.trim();
   if(!name){showToast('Project name is required','alert');return;}
+  const shortCode=document.getElementById('pm-code').value.trim().toUpperCase();
+  if(!shortCode){showToast('Short Code is required (e.g. XR, VS)','alert');return;}
 
   let payload;
   if(currentUser.role==='superadmin'){
@@ -1983,6 +2006,7 @@ async function saveProject(){
     const existing=allProjects.find(p=>p.id===editingProjectId);
     payload={
       name,
+      shortCode,
       description:document.getElementById('pm-desc').value,
       managers:getChecked('pm-managers'),
       // Preserve existing devs/testers if editing
@@ -1993,6 +2017,7 @@ async function saveProject(){
     // Manager sets devs and testers (and can also manage managers if needed)
     payload={
       name,
+      shortCode,
       description:document.getElementById('pm-desc').value,
       developers:getChecked('pm-devs'),
       testers:getChecked('pm-testers'),
@@ -2002,10 +2027,12 @@ async function saveProject(){
 
   try{
     if(editingProjectId){
-      await fetch(`/api/projects/${editingProjectId}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const r=await fetch(`/api/projects/${editingProjectId}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(!r.ok){const e=await r.json();showToast(e.error||'Update failed','alert');return;}
       showToast('Project updated','success');
     } else {
-      await fetch('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const r=await fetch('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      if(!r.ok){const e=await r.json();showToast(e.error||'Create failed','alert');return;}
       showToast('Project created — assign Developers & Testers via Manager','success');
     }
     allProjects=await(await fetch('/api/projects')).json();
