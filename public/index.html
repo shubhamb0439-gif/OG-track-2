@@ -1149,7 +1149,7 @@ body { transition: background .3s ease, color .3s ease; }
       </div>
       <div class="topbar-right">
         <div class="filter-bar" id="filter-bar" style="display:none">
-          <select id="filter-status" onchange="renderView()"><option value="">All Status</option><option>Open</option><option>In Progress</option><option>Fixed</option><option>Closed</option><option>Wont Fix</option><option>Not a Bug</option><option>Expected Behavior</option></select>
+          <select id="filter-status" onchange="renderView()"><option value="">All Status</option><option>Open</option><option>In Progress</option><option>Resolved</option><option>Closed</option><option>Wont Fix</option><option>Not a Bug</option><option>Expected Behavior</option></select>
           <select id="filter-sev" onchange="renderView()" class="hide-mobile"><option value="">All Severity</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
         </div>
         <button id="font-btn" onclick="toggleFontPicker()" title="Change font">Aa</button>
@@ -1181,7 +1181,7 @@ body { transition: background .3s ease, color .3s ease; }
         <div class="form-group"><label>Component *</label><input type="text" id="f-component" placeholder="e.g. Login"></div>
       </div>
       <div class="form-row full"><div class="form-group"><label>Description</label><textarea id="f-desc" placeholder="Detailed description..."></textarea></div></div>
-      <div class="form-row full"><div class="form-group"><label>Steps to Reproduce</label><textarea id="f-steps" placeholder="1. Go to...&#10;2. Click...&#10;3. Observe..."></textarea></div></div>
+      <div class="form-row full"><div class="form-group"><label>Steps to Reproduce</label><textarea id="f-steps" placeholder="1. Go to...&#10;2. Click...&#10;3. Observe..." onkeydown="handleStepsKeydown(event,this)"></textarea></div></div>
       <div class="form-row">
         <div class="form-group"><label>Expected</label><input type="text" id="f-expected"></div>
         <div class="form-group"><label>Actual</label><input type="text" id="f-actual"></div>
@@ -1199,7 +1199,7 @@ body { transition: background .3s ease, color .3s ease; }
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('new-bug-modal')">Cancel</button>
+      <button class="btn btn-ghost" onclick="closeModal('new-bug-modal');this.closest('.modal').querySelector('h2').textContent='Raise New Bug';this.nextElementSibling.textContent='Raise Bug';this.nextElementSibling.onclick=saveBug;">Cancel</button>
       <button class="btn btn-primary" onclick="saveBug()">Raise Bug</button>
     </div>
   </div>
@@ -1625,7 +1625,7 @@ function connectSocket(){
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(iso){if(!iso)return'—';return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 function badgeClass(type,val){
-  const m={status:{'Open':'open','In Progress':'inprogress','Fixed':'fixed','Closed':'closed','Wont Fix':'wontfix','Not a Bug':'wontfix','Expected Behavior':'closed'},sev:{'Critical':'critical','High':'high','Medium':'medium','Low':'low'}};
+  const m={status:{'Open':'open','In Progress':'inprogress','Fixed':'fixed','Resolved':'fixed','Closed':'closed','Wont Fix':'wontfix','Not a Bug':'wontfix','Expected Behavior':'closed'},sev:{'Critical':'critical','High':'high','Medium':'medium','Low':'low'}};
   return 'badge badge-'+(m[type]?.[val]||'low');
 }
 function showToast(msg,type='success'){
@@ -1710,7 +1710,7 @@ function renderDashboard(){
   if(role==='tester')    base=bugs.filter(b=>b.reporter===currentUser.name);
   const open=base.filter(b=>b.status==='Open').length;
   const prog=base.filter(b=>b.status==='In Progress').length;
-  const fixed=base.filter(b=>b.status==='Fixed').length;
+  const fixed=base.filter(b=>b.status==='Resolved'||b.status==='Fixed').length;
   const closed=base.filter(b=>b.status==='Closed').length;
 
   function card(label,val,colorClass,fv){
@@ -1718,14 +1718,14 @@ function renderDashboard(){
     return `<div class="stat-card clickable${active?' active':''}" onclick="setDashFilter('${fv}')"><div class="label">${label}</div><div class="value ${colorClass}">${val}</div></div>`;
   }
   let stats='';
-  if(role==='developer') stats=`<div class="stats-grid">${card('Assigned',base.length,'grey','')}${card('Open',open,'red','Open')}${card('In Progress',prog,'grey','In Progress')}${card('Fixed',fixed,'grey','Fixed')}</div>`;
-  else if(role==='tester') stats=`<div class="stats-grid">${card('Raised',base.length,'grey','')}${card('Open',open,'red','Open')}${card('Retest',fixed,'grey','Fixed')}${card('Closed',closed,'grey','Closed')}</div>`;
-  else stats=`<div class="stats-grid">${card('Total',bugs.length,'grey','')}${card('Open',bugs.filter(b=>b.status==='Open').length,'red','Open')}${card('In Progress',bugs.filter(b=>b.status==='In Progress').length,'grey','In Progress')}${card('Done',bugs.filter(b=>b.status==='Fixed'||b.status==='Closed').length,'grey','Fixed|Closed')}</div>`;
+  if(role==='developer') stats=`<div class="stats-grid">${card('Assigned',base.length,'grey','')}${card('Open',open,'red','Open')}${card('In Progress',prog,'grey','In Progress')}${card('Resolved',fixed,'grey','Resolved')}</div>`;
+  else if(role==='tester') stats=`<div class="stats-grid">${card('Raised',base.length,'grey','')}${card('Open',open,'red','Open')}${card('Retest',fixed,'grey','Resolved')}${card('Closed',closed,'grey','Closed')}</div>`;
+  else stats=`<div class="stats-grid">${card('Total',bugs.length,'grey','')}${card('Open',bugs.filter(b=>b.status==='Open').length,'red','Open')}${card('In Progress',bugs.filter(b=>b.status==='In Progress').length,'grey','In Progress')}${card('Closed',bugs.filter(b=>b.status==='Closed').length,'grey','Closed')}</div>`;
 
   let filtered=[...base];
-  if(dashFilter){const parts=dashFilter.split('|');filtered=filtered.filter(b=>parts.includes(b.status));}
+  if(dashFilter){const parts=dashFilter.split('|');filtered=filtered.filter(b=>parts.includes(b.status)||(parts.includes('Resolved')&&b.status==='Fixed'));}
   if(dashSeverity)  filtered=filtered.filter(b=>b.severity===dashSeverity);
-  if(dashStatus)    filtered=filtered.filter(b=>b.status===dashStatus);
+  if(dashStatus)    filtered=filtered.filter(b=>dashStatus==='Resolved'?(b.status==='Resolved'||b.status==='Fixed'):b.status===dashStatus);
   if(dashComponent) filtered=filtered.filter(b=>b.component===dashComponent);
   if(searchQuery){const q=searchQuery.toLowerCase();filtered=filtered.filter(b=>searchMatch(b,q));}
 
@@ -1749,7 +1749,7 @@ function renderDashboard(){
         <option value="">All Status</option>
         <option value="Open"        ${dashStatus==='Open'?'selected':''}>Open</option>
         <option value="In Progress" ${dashStatus==='In Progress'?'selected':''}>In Progress</option>
-        <option value="Fixed"       ${dashStatus==='Fixed'?'selected':''}>Fixed</option>
+        <option value="Resolved"     ${dashStatus==='Resolved'?'selected':''}>Resolved</option>
         <option value="Closed"      ${dashStatus==='Closed'?'selected':''}>Closed</option>
         <option value="Wont Fix"    ${dashStatus==='Wont Fix'?'selected':''}>Wont Fix</option>
       </select>
@@ -1813,7 +1813,7 @@ function renderBugTable(){
   if(currentView==='mybugs'&&role==='tester')    data=bugs.filter(b=>b.reporter===currentUser.name);
   const fs=document.getElementById('filter-status')?.value;
   const fv=document.getElementById('filter-sev')?.value;
-  if(fs) data=data.filter(b=>b.status===fs);
+  if(fs) data=data.filter(b=>fs==='Resolved'?(b.status==='Resolved'||b.status==='Fixed'):b.status===fs);
   if(fv) data=data.filter(b=>b.severity===fv);
   if(tableSearch){const q=tableSearch.toLowerCase();data=data.filter(b=>searchMatch(b,q));}
   document.getElementById('content-area').innerHTML=`
@@ -1872,7 +1872,7 @@ function renderProjects(){
       <div class="pcard-stats">
         <span class="pcard-stat pcard-open">${pb.filter(b=>b.status==='Open').length} open</span>
         <span class="pcard-stat pcard-prog">${pb.filter(b=>b.status==='In Progress').length} in progress</span>
-        <span class="pcard-stat pcard-done">${pb.filter(b=>b.status==='Fixed'||b.status==='Closed').length} done</span>
+        <span class="pcard-stat pcard-done">${pb.filter(b=>b.status==='Resolved'||b.status==='Fixed'||b.status==='Closed').length} done</span>
         <span class="pcard-stat pcard-total">${pb.length} total</span>
       </div>
       <div class="pcard-members">
@@ -2038,7 +2038,7 @@ function renderManagerSummary(){
       return `<div class="dev-row"><div class="name">👨‍💻 ${d}</div><div class="pills">
         <span class="pill pill-open">${db.filter(b=>b.status==='Open').length} open</span>
         <span class="pill pill-prog">${db.filter(b=>b.status==='In Progress').length} in progress</span>
-        <span class="pill pill-fixed">${db.filter(b=>b.status==='Fixed'||b.status==='Closed').length} fixed</span>
+        <span class="pill pill-fixed">${db.filter(b=>b.status==='Resolved'||b.status==='Fixed'||b.status==='Closed').length} fixed</span>
       </div></div>`;
     }).join('')||'<div style="color:var(--g3);font-size:13px;padding:8px 0">No developers assigned</div>';
 
@@ -2057,7 +2057,7 @@ function renderManagerSummary(){
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <span class="pill pill-open">${pb.filter(b=>b.status==='Open').length} open</span>
           <span class="pill pill-prog">${pb.filter(b=>b.status==='In Progress').length} in progress</span>
-          <span class="pill pill-fixed">${pb.filter(b=>b.status==='Fixed'||b.status==='Closed').length} done</span>
+          <span class="pill pill-fixed">${pb.filter(b=>b.status==='Resolved'||b.status==='Fixed'||b.status==='Closed').length} done</span>
         </div>
       </div>
       <div class="summary-section"><h3>Developers</h3>${devRows}</div>
@@ -2071,7 +2071,7 @@ function renderManagerSummary(){
       <div class="stat-card"><div class="label">Projects</div><div class="value grey">${myProjects.length}</div></div>
       <div class="stat-card"><div class="label">Total Bugs</div><div class="value grey">${total}</div></div>
       <div class="stat-card"><div class="label">Open</div><div class="value red">${open}</div></div>
-      <div class="stat-card"><div class="label">Done</div><div class="value grey">${bugs.filter(b=>b.status==='Closed'||b.status==='Fixed').length}</div></div>
+      <div class="stat-card"><div class="label">Closed</div><div class="value grey">${bugs.filter(b=>b.status==='Closed').length}</div></div>
     </div>
     ${sections}`;
 }
@@ -2147,6 +2147,18 @@ function openNewBugModal(){
   sel.innerHTML='<option value="">— Unassigned —</option>'+devs.map(u=>`<option>${u.name}</option>`).join('');
   document.getElementById('new-bug-modal').classList.add('open');
 }
+function handleStepsKeydown(e,ta){
+  if(e.key==='Enter'&&e.shiftKey){
+    e.preventDefault();
+    const val=ta.value,pos=ta.selectionStart;
+    const lines=val.substring(0,pos).split('\n');
+    const last=lines[lines.length-1];
+    const match=last.match(/^(\d+)\./);
+    const next=(match?parseInt(match[1])+1:1)+'. ';
+    ta.value=val.substring(0,pos)+'\n'+next+val.substring(pos);
+    ta.selectionStart=ta.selectionEnd=pos+1+next.length;
+  }
+}
 async function saveBug(){
   const title=document.getElementById('f-title').value.trim();
   const comp=document.getElementById('f-component').value.trim();
@@ -2167,6 +2179,51 @@ async function saveBug(){
   catch(e){showToast('Failed to save','alert');}
 }
 
+function openEditBugModal(id){
+  const bug=bugs.find(b=>b.id===id);if(!bug)return;
+  document.getElementById('new-bug-modal').querySelector('h2').textContent='Edit Bug';
+  document.querySelector('#new-bug-modal .btn-primary').textContent='Save Changes';
+  document.querySelector('#new-bug-modal .btn-primary').onclick=()=>updateBug(id);
+  document.getElementById('f-title').value=bug.title||'';
+  document.getElementById('f-component').value=bug.component||'';
+  document.getElementById('f-desc').value=bug.description||'';
+  document.getElementById('f-steps').value=bug.steps||'';
+  document.getElementById('f-expected').value=bug.expected||'';
+  document.getElementById('f-actual').value=bug.actual||'';
+  document.getElementById('f-severity').value=bug.severity||'High';
+  document.getElementById('f-priority').value=bug.priority||'High';
+  document.getElementById('f-repro-rate').value=bug.reproRate||'';
+  document.getElementById('f-reporter').value=bug.reporter||'';
+  document.getElementById('f-project').value=bug.projectName||'—';
+  const devs=allUsers.filter(u=>u.role==='developer'&&u.status==='active');
+  const sel=document.getElementById('f-assignee');
+  sel.innerHTML='<option value="">— Unassigned —</option>'+devs.map(u=>`<option${bug.assignee===u.name?' selected':''}>${u.name}</option>`).join('');
+  document.getElementById('new-bug-modal').classList.add('open');
+}
+async function updateBug(id){
+  const title=document.getElementById('f-title').value.trim();
+  const comp=document.getElementById('f-component').value.trim();
+  if(!title||!comp){showToast('Title and Component are required','alert');return;}
+  const bug=bugs.find(b=>b.id===id);
+  const payload={title,component:comp,
+    description:document.getElementById('f-desc').value,
+    steps:document.getElementById('f-steps').value,
+    expected:document.getElementById('f-expected').value,
+    actual:document.getElementById('f-actual').value,
+    severity:document.getElementById('f-severity').value,
+    priority:document.getElementById('f-priority').value,
+    reproRate:document.getElementById('f-repro-rate').value,
+    assignee:document.getElementById('f-assignee').value,
+    audit:[...(bug.audit||[]),{who:currentUser.name,action:'Bug edited',when:new Date().toISOString(),note:''}]};
+  try{
+    await patchBug(id,payload);
+    closeModal('new-bug-modal');
+    document.getElementById('new-bug-modal').querySelector('h2').textContent='Raise New Bug';
+    document.querySelector('#new-bug-modal .btn-primary').textContent='Raise Bug';
+    document.querySelector('#new-bug-modal .btn-primary').onclick=saveBug;
+    showToast('Bug updated','success');
+  }catch(e){showToast('Failed to update','alert');}
+}
 // ── View Bug ──────────────────────────────────────────────────────────────────
 function viewBug(id){
   const bug=bugs.find(b=>b.id===id);if(!bug)return;
@@ -2175,8 +2232,8 @@ function viewBug(id){
   const role=currentUser.role;
   const canStart  =role==='developer'&&bug.status==='Open';
   const canResolve=role==='developer'&&bug.status==='In Progress';
-  const canRetest =role==='tester'&&bug.status==='Fixed';
-  const canReopen =role==='developer'&&['Wont Fix','Not a Bug','Expected Behavior','Fixed','Closed'].includes(bug.status);
+  const canRetest =role==='tester'&&(bug.status==='Resolved'||bug.status==='Fixed');
+  const canReopen =role==='developer'&&['Wont Fix','Not a Bug','Expected Behavior','Resolved','Fixed','Closed'].includes(bug.status);
   const canComment=role==='developer'||role==='tester'||role==='manager';
   const canChange =canComment; // kept for backward compat
 
@@ -2238,6 +2295,8 @@ function viewBug(id){
   footer.innerHTML='';footer.style.justifyContent='space-between';
   const left=document.createElement('div');left.style.cssText='display:flex;gap:8px';
   if(role==='tester'&&bug.reporter===currentUser.name){
+    const be=document.createElement('button');be.className='btn btn-ghost btn-sm';be.textContent='✏️ Edit';
+    be.onclick=()=>openEditBugModal(bug.id);left.appendChild(be);
     const bd=document.createElement('button');bd.className='btn btn-danger btn-sm';bd.textContent='🗑 Delete';
     bd.onclick=()=>confirmDelete(bug.id);left.appendChild(bd);
   }
@@ -2251,7 +2310,7 @@ function viewBug(id){
     wrap.innerHTML=`
       <button class="btn btn-primary btn-sm" onclick="toggleResolveMenu('${bug.id}')">Resolve ▾</button>
       <div id="resolve-menu" style="display:none;position:absolute;bottom:38px;right:0;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:170px;z-index:10;overflow:hidden">
-        <div onclick="markFixed('${bug.id}')"           style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✅ Mark Fixed</div>
+        <div onclick="markFixed('${bug.id}')"           style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✅ Mark Resolved</div>
         <div onclick="resolveAs('${bug.id}','Not a Bug')"     style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">🚫 Not a Bug</div>
         <div onclick="resolveAs('${bug.id}','Expected Behavior')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✔ Expected Behavior</div>
         <div onclick="resolveAs('${bug.id}','Wont Fix')"     style="padding:10px 14px;cursor:pointer;font-size:13px">🔕 Won't Fix</div>
@@ -2266,7 +2325,7 @@ function viewBug(id){
       <div id="reopen-menu" style="display:none;position:absolute;bottom:38px;right:0;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:180px;z-index:10;overflow:hidden">
         <div onclick="changeStatusTo('${bug.id}','Open')"       style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">🔄 Reopen as Open</div>
         <div onclick="changeStatusTo('${bug.id}','In Progress')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">▶ Set In Progress</div>
-        <div onclick="markFixed('${bug.id}')"                   style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✅ Mark Fixed</div>
+        <div onclick="markFixed('${bug.id}')"                   style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✅ Mark Resolved</div>
         <div onclick="resolveAs('${bug.id}','Not a Bug')"       style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">🚫 Not a Bug</div>
         <div onclick="resolveAs('${bug.id}','Expected Behavior')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✔ Expected Behavior</div>
         <div onclick="resolveAs('${bug.id}','Wont Fix')"        style="padding:10px 14px;cursor:pointer;font-size:13px">🔕 Won't Fix</div>
@@ -2290,8 +2349,8 @@ async function markFixed(id){
   closeResolveMenu();
   const bug=bugs.find(b=>b.id===id);
   const summary=document.getElementById('fix-summary-input')?.value||'';
-  await patchBug(id,{status:'Fixed',fixSummary:summary,audit:[...(bug.audit||[]),{who:currentUser.name,action:'Marked as Fixed',when:new Date().toISOString(),note:summary?`Fix: ${summary}`:''}]});
-  showToast('Bug marked Fixed — tester notified','success');
+  await patchBug(id,{status:'Resolved',fixSummary:summary,audit:[...(bug.audit||[]),{who:currentUser.name,action:'Marked as Resolved',when:new Date().toISOString(),note:summary?`Fix: ${summary}`:''}]});
+  showToast('Bug marked Resolved — tester notified','success');
 }
 
 function toggleResolveMenu(id){
@@ -2979,15 +3038,17 @@ async function sendMessage(convoId) {
   input.style.height = 'auto';
 
   const tempMsg = { id:'tmp'+Date.now(), senderId:currentUser.id, senderName:currentUser.name,
-    text, sentAt: new Date().toISOString() };
+    text, sentAt: new Date().toISOString(), replyTo: replyTo||null };
   msgMessages.push(tempMsg);
+  const capturedReply = replyTo;
+  clearReply();
   const area = document.getElementById('msg-messages-area');
   if (area) { area.innerHTML = renderMsgBubbles(); scrollMsgs(); }
 
   try {
     const r = await fetch(`/api/conversations/${convoId}/messages`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ senderId:currentUser.id, senderName:currentUser.name, text })
+      body: JSON.stringify({ senderId:currentUser.id, senderName:currentUser.name, text, replyTo: capturedReply||null })
     });
     const saved = await r.json();
     // Replace temp with saved (dedup: only push if not already delivered by socket)
