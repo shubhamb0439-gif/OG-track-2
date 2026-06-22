@@ -1182,7 +1182,7 @@ body { transition: background .3s ease, color .3s ease; }
         <div class="form-group"><label>Component *</label><input type="text" id="f-component" placeholder="e.g. Login"></div>
       </div>
       <div class="form-row full"><div class="form-group"><label>Description</label><textarea id="f-desc" placeholder="Detailed description..."></textarea></div></div>
-      <div class="form-row full"><div class="form-group"><label>Steps to Reproduce</label><textarea id="f-steps" placeholder="1. Go to...&#10;2. Click...&#10;3. Observe..." onkeydown="handleStepsKeydown(event,this)"></textarea></div></div>
+      <div class="form-row full"><div class="form-group"><label>Steps to Reproduce</label><textarea id="f-steps" placeholder="1. Go to...&#10;2. Click...&#10;3. Observe..." onkeydown="handleStepsKeydown(event,this)" onpaste="handleStepsPaste(event,this)"></textarea></div></div>
       <div class="form-row">
         <div class="form-group"><label>Expected</label><input type="text" id="f-expected"></div>
         <div class="form-group"><label>Actual</label><input type="text" id="f-actual"></div>
@@ -2190,6 +2190,28 @@ function openNewBugModal(){
   const sel=document.getElementById('f-assignee');
   sel.innerHTML='<option value="">— Unassigned —</option>'+devs.map(u=>`<option>${u.name}</option>`).join('');
   document.getElementById('new-bug-modal').classList.add('open');
+}
+function handleStepsPaste(e,ta){
+  e.preventDefault();
+  const raw=(e.clipboardData||window.clipboardData).getData('text');
+  // Split on newlines; also split on sentence-ending punctuation followed by a capital (e.g. "Step one. Step two")
+  const lines=raw.split(/\r?\n/).flatMap(l=>{
+    // If a line has no newlines but contains ". " between sentences, keep as-is (user may want it on one line)
+    return l.trim();
+  }).filter(l=>l.length>0);
+  // Strip existing leading numbers/bullets so we can re-number cleanly
+  const cleaned=lines.map(l=>l.replace(/^[\s]*(\d+[\.\)]\s*|[-•*]\s*)/,'').trim()).filter(l=>l);
+  // Find the step number to continue from (based on text already in textarea before cursor)
+  const before=ta.value.substring(0,ta.selectionStart);
+  const existingLines=before.split('\n').filter(l=>l.trim());
+  const lastMatch=existingLines.length?existingLines[existingLines.length-1].match(/^(\d+)[\.\)]/):null;
+  let counter=lastMatch?parseInt(lastMatch[1])+1:1;
+  const numbered=cleaned.map(l=>`${counter++}. ${l}`).join('\n');
+  const after=ta.value.substring(ta.selectionEnd);
+  ta.value=(before&&!before.endsWith('\n')&&cleaned.length?before+'\n':before)+numbered+(after?'\n'+after.replace(/^\n/,''):after);
+  // Place cursor at end of inserted text
+  const newPos=(before&&!before.endsWith('\n')&&cleaned.length?before.length+1:before.length)+numbered.length;
+  ta.selectionStart=ta.selectionEnd=newPos;
 }
 function handleStepsKeydown(e,ta){
   if(e.key==='Enter'&&e.shiftKey){
