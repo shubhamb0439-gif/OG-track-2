@@ -308,6 +308,7 @@ tr:hover td{background:#fafafa;}tr[onclick]{cursor:pointer;}tr[onclick]:hover td
 .acc-eod-review-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;}
 .acc-eod-review-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
 .acc-eod-review-body{border-top:1px solid var(--border);padding-top:8px;}
+.role-badge.role-accounts_manager{background:#2c3e5022;color:#2C3E50;}
 .role-badge.role-senior_accountant{background:#8e44ad22;color:#8E44AD;}
 .role-badge.role-accountant{background:#16a08522;color:#16A085;}
 .form-group textarea{resize:vertical;min-height:70px;}
@@ -1114,7 +1115,7 @@ body { transition: background .3s ease, color .3s ease; }
       <div class="field"><label>Full Name</label><input type="text" id="r-name" placeholder="Your name"></div>
       <div class="field"><label>Email</label><input type="email" id="r-email" placeholder="you@example.com"></div>
       <div class="field"><label>Password</label><input type="password" id="r-pass" placeholder="Min 6 characters"></div>
-      <div class="field"><label>Role</label><select id="r-role"><option value="developer">Developer</option><option value="tester">Tester</option><option value="manager">Manager</option><option value="accountant">Accountant</option><option value="senior_accountant">Senior Accountant</option></select></div>
+      <div class="field"><label>Role</label><select id="r-role"><option value="developer">Developer</option><option value="tester">Tester</option><option value="manager">Manager</option><option value="accountant">Accountant</option><option value="senior_accountant">Senior Accountant</option><option value="accounts_manager">Accounts Manager</option></select></div>
       <button class="auth-btn" onclick="doRegister()">Request Access</button>
       <div class="pending-msg" id="pending-msg">✅ Registration submitted! Pending Super Admin approval.</div>
     </div>
@@ -1290,19 +1291,20 @@ body { transition: background .3s ease, color .3s ease; }
   </div>
 </div>
 
-<!-- Stop Timer Modal -->
-<div class="modal-overlay" id="stop-timer-modal">
+<!-- Start Timer Modal -->
+<div class="modal-overlay" id="start-timer-modal">
   <div class="modal" style="max-width:420px">
-    <div class="modal-header"><h2>Stop Timer</h2><button class="modal-close" onclick="closeModal('stop-timer-modal')">×</button></div>
+    <div class="modal-header"><h2 id="start-timer-title">Start Timer</h2><button class="modal-close" onclick="closeModal('start-timer-modal')">×</button></div>
     <div class="modal-body">
+      <div style="font-size:13px;color:var(--g3);margin-bottom:12px" id="start-timer-client-label"></div>
       <div class="form-group">
-        <label>What did you do for this client? *</label>
-        <textarea id="stop-note-input" placeholder="e.g. Reviewed Q3 invoices, reconciled bank statements..." style="min-height:90px"></textarea>
+        <label>What are you working on? *</label>
+        <textarea id="start-note-input" placeholder="e.g. Reviewing Q3 invoices, reconciling bank statements..." style="min-height:90px"></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('stop-timer-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="confirmStopTimer()">Save &amp; Stop</button>
+      <button class="btn btn-ghost" onclick="closeModal('start-timer-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmStartTimer()">▶ Start Timer</button>
     </div>
   </div>
 </div>
@@ -1590,7 +1592,7 @@ async function launchApp(){
   buildSidebar();
   // Show project switcher bar only for bug-tracker roles
   const projBar=document.getElementById('sidebar-project-bar');
-  const _hideBar=currentUser.role==='superadmin'||currentUser.role==='senior_accountant'||currentUser.role==='accountant';
+  const _hideBar=currentUser.role==='superadmin'||currentUser.role==='accounts_manager'||currentUser.role==='senior_accountant'||currentUser.role==='accountant';
   if(projBar) projBar.style.display=_hideBar?'none':'block';
   connectSocket();
   requestNotifPermission();
@@ -1600,7 +1602,7 @@ async function launchApp(){
     localStorage.setItem('bt_project',JSON.stringify(currentProject));
     document.getElementById('main-app').style.display='flex';
     await loadBugs();
-  } else if(currentUser.role==='senior_accountant'||currentUser.role==='accountant'){
+  } else if(currentUser.role==='accounts_manager'||currentUser.role==='senior_accountant'||currentUser.role==='accountant'){
     currentProject={id:'__acc__',name:'Accounting'};
     localStorage.setItem('bt_project',JSON.stringify(currentProject));
     document.getElementById('new-bug-btn').style.display='none';
@@ -1630,7 +1632,7 @@ async function launchApp(){
 
 function buildSidebar(){
   const role=currentUser.role;
-  const BUILTIN_ROLES=['superadmin','manager','developer','tester','senior_accountant','accountant'];
+  const BUILTIN_ROLES=['superadmin','manager','developer','tester','senior_accountant','accountant','accounts_manager'];
   let navItems;
   if(BUILTIN_ROLES.includes(role)){
     const items={
@@ -1638,6 +1640,7 @@ function buildSidebar(){
       manager:          [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['summary','Team Summary','#D0D0D0'],['bugs','All Bugs','#4A4A4A'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
       tester:           [['dashboard','Dashboard','var(--red2)'],['bugs','All Bugs','#7F7F7F'],['mybugs','My Bugs','#D0D0D0'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
       developer:        [['dashboard','Dashboard','var(--red2)'],['mybugs','My Bugs','#7F7F7F'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      accounts_manager: [['dashboard','Dashboard','var(--red2)'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
       senior_accountant:[['dashboard','Dashboard','var(--red2)'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
       accountant:       [['dashboard','Dashboard','var(--red2)'],['acc_clients','My Clients','#16A085'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Report','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
     };
@@ -1793,7 +1796,7 @@ function renderView(){
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 function renderDashboard(){
   const role=currentUser.role;
-  if(role==='senior_accountant'||role==='accountant') return renderAccDashboard();
+  if(role==='accounts_manager'||role==='senior_accountant'||role==='accountant') return renderAccDashboard();
   let base=bugs;
   if(role==='developer') base=bugs.filter(b=>b.assignee===currentUser.name);
   if(role==='tester')    base=bugs.filter(b=>b.reporter===currentUser.name);
@@ -2208,7 +2211,7 @@ function renderManagerSummary(){
 // ── Admin ─────────────────────────────────────────────────────────────────────
 function renderAdmin(){
   const users=allUsers.filter(u=>u.role!=='superadmin');
-  const builtinRoles=['manager','developer','tester','senior_accountant','accountant'];
+  const builtinRoles=['manager','developer','tester','accounts_manager','senior_accountant','accountant'];
   const customRoleOpts=allCustomRoles.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
   const allRoleOpts=builtinRoles.map(r=>`<option value="${r}">${r}</option>`).join('')+customRoleOpts;
   const rows=users.map(u=>{
@@ -4076,7 +4079,7 @@ function renderAccDashboard(){
   if(running) totalSecs+=Math.floor((Date.now()-new Date(running.startTime).getTime())/1000);
   const myClients=accClients.filter(c=>(c.assignedTo||[]).includes(currentUser.name));
   let html='';
-  if(role==='senior_accountant'){
+  if(role==='accounts_manager'||role==='senior_accountant'){
     const pending=accEodReports.filter(r=>r.status==='submitted');
     const reviewedToday=accEodReports.filter(r=>r.status==='reviewed'&&r.date===today);
     const accountants=allUsers.filter(u=>u.role==='accountant'&&u.status==='active');
@@ -4125,6 +4128,7 @@ function renderAccClients(){
   const role=currentUser.role;
   const myClients=accClients.filter(c=>(c.assignedTo||[]).includes(currentUser.name));
   const otherClients=accClients.filter(c=>!(c.assignedTo||[]).includes(currentUser.name));
+  const isSenior=role==='accounts_manager'||role==='senior_accountant';
   const card=(c,isMine)=>`<div class="acc-client-card">
     <div class="acc-client-header">
       <span class="acc-client-name">${c.name}</span>
@@ -4134,10 +4138,10 @@ function renderAccClients(){
     <div class="acc-client-meta">👤 ${(c.assignedTo||[]).join(', ')||'Unassigned'}</div>
     <div class="acc-client-actions">
       ${isMine?`
-        <button class="action-btn" onclick="startTimerForClient('${c.id}','${c.name.replace(/'/g,'\\'+'\'').replace(/"/g,'&quot;')}')">⏱ Start Timer</button>
+        <button class="action-btn" onclick="openStartTimerModal('${c.id}','${c.name.replace(/'/g,'\\'+'\'').replace(/"/g,'&quot;')}')">⏱ Start Timer</button>
         <button class="action-btn" onclick="removeFromClient('${c.id}')">✕ Remove Me</button>
       `:`<button class="action-btn" style="color:var(--red);border-color:var(--red)" onclick="pickClient('${c.id}')">+ Pick Up</button>`}
-      ${role==='senior_accountant'?`
+      ${isSenior?`
         <button class="action-btn" onclick="openClientModal('${c.id}')">Edit</button>
         <button class="action-btn" style="color:var(--red)" onclick="deleteClient('${c.id}')">Delete</button>
       `:''}
@@ -4146,7 +4150,7 @@ function renderAccClients(){
   document.getElementById('content-area').innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h2 style="margin:0;font-size:18px">Clients</h2>
-      ${role==='senior_accountant'?`<button class="btn-primary" onclick="openClientModal()">+ Add Client</button>`:''}
+      ${isSenior?`<button class="btn-primary" onclick="openClientModal()">+ Add Client</button>`:''}
     </div>
     <h3 style="font-size:12px;font-weight:600;color:var(--g3);margin:0 0 10px;text-transform:uppercase;letter-spacing:.5px">MY CLIENTS (${myClients.length})</h3>
     ${myClients.length?`<div class="acc-cards-grid">${myClients.map(c=>card(c,true)).join('')}</div>`:
@@ -4155,7 +4159,7 @@ function renderAccClients(){
       <h3 style="font-size:12px;font-weight:600;color:var(--g3);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.5px">AVAILABLE CLIENTS (${otherClients.length})</h3>
       <div class="acc-cards-grid">${otherClients.map(c=>card(c,false)).join('')}</div>
     `:''}
-    ${!myClients.length&&!otherClients.length?`<div class="empty-state"><p>${role==='senior_accountant'?'No clients yet. Add your first client above.':'No clients available.'}</p></div>`:''}
+    ${!myClients.length&&!otherClients.length?`<div class="empty-state"><p>${isSenior?'No clients yet. Add your first client above.':'No clients available.'}</p></div>`:''}
   `;
 }
 
@@ -4178,14 +4182,17 @@ function renderAccTimer(){
       </div>`:''}
     </div>
     ${running?`<div class="acc-running-card">
-      <div class="acc-running-left">
-        <div class="acc-pulse"></div>
-        <div><div style="font-weight:700;font-size:16px">${running.clientName}</div>
-          <div style="font-size:12px;color:var(--g3)">Started ${fmtTime(running.startTime)}</div></div>
-      </div>
-      <div style="text-align:right">
-        <div id="live-timer-display" style="font-size:30px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums">—</div>
-        <button class="btn-primary" style="margin-top:6px" onclick="openStopTimerModal('${running.id}')">⏹ Stop &amp; Note</button>
+      <div style="width:100%">
+        <div class="acc-running-left" style="margin-bottom:8px">
+          <div class="acc-pulse"></div>
+          <div><div style="font-weight:700;font-size:16px">${running.clientName}</div>
+            <div style="font-size:12px;color:var(--g3)">Started ${fmtTime(running.startTime)}</div></div>
+          <div style="margin-left:auto;text-align:right">
+            <div id="live-timer-display" style="font-size:28px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums">—</div>
+          </div>
+        </div>
+        ${running.note?`<div style="font-size:13px;padding:8px 10px;background:rgba(0,0,0,.04);border-radius:7px;color:var(--g2);margin-bottom:10px">📝 ${running.note}</div>`:''}
+        <button class="btn-primary" style="background:var(--g2)" onclick="stopTimer('${running.id}')">⏹ Stop Timer</button>
       </div>
     </div>`:`<div class="acc-no-timer">
       <span style="font-size:32px">⏱</span>
@@ -4209,7 +4216,7 @@ function renderAccTimer(){
 // ── EOD Report Page ───────────────────────────────────────────────────────────
 function renderAccEod(){
   const role=currentUser.role;
-  if(role==='senior_accountant') renderSeniorEod(); else renderAccountantEod();
+  if(role==='accounts_manager'||role==='senior_accountant') renderSeniorEod(); else renderAccountantEod();
 }
 
 function renderAccountantEod(){
@@ -4358,12 +4365,12 @@ function openClientModal(id){
   document.getElementById('cm-name').value=c?.name||'';
   document.getElementById('cm-desc').value=c?.description||'';
   document.getElementById('cm-industry').value=c?.industry||'';
-  const accs=allUsers.filter(u=>(u.role==='accountant'||u.role==='senior_accountant')&&u.status==='active');
+  const accs=allUsers.filter(u=>(u.role==='accountant'||u.role==='senior_accountant'||u.role==='accounts_manager')&&u.status==='active');
   const assigned=c?.assignedTo||[];
   document.getElementById('cm-assign').innerHTML=accs.length?
     accs.map((u,i)=>`<label class="ms-option" for="cm-a${i}">
       <input type="checkbox" id="cm-a${i}" value="${u.name}" ${assigned.includes(u.name)?'checked':''}>
-      <span>${u.name} <span style="font-size:11px;color:var(--g3)">(${u.role==='senior_accountant'?'Senior':'Accountant'})</span></span>
+      <span>${u.name} <span style="font-size:11px;color:var(--g3)">(${u.role==='accounts_manager'?'Accounts Manager':u.role==='senior_accountant'?'Senior':'Accountant'})</span></span>
     </label>`).join(''):
     '<div style="font-size:12px;color:var(--g3);padding:8px">No accountants registered yet</div>';
   document.getElementById('client-modal').classList.add('open');
@@ -4422,45 +4429,50 @@ async function removeFromClient(id){
 }
 
 // ── Timer controls ────────────────────────────────────────────────────────────
-async function startTimerForClient(clientId,clientName){
-  const running=getRunningEntry();
-  if(running){showToast('Stop your current timer first','alert');return;}
-  const entry={clientId,clientName,accountantId:currentUser.id,accountantName:currentUser.name,
-    date:todayStr(),startTime:new Date().toISOString(),endTime:null,duration:null,note:'',status:'in-progress'};
+let pendingTimerClientId=null, pendingTimerClientName=null;
+
+function openStartTimerModal(clientId,clientName){
+  if(getRunningEntry()){showToast('Stop your current timer first','alert');return;}
+  pendingTimerClientId=clientId;
+  pendingTimerClientName=clientName;
+  document.getElementById('start-timer-title').textContent='Start Timer — '+clientName;
+  document.getElementById('start-timer-client-label').textContent='Client: '+clientName;
+  document.getElementById('start-note-input').value='';
+  document.getElementById('start-timer-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('start-note-input').focus(),100);
+}
+
+async function confirmStartTimer(){
+  const note=document.getElementById('start-note-input').value.trim();
+  if(!note){showToast('Please describe what you are working on','alert');return;}
+  if(!pendingTimerClientId)return;
+  const entry={clientId:pendingTimerClientId,clientName:pendingTimerClientName,
+    accountantId:currentUser.id,accountantName:currentUser.name,
+    date:todayStr(),startTime:new Date().toISOString(),endTime:null,duration:null,note,status:'in-progress'};
   const r=await fetch('/api/time-entries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)});
   const saved=await r.json();
   accTimeEntries.push(saved);
-  showToast('Timer started for '+clientName,'success');
+  closeModal('start-timer-modal');
+  pendingTimerClientId=null; pendingTimerClientName=null;
+  showToast('Timer started — '+saved.clientName,'success');
   showView('acc_timer');
 }
 
-async function startTimer(){
+function startTimer(){
   const sel=document.getElementById('timer-client-sel');
   if(!sel||!sel.value){showToast('Select a client first','alert');return;}
   const opt=sel.options[sel.selectedIndex];
-  await startTimerForClient(sel.value,opt.dataset.name||opt.text);
+  openStartTimerModal(sel.value,opt.dataset.name||opt.text);
 }
 
-function openStopTimerModal(entryId){
-  stoppingEntryId=entryId;
-  document.getElementById('stop-note-input').value='';
-  document.getElementById('stop-timer-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('stop-note-input').focus(),100);
-}
-
-async function confirmStopTimer(){
-  if(!stoppingEntryId)return;
-  const entry=accTimeEntries.find(e=>e.id===stoppingEntryId);if(!entry)return;
-  const note=document.getElementById('stop-note-input').value.trim();
-  if(!note){showToast('Please add a note about what you did','alert');return;}
+async function stopTimer(entryId){
+  const entry=accTimeEntries.find(e=>e.id===entryId);if(!entry)return;
   const endTime=new Date().toISOString();
   const duration=Math.max(1,Math.floor((new Date(endTime)-new Date(entry.startTime))/1000));
-  const r=await fetch('/api/time-entries/'+stoppingEntryId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({endTime,duration,note,status:'completed'})});
+  const r=await fetch('/api/time-entries/'+entryId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({endTime,duration,status:'completed'})});
   const saved=await r.json();
-  accTimeEntries=accTimeEntries.map(e=>e.id===stoppingEntryId?saved:e);
+  accTimeEntries=accTimeEntries.map(e=>e.id===entryId?saved:e);
   clearInterval(accTimerInterval);
-  closeModal('stop-timer-modal');
-  stoppingEntryId=null;
   showToast('Session saved ('+fmtDuration(duration)+') ✓','success');
   renderAccTimer();
 }
