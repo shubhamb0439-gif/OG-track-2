@@ -710,7 +710,20 @@ app.get('/api/stories', async (req, res) => {
 });
 app.post('/api/stories', async (req, res) => {
   try {
-    const data = { ...req.body, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const { projectId } = req.body;
+    let shortCode = 'ST';
+    if (projectId) {
+      const pDoc = await db.collection('projects').doc(projectId).get();
+      if (pDoc.exists && pDoc.data().shortCode) shortCode = pDoc.data().shortCode;
+    }
+    const counterRef = db.collection('meta').doc('story_counter_' + shortCode);
+    const storyId = await db.runTransaction(async t => {
+      const doc = await t.get(counterRef);
+      const next = doc.exists ? doc.data().count + 1 : 1;
+      t.set(counterRef, { count: next });
+      return shortCode + '-S' + String(next).padStart(3, '0');
+    });
+    const data = { ...req.body, storyId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     const ref = await db.collection('stories').add(data);
     res.json({ id: ref.id, ...data });
   } catch(e) { res.status(500).json({ error: e.message }); }

@@ -4813,10 +4813,17 @@ async function renderSprints(){
   _renderSprintList();
 }
 
+function bugBoardCol(b){
+  if(['Resolved','Fixed','Closed',"Won't Fix",'NAB'].includes(b.status)) return 'done';
+  if(b.status==='In Progress') return 'in_progress';
+  return 'todo';
+}
+
 function _sprintProgress(sprintId){
   const ss=stories.filter(s=>s.sprintId===sprintId);
-  const done=ss.filter(s=>s.status==='done').length;
-  const total=ss.length;
+  const sb=bugs.filter(b=>b.sprintId===sprintId);
+  const done=ss.filter(s=>s.status==='done').length+sb.filter(b=>bugBoardCol(b)==='done').length;
+  const total=ss.length+sb.length;
   const pct=total>0?Math.round(done/total*100):0;
   const clr=pct>=75?'#27AE60':pct>=40?'#F39C12':'#E74C3C';
   return {done,total,pct,clr};
@@ -4846,7 +4853,7 @@ function _renderSprintList(){
         <button class="btn" style="background:#fff;color:#C0392B;font-weight:700;padding:8px 18px" onclick="_boardSprintId='${active.id}';_sprintSubview='board';renderSprints()">View Board →</button>
       </div>
       ${active.goal?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.25);font-size:13px;opacity:.85">🎯 ${active.goal}</div>`:''}
-      ${(()=>{const {done,total,pct,clr}=_sprintProgress(active.id);return total>0?`<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;opacity:.8;margin-bottom:5px"><span>${done}/${total} stories done</span><span>${pct}%</span></div><div class="sprint-progress-bar" style="background:rgba(255,255,255,.2)"><div class="sprint-progress-fill" style="width:${pct}%;background:#fff"></div></div></div>`:'';})()}
+      ${(()=>{const {done,total,pct,clr}=_sprintProgress(active.id);return total>0?`<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;opacity:.8;margin-bottom:5px"><span>${done}/${total} items done</span><span>${pct}%</span></div><div class="sprint-progress-bar" style="background:rgba(255,255,255,.2)"><div class="sprint-progress-fill" style="width:${pct}%;background:#fff"></div></div></div>`:'';})()}
     </div>`:''}
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <button class="btn btn-ghost" style="${_sprintSubview!=='backlog'?'background:var(--red);color:#fff;border-color:var(--red)':''}" onclick="_sprintSubview='list';renderSprints()">All Sprints (${sprints.length})</button>
@@ -4874,12 +4881,30 @@ function _renderSprintList(){
               ${isManager?`<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSprint('${sp.id}')">✕</button>`:''}
             </div>
           </div>
-          ${total>0?`<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--g3);margin-bottom:4px"><span>${done}/${total} stories · ${total-done} remaining</span><span style="color:${clr};font-weight:600">${pct}%</span></div><div class="sprint-progress-bar"><div class="sprint-progress-fill" style="width:${pct}%;background:${clr}"></div></div></div>`:
-          `<div style="font-size:12px;color:var(--g3);margin-top:10px">No stories added yet</div>`}
+          ${total>0?`<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--g3);margin-bottom:4px"><span>${done}/${total} items · ${total-done} remaining</span><span style="color:${clr};font-weight:600">${pct}%</span></div><div class="sprint-progress-bar"><div class="sprint-progress-fill" style="width:${pct}%;background:${clr}"></div></div></div>`:
+          `<div style="font-size:12px;color:var(--g3);margin-top:10px">No items added yet</div>`}
         </div>`;
       }).join('')}
     </div>`}
   `;
+}
+
+function _bugCard(b,isManager){
+  return `<div class="story-card" style="border-left:3px solid var(--red)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:10px;background:#e74c3c22;color:#E74C3C;padding:2px 8px;border-radius:10px;font-weight:700;letter-spacing:.5px">BUG</span>
+      <span style="font-size:11px;color:var(--g3);font-weight:600">${b.id}</span>
+    </div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:4px">${b.title}</div>
+    ${b.severity?`<div style="font-size:11px;color:var(--g3);margin-bottom:4px">${b.severity}</div>`:''}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+      <span style="font-size:11px;color:var(--g3)">${b.assignee||'Unassigned'}</span>
+      <div style="display:flex;gap:4px">
+        <button onclick="currentView='bugs';currentBug='${b.id}';renderView()" class="story-move-btn" title="View bug">👁</button>
+        ${isManager?`<button onclick="unlinkBugFromSprint('${b.id}')" class="story-move-btn" style="color:var(--red)" title="Remove from sprint">✕</button>`:''}
+      </div>
+    </div>
+  </div>`;
 }
 
 function _renderBoard(){
@@ -4888,6 +4913,7 @@ function _renderBoard(){
   const role=currentUser.role;
   const isManager=role==='manager'||role==='superadmin';
   const ss=stories.filter(s=>s.sprintId===_boardSprintId);
+  const sb=bugs.filter(b=>b.sprintId===_boardSprintId);
   const cols=[{key:'todo',label:'To Do',color:'#6c757d'},{key:'in_progress',label:'In Progress',color:'#F39C12'},{key:'done',label:'Done',color:'#27AE60'}];
   const {done,total,pct,clr}=_sprintProgress(_boardSprintId);
   document.getElementById('content-area').innerHTML=`
@@ -4899,17 +4925,33 @@ function _renderBoard(){
       ${isManager?`<button class="btn btn-primary btn-sm" onclick="openStoryModal('${_boardSprintId}')">+ Add Story</button>`:''}
     </div>
     ${sprint.goal?`<div style="font-size:13px;color:var(--g3);margin-bottom:8px">🎯 ${sprint.goal}</div>`:''}
-    ${total>0?`<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--g3);margin-bottom:4px"><span>${done}/${total} stories done</span><span style="color:${clr};font-weight:600">${pct}%</span></div><div class="sprint-progress-bar"><div class="sprint-progress-fill" style="width:${pct}%;background:${clr}"></div></div></div>`:''}
+    ${total>0?`<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--g3);margin-bottom:4px"><span>${done}/${total} items done</span><span style="color:${clr};font-weight:600">${pct}%</span></div><div class="sprint-progress-bar"><div class="sprint-progress-fill" style="width:${pct}%;background:${clr}"></div></div></div>`:''}
     <div class="sprint-board">
       ${cols.map(col=>{
         const colStories=ss.filter(s=>s.status===col.key);
+        const colBugs=sb.filter(b=>bugBoardCol(b)===col.key);
+        const count=colStories.length+colBugs.length;
         return `<div class="sprint-col">
-          <div class="sprint-col-header" style="color:${col.color}">${col.label} <span style="background:var(--border);color:var(--g2);padding:1px 7px;border-radius:10px;font-size:11px">${colStories.length}</span></div>
+          <div class="sprint-col-header" style="color:${col.color}">${col.label} <span style="background:var(--border);color:var(--g2);padding:1px 7px;border-radius:10px;font-size:11px">${count}</span></div>
           ${colStories.map(s=>_storyCard(s,isManager)).join('')}
-          ${!colStories.length?`<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--g3)">No stories</div>`:''}
+          ${colBugs.map(b=>_bugCard(b,isManager)).join('')}
+          ${!count?`<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--g3)">Empty</div>`:''}
         </div>`;
       }).join('')}
     </div>
+    ${isManager?`<div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
+      <div style="font-size:13px;font-weight:600;color:var(--g2);margin-bottom:10px">Link Existing Items to Sprint</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:6px;flex:1;min-width:220px">
+          <input id="link-bug-id" placeholder="Bug ID (e.g. XR-001)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white);color:var(--text)" onkeydown="if(event.key==='Enter')linkBugToSprint('${_boardSprintId}')">
+          <button class="btn btn-ghost" onclick="linkBugToSprint('${_boardSprintId}')">+ Bug</button>
+        </div>
+        <div style="display:flex;gap:6px;flex:1;min-width:220px">
+          <input id="link-story-id" placeholder="Story ID (e.g. XR-S001)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white);color:var(--text)" onkeydown="if(event.key==='Enter')linkStoryToSprint('${_boardSprintId}')">
+          <button class="btn btn-ghost" onclick="linkStoryToSprint('${_boardSprintId}')">+ Story</button>
+        </div>
+      </div>
+    </div>`:''}
   `;
 }
 
@@ -4956,7 +4998,10 @@ function _storyCard(s,isManager){
   return `<div class="story-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
       <span class="story-pri ${s.priority}">${s.priority}</span>
-      <span class="story-pts">${s.points}pt</span>
+      <div style="display:flex;align-items:center;gap:5px">
+        ${s.storyId?`<span style="font-size:10px;color:var(--g3);font-weight:600">${s.storyId}</span>`:''}
+        <span class="story-pts">${s.points}pt</span>
+      </div>
     </div>
     <div style="font-weight:600;font-size:13px;margin-bottom:4px">${s.title}</div>
     ${s.description?`<div style="font-size:12px;color:var(--g3);margin-bottom:6px;line-height:1.4">${s.description.substring(0,80)}${s.description.length>80?'…':''}</div>`:''}
@@ -4964,11 +5009,57 @@ function _storyCard(s,isManager){
       <span style="font-size:11px;color:var(--g3)">${s.assigneeName?'@'+s.assigneeName:'Unassigned'}</span>
       <div style="display:flex;gap:4px">
         ${isManager?`<button class="btn btn-ghost btn-sm" style="padding:2px 7px;font-size:11px" onclick="openStoryModal('${s.sprintId||''}','${s.id}')">Edit</button>`:''}
+        ${isManager&&s.sprintId?`<button class="story-move-btn" style="color:var(--red)" title="Remove from sprint" onclick="unlinkStoryFromSprint('${s.id}')">✕</button>`:''}
         ${idx>0?`<button class="story-move-btn" title="Move left" onclick="updateStoryStatus('${s.id}','${statusOrder[idx-1]}')">←</button>`:''}
         ${idx<2?`<button class="story-move-btn" title="Move right" onclick="updateStoryStatus('${s.id}','${statusOrder[idx+1]}')">→</button>`:''}
       </div>
     </div>
   </div>`;
+}
+
+// ── Link/Unlink Bugs & Stories to Sprint ─────────────────────────────────────
+async function linkBugToSprint(sprintId){
+  const input=document.getElementById('link-bug-id');
+  const bugId=(input.value||'').trim().toUpperCase();
+  if(!bugId){showToast('Enter a bug ID','alert');return;}
+  const bug=bugs.find(b=>b.id===bugId);
+  if(!bug){showToast(`Bug "${bugId}" not found in this project`,'alert');return;}
+  if(bug.sprintId===sprintId){showToast('Bug is already in this sprint','alert');return;}
+  await fetch('/api/bugs/'+bugId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({sprintId})});
+  bugs=bugs.map(b=>b.id===bugId?{...b,sprintId}:b);
+  input.value='';
+  showToast('Bug linked to sprint','success');
+  _renderBoard();
+}
+
+async function unlinkBugFromSprint(bugId){
+  await fetch('/api/bugs/'+bugId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({sprintId:null})});
+  bugs=bugs.map(b=>b.id===bugId?{...b,sprintId:null}:b);
+  showToast('Bug removed from sprint','success');
+  _renderBoard();
+}
+
+async function linkStoryToSprint(sprintId){
+  const input=document.getElementById('link-story-id');
+  const sid=(input.value||'').trim().toUpperCase();
+  if(!sid){showToast('Enter a story ID','alert');return;}
+  const story=stories.find(s=>s.storyId===sid);
+  if(!story){showToast(`Story "${sid}" not found`,'alert');return;}
+  if(story.sprintId===sprintId){showToast('Story is already in this sprint','alert');return;}
+  const r=await fetch('/api/stories/'+story.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({sprintId})});
+  const saved=await r.json();
+  stories=stories.map(s=>s.id===story.id?{...s,...saved}:s);
+  input.value='';
+  showToast('Story linked to sprint','success');
+  _renderBoard();
+}
+
+async function unlinkStoryFromSprint(storyId){
+  const r=await fetch('/api/stories/'+storyId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({sprintId:null})});
+  const saved=await r.json();
+  stories=stories.map(s=>s.id===storyId?{...s,...saved}:s);
+  showToast('Story removed from sprint','success');
+  _renderBoard();
 }
 
 // ── Sprint CRUD ───────────────────────────────────────────────────────────────
