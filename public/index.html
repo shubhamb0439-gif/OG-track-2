@@ -1863,14 +1863,13 @@ async function loadBugs(){
   renderView();
 }
 
-function showProjectPicker(){
+async function showProjectPicker(){
   const role=currentUser.role;
-  // Filter projects this user is a member of
   const myProjects=allProjects.filter(p=>{
-    if(role==='manager')   return (p.managers||[]).includes(currentUser.name);
-    if(role==='developer') return (p.developers||[]).includes(currentUser.name);
-    if(role==='tester')    return (p.testers||[]).includes(currentUser.name);
-    return false;
+    if(role==='superadmin') return true;
+    return (p.managers||[]).includes(currentUser.name)||
+           (p.developers||[]).includes(currentUser.name)||
+           (p.testers||[]).includes(currentUser.name);
   });
 
   document.getElementById('picker-sub').textContent=`Hello ${currentUser.name} — pick a project to work in`;
@@ -1883,30 +1882,46 @@ function showProjectPicker(){
       <div style="font-size:13px">Ask your ${role==='manager'?'Super Admin':'Manager'} to assign you to a project.</div>
     </div>`;
   } else {
-    el.innerHTML=myProjects.map(p=>{
-      // Get bug counts from already-loaded bugs or show 0
-      const pb=bugs.filter(b=>b.projectId===p.id);
-      const open=pb.filter(b=>b.status==='Open').length;
-      return `<div class="picker-item" onclick="selectProject('${p.id}')">
-        <div>
-          <div class="pname">${p.name}</div>
-          <div class="pmeta">${p.description||'No description'}</div>
-        </div>
-        <div class="picker-badges">
-          ${open?`<span class="pb-open">${open} open</span>`:''}
-          <span class="pb-total">${pb.length} total</span>
-        </div>
-      </div>`;
-    }).join('');
+    // Render immediately with loading spinners for counts
+    el.innerHTML=myProjects.map(p=>`<div class="picker-item" onclick="selectProject('${p.id}')">
+      <div>
+        <div class="pname">${p.name}</div>
+        <div class="pmeta">${p.description||'No description'}</div>
+      </div>
+      <div class="picker-badges" id="pcb-${p.id}">
+        <span style="font-size:11px;color:var(--g3)">…</span>
+      </div>
+    </div>`).join('');
+
+    // Fetch real counts from server (single scan, not N queries)
+    try {
+      const counts=await fetch('/api/bugs/counts').then(r=>r.json());
+      myProjects.forEach(p=>{
+        const el2=document.getElementById('pcb-'+p.id);
+        if(!el2)return;
+        const c=counts[p.id]||{total:0,open:0};
+        el2.innerHTML=(c.open?`<span class="pb-open">${c.open} open</span>`:'')+
+          `<span class="pb-total">${c.total} total</span>`;
+      });
+    } catch(e){
+      // fallback: use in-memory bugs if fetch fails
+      myProjects.forEach(p=>{
+        const el2=document.getElementById('pcb-'+p.id);
+        if(!el2)return;
+        const pb=bugs.filter(b=>b.projectId===p.id);
+        const open=pb.filter(b=>!['Resolved','Fixed','Closed',"Won't Fix",'Wont Fix','Not a Bug','Expected Behavior','NAB'].includes(b.status)).length;
+        el2.innerHTML=(open?`<span class="pb-open">${open} open</span>`:'')+
+          `<span class="pb-total">${pb.length} total</span>`;
+      });
+    }
   }
 
-  const ps = document.getElementById('picker-screen');
-  ps.style.display = 'flex';
-  // Re-trigger card animation each time
-  const card = ps.querySelector('div');
-  if (card) { card.style.animation='none'; void card.offsetHeight; card.style.animation=''; }
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('auth-screen').style.display = 'none';
+  const ps=document.getElementById('picker-screen');
+  ps.style.display='flex';
+  const card=ps.querySelector('div');
+  if(card){card.style.animation='none';void card.offsetHeight;card.style.animation='';}
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('auth-screen').style.display='none';
 }
 
 async function selectProject(id){
@@ -2757,18 +2772,26 @@ function viewBug(id){
   openDetailId=id;
   document.getElementById('detail-title').textContent=`${id}`;
   const role=currentUser.role;
+  const isSuperAdmin=role==='superadmin';
+  // Look up this bug's project to check assignment lists
+  const bugProject=allProjects.find(p=>p.id===bug.projectId);
   const isAssignee=bug.assignee===currentUser.name;
   const isReporter=bug.reporter===currentUser.name;
-  const isMgr=role==='manager'||role==='superadmin';
-  // Dev-capable: assigned to this bug, OR has developer/manager/superadmin role
-  const isDevCapable=role==='developer'||isMgr||isAssignee;
-  // Tester-capable: reporter of this bug, OR has tester/manager/superadmin role
-  const isTesterCapable=role==='tester'||isMgr||isReporter;
+  // Project-level roles (what this user does ON this project, regardless of account role)
+  const isProjectDev=(bugProject?.developers||[]).includes(currentUser.name);
+  const isProjectTester=(bugProject?.testers||[]).includes(currentUser.name);
+  const isProjectManager=(bugProject?.managers||[]).includes(currentUser.name);
+  // Dev actions: assigned as dev on the project, OR is the assignee of this specific bug
+  const isDevCapable=isSuperAdmin||isProjectDev||isAssignee;
+  // Tester actions: assigned as tester on the project, OR is the reporter of this specific bug
+  const isTesterCapable=isSuperAdmin||isProjectTester||isReporter;
+  // Manager actions (edit, delete, comment): project manager or superadmin
+  const isMgr=isSuperAdmin||isProjectManager;
   const canStart  =isDevCapable&&bug.status==='Open';
   const canResolve=isDevCapable&&bug.status==='In Progress';
   const canRetest =isTesterCapable&&(bug.status==='Resolved'||bug.status==='Fixed');
   const canReopen =isDevCapable&&['Wont Fix','Not a Bug','Expected Behavior','Resolved','Fixed','Closed'].includes(bug.status);
-  const canComment=isDevCapable||isTesterCapable;
+  const canComment=isDevCapable||isTesterCapable||isMgr;
   const canChange =canComment;
 
   document.getElementById('detail-body').innerHTML=`

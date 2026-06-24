@@ -157,6 +157,22 @@ app.delete('/api/projects/:id', async (req, res) => {
 });
 
 // ── BUGS ──────────────────────────────────────────────────────────────────────
+const CLOSED_STATUSES = new Set(['Resolved','Fixed','Closed',"Won't Fix",'Wont Fix','Not a Bug','Expected Behavior','NAB']);
+app.get('/api/bugs/counts', async (req, res) => {
+  try {
+    const snap = await db.collection('bugs').select('projectId','status').get();
+    const counts = {};
+    snap.docs.forEach(d => {
+      const { projectId: pid, status } = d.data();
+      if (!pid) return;
+      if (!counts[pid]) counts[pid] = { total: 0, open: 0 };
+      counts[pid].total++;
+      if (!CLOSED_STATUSES.has(status)) counts[pid].open++;
+    });
+    res.json(counts);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/bugs', async (req, res) => {
   try {
     const { projectId } = req.query;
