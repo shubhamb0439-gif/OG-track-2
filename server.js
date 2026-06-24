@@ -742,6 +742,49 @@ app.delete('/api/stories/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Subscription Tickets ─────────────────────────────────────────────────────
+app.get('/api/sub-tickets', async (req, res) => {
+  try {
+    const { userId, role } = req.query;
+    const snap = await db.collection('sub_tickets').orderBy('createdAt', 'desc').get();
+    let tickets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const viewAll = ['superadmin','manager','accounts_manager','senior_accountant'].includes(role);
+    if (!viewAll && userId) tickets = tickets.filter(t => t.raisedById === userId);
+    res.json(tickets);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/sub-tickets', async (req, res) => {
+  try {
+    const counterRef = db.collection('meta').doc('sub_ticket_counter');
+    const ticketId = await db.runTransaction(async t => {
+      const doc = await t.get(counterRef);
+      const next = doc.exists ? doc.data().count + 1 : 1;
+      t.set(counterRef, { count: next });
+      return 'REQ-' + String(next).padStart(3, '0');
+    });
+    const data = { ...req.body, ticketId, status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const ref = await db.collection('sub_tickets').add(data);
+    res.json({ id: ref.id, ...data });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.patch('/api/sub-tickets/:id', async (req, res) => {
+  try {
+    const updates = { ...req.body, updatedAt: new Date().toISOString() };
+    await db.collection('sub_tickets').doc(req.params.id).update(updates);
+    const doc = await db.collection('sub_tickets').doc(req.params.id).get();
+    res.json({ id: doc.id, ...doc.data() });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/sub-tickets/:id', async (req, res) => {
+  try {
+    await db.collection('sub_tickets').doc(req.params.id).delete();
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Socket ────────────────────────────────────────────────────────────────────
 io.on('connection', socket => {
   console.log('Client connected:', socket.id);

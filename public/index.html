@@ -311,6 +311,18 @@ tr:hover td{background:#fafafa;}tr[onclick]{cursor:pointer;}tr[onclick]:hover td
 .role-badge.role-accounts_manager{background:#2c3e5022;color:#2C3E50;}
 .role-badge.role-senior_accountant{background:#8e44ad22;color:#8E44AD;}
 .role-badge.role-accountant{background:#16a08522;color:#16A085;}
+/* ── SUBSCRIPTION TICKETS ────────────────────────────────────────────────── */
+.req-stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 18px;flex:1;min-width:110px;text-align:center;}
+.req-stat-num{font-size:24px;font-weight:700;line-height:1.2;}
+.req-stat-label{font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.req-row{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:14px;transition:box-shadow .15s;}
+.req-row:hover{box-shadow:0 2px 8px rgba(0,0,0,.07);}
+.req-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+.req-badge.pending{background:#F39C1220;color:#F39C12;}
+.req-badge.approved{background:#3498DB20;color:#3498DB;}
+.req-badge.paid{background:#27AE6020;color:#27AE60;}
+.req-badge.rejected{background:#E74C3C20;color:#E74C3C;}
+.req-spend-bar{background:linear-gradient(135deg,#16A085,#1ABC9C);color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:20px;}
 /* ── SPRINTS & STORIES ───────────────────────────────────────────────────── */
 .sprint-list{display:flex;flex-direction:column;gap:12px;}
 .sprint-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
@@ -1438,6 +1450,52 @@ body { transition: background .3s ease, color .3s ease; }
   </div>
 </div>
 
+<!-- Subscription Ticket Modal -->
+<div class="modal-overlay" id="sub-ticket-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><h2 id="subtm-title">Raise Subscription Request</h2><button class="modal-close" onclick="closeModal('sub-ticket-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Subscription / Tool Name *</label><input id="subtm-name" placeholder="e.g. ChatGPT Plus, Figma, GitHub Copilot"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label>Amount (₹) *</label><input id="subtm-amount" type="number" min="0" placeholder="e.g. 1999" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)"></div>
+        <div class="form-group"><label>Billing Cycle</label>
+          <select id="subtm-cycle" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+            <option value="monthly">Monthly</option>
+            <option value="annual">Annual</option>
+            <option value="one-time">One-time</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Category</label>
+        <select id="subtm-category" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+          <option value="AI Tools">AI Tools</option>
+          <option value="Design">Design</option>
+          <option value="Development">Development</option>
+          <option value="Communication">Communication</option>
+          <option value="Productivity">Productivity</option>
+          <option value="Infrastructure">Infrastructure</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Purpose / Justification *</label><textarea id="subtm-purpose" style="min-height:75px" placeholder="Why do you need this? What will it be used for?"></textarea></div>
+      <div class="form-group"><label>Website / Link (optional)</label><input id="subtm-link" placeholder="https://..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('sub-ticket-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSubTicket()">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subscription Ticket Detail Modal -->
+<div class="modal-overlay" id="sub-ticket-detail-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><h2 id="subtd-title">Request Details</h2><button class="modal-close" onclick="closeModal('sub-ticket-detail-modal')">×</button></div>
+    <div class="modal-body" id="subtd-body"></div>
+    <div class="modal-footer" id="subtd-footer"></div>
+  </div>
+</div>
+
 <!-- Sprint Modal -->
 <div class="modal-overlay" id="sprint-modal">
   <div class="modal" style="max-width:500px">
@@ -1606,6 +1664,10 @@ let _boardSprintId = null;
 let _editSprintId  = null;
 let _editStoryId   = null;
 let _sprintsLoaded = false;
+let subTickets     = [];
+let _subTicketsLoaded = false;
+let _subFilter     = 'all';
+let _editSubTicketId = null;
 let notifications  = [];
 let openDetailId   = null;
 let currentView    = 'dashboard';
@@ -1857,13 +1919,13 @@ function buildSidebar(){
   let navItems;
   if(BUILTIN_ROLES.includes(role)){
     const items={
-      superadmin:       [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['sprints','Sprints','#8E44AD'],['admin','User Management','#D0D0D0'],['roles','Role Manager','#9B59B6'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      manager:          [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['sprints','Sprints','#8E44AD'],['summary','Team Summary','#D0D0D0'],['bugs','All Bugs','#4A4A4A'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      tester:           [['dashboard','Dashboard','var(--red2)'],['sprints','Sprints','#8E44AD'],['bugs','All Bugs','#7F7F7F'],['mybugs','My Bugs','#D0D0D0'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      developer:        [['dashboard','Dashboard','var(--red2)'],['sprints','Sprints','#8E44AD'],['mybugs','My Bugs','#7F7F7F'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      accounts_manager: [['dashboard','Dashboard','var(--red2)'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
-      senior_accountant:[['dashboard','Dashboard','var(--red2)'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
-      accountant:       [['dashboard','Dashboard','var(--red2)'],['acc_clients','My Clients','#16A085'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Report','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
+      superadmin:       [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['sprints','Sprints','#8E44AD'],['sub_tickets','Requests','#16A085'],['admin','User Management','#D0D0D0'],['roles','Role Manager','#9B59B6'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      manager:          [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['sprints','Sprints','#8E44AD'],['sub_tickets','Requests','#16A085'],['summary','Team Summary','#D0D0D0'],['bugs','All Bugs','#4A4A4A'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      tester:           [['dashboard','Dashboard','var(--red2)'],['sprints','Sprints','#8E44AD'],['sub_tickets','Requests','#16A085'],['bugs','All Bugs','#7F7F7F'],['mybugs','My Bugs','#D0D0D0'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      developer:        [['dashboard','Dashboard','var(--red2)'],['sprints','Sprints','#8E44AD'],['sub_tickets','Requests','#16A085'],['mybugs','My Bugs','#7F7F7F'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      accounts_manager: [['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
+      senior_accountant:[['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
+      accountant:       [['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','My Clients','#16A085'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Report','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
     };
     navItems=items[role]||[];
   } else {
@@ -1971,6 +2033,8 @@ function searchMatch(b,q){return[b.id,b.title,b.component,b.reporter,b.assignee,
 
 // ── Views ─────────────────────────────────────────────────────────────────────
 function showView(v){
+  if(v!=='sub_tickets'){_subTicketsLoaded=false;_subFilter='all';}
+  if(v!=='sprints'){_sprintsLoaded=false;}
   currentView=v;dashFilter=null;searchQuery='';tableSearch='';dashSeverity='';dashStatus='';dashComponent='';
   // Reset content area padding when leaving messages
   if (v !== 'messages') {
@@ -1978,10 +2042,10 @@ function showView(v){
     if (ca) ca.style.padding = '16px';
   }
   document.querySelectorAll('.nav-btn').forEach(b=>{
-    const map={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager'};
+    const map={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints',acc_clients:'Clients',acc_timer:'Timer',acc_eod:'EOD Reports',acc_clients_my:'My Clients',acc_eod_own:'EOD Report'};
     b.classList.toggle('active',b.textContent.trim()===map[v]);
   });
-  document.getElementById('view-title').textContent={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager'}[v]||v;
+  document.getElementById('view-title').textContent={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints'}[v]||v;
   document.getElementById('filter-bar').style.display=(v==='bugs'||v==='mybugs')?'flex':'none';
   // Animate content area on tab switch
   const ca = document.getElementById('content-area');
@@ -2012,6 +2076,7 @@ function renderView(){
   if(currentView==='acc_timer')   return renderAccTimer();
   if(currentView==='acc_eod')     return renderAccEod();
   if(currentView==='sprints')     return renderSprints();
+  if(currentView==='sub_tickets') return renderSubTickets();
   renderBugTable();
 }
 
@@ -4784,6 +4849,204 @@ async function reviewEodReport(id){
   accEodReports=accEodReports.map(x=>x.id===id?saved:x);
   showToast('Report marked as reviewed ✓','success');
   renderSeniorEod();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUBSCRIPTION TICKETS MODULE
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function loadSubTickets(){
+  const role=currentUser.role;
+  const userId=currentUser.uid||currentUser.id||'';
+  const r=await fetch(`/api/sub-tickets?userId=${encodeURIComponent(userId)}&role=${encodeURIComponent(role)}`);
+  subTickets=await r.json();
+  _subTicketsLoaded=true;
+}
+
+async function renderSubTickets(){
+  const ca=document.getElementById('content-area');
+  if(!ca)return;
+  if(!_subTicketsLoaded){
+    ca.innerHTML='<div class="empty-state"><p>Loading requests…</p></div>';
+    await loadSubTickets();
+  }
+  const role=currentUser.role;
+  const canManage=['superadmin','manager','accounts_manager','senior_accountant'].includes(role);
+  const now=new Date();
+  const monthStr=now.toISOString().slice(0,7); // "2026-06"
+  const monthName=now.toLocaleString('default',{month:'long',year:'numeric'});
+
+  const filtered=_subFilter==='all'?subTickets:subTickets.filter(t=>t.status===_subFilter);
+  const counts={pending:0,approved:0,paid:0,rejected:0};
+  subTickets.forEach(t=>{if(counts[t.status]!==undefined)counts[t.status]++;});
+
+  const paidThisMonth=subTickets.filter(t=>t.status==='paid'&&(t.paidAt||t.updatedAt||'').startsWith(monthStr));
+  const monthSpend=paidThisMonth.reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+
+  const catColors={'AI Tools':'#8E44AD','Design':'#E91E63','Development':'#2980B9','Communication':'#27AE60','Productivity':'#F39C12','Infrastructure':'#E74C3C','Other':'#7F8C8D'};
+
+  ca.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div><h2 style="margin:0;font-size:18px">Subscription Requests</h2>
+        <div style="font-size:13px;color:var(--g3)">${canManage?'All team requests':'Your requests'}</div>
+      </div>
+      <button class="btn btn-primary" onclick="openSubTicketModal(null)">+ New Request</button>
+    </div>
+
+    ${monthSpend>0?`<div class="req-spend-bar">
+      <div style="font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Total Paid — ${monthName}</div>
+      <div style="font-size:28px;font-weight:700">₹${monthSpend.toLocaleString('en-IN')}</div>
+      <div style="font-size:12px;opacity:.75;margin-top:4px">${paidThisMonth.length} payment${paidThisMonth.length!==1?'s':''} processed this month</div>
+    </div>`:''}
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      ${['pending','approved','paid','rejected'].map(s=>`<div class="req-stat-card" style="cursor:pointer;border-color:${_subFilter===s?'var(--red)':'var(--border)'}" onclick="_subFilter='${s}';renderSubTickets()">
+        <div class="req-stat-num" style="color:${s==='pending'?'#F39C12':s==='approved'?'#3498DB':s==='paid'?'#27AE60':'#E74C3C'}">${counts[s]}</div>
+        <div class="req-stat-label">${s}</div>
+      </div>`).join('')}
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" style="${_subFilter==='all'?'background:var(--red);color:#fff;border-color:var(--red)':''}" onclick="_subFilter='all';renderSubTickets()">All (${subTickets.length})</button>
+      ${['pending','approved','paid','rejected'].map(s=>`<button class="btn btn-ghost btn-sm" style="${_subFilter===s?'background:var(--red);color:#fff;border-color:var(--red)':''}" onclick="_subFilter='${s}';renderSubTickets()">${s.charAt(0).toUpperCase()+s.slice(1)} (${counts[s]})</button>`).join('')}
+    </div>
+
+    ${!filtered.length?`<div class="empty-state"><p>${_subFilter==='all'?'No requests yet. Click "+ New Request" to raise one.':'No '+_subFilter+' requests.'}</p></div>`:`
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${filtered.map(t=>{
+        const catClr=catColors[t.category]||'#7F8C8D';
+        const cycleLabel=t.billingCycle==='monthly'?'/mo':t.billingCycle==='annual'?'/yr':' one-time';
+        return `<div class="req-row">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
+              <span style="font-size:11px;font-weight:700;color:var(--g3)">${t.ticketId}</span>
+              <span class="req-badge ${t.status}">${t.status==='pending'?'⏳ Pending':t.status==='approved'?'✓ Approved':t.status==='paid'?'✅ Paid':'✕ Rejected'}</span>
+              <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${catClr}20;color:${catClr};font-weight:600">${t.category}</span>
+            </div>
+            <div style="font-weight:600;font-size:14px;margin-bottom:3px">${t.name}</div>
+            <div style="font-size:12px;color:var(--g3);line-height:1.4">${(t.purpose||'').substring(0,100)}${(t.purpose||'').length>100?'…':''}</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:6px;flex-wrap:wrap">
+              <span style="font-size:13px;font-weight:700;color:var(--text)">₹${parseFloat(t.amount||0).toLocaleString('en-IN')}${cycleLabel}</span>
+              <span style="font-size:11px;color:var(--g3)">by ${t.raisedByName||'—'}</span>
+              <span style="font-size:11px;color:var(--g3)">${(t.createdAt||'').slice(0,10)}</span>
+              ${t.status==='paid'&&t.paidAt?`<span style="font-size:11px;color:#27AE60">Paid ${t.paidAt.slice(0,10)}</span>`:''}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
+            <button class="btn btn-ghost btn-sm" onclick="viewSubTicket('${t.id}')">View</button>
+            ${canManage&&t.status==='pending'?`<button class="btn btn-ghost btn-sm" style="color:#27AE60;border-color:#27AE60" onclick="updateSubTicketStatus('${t.id}','approved')">Approve</button>`:''}
+            ${canManage&&t.status==='pending'?`<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="updateSubTicketStatus('${t.id}','rejected')">Reject</button>`:''}
+            ${canManage&&t.status==='approved'?`<button class="btn btn-ghost btn-sm" style="color:#27AE60;border-color:#27AE60;font-weight:700" onclick="markSubTicketPaid('${t.id}')">Mark Paid</button>`:''}
+            ${canManage&&t.status==='rejected'?`<button class="btn btn-ghost btn-sm" style="color:var(--g3)" onclick="updateSubTicketStatus('${t.id}','pending')">Reopen</button>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`}
+  `;
+}
+
+function openSubTicketModal(id){
+  _editSubTicketId=id||null;
+  const t=id?subTickets.find(x=>x.id===id):null;
+  document.getElementById('subtm-title').textContent=t?'Edit Request':'Raise Subscription Request';
+  document.getElementById('subtm-name').value=t?.name||'';
+  document.getElementById('subtm-amount').value=t?.amount||'';
+  document.getElementById('subtm-cycle').value=t?.billingCycle||'monthly';
+  document.getElementById('subtm-category').value=t?.category||'AI Tools';
+  document.getElementById('subtm-purpose').value=t?.purpose||'';
+  document.getElementById('subtm-link').value=t?.link||'';
+  document.getElementById('sub-ticket-modal').style.display='flex';
+}
+
+async function saveSubTicket(){
+  const name=document.getElementById('subtm-name').value.trim();
+  const amount=document.getElementById('subtm-amount').value.trim();
+  const purpose=document.getElementById('subtm-purpose').value.trim();
+  if(!name||!amount||!purpose){showToast('Name, amount, and purpose are required','alert');return;}
+  const payload={
+    name, amount:parseFloat(amount),
+    billingCycle:document.getElementById('subtm-cycle').value,
+    category:document.getElementById('subtm-category').value,
+    purpose,
+    link:document.getElementById('subtm-link').value.trim(),
+    raisedById:currentUser.uid||currentUser.id||'',
+    raisedByName:currentUser.name||currentUser.email||'',
+  };
+  if(_editSubTicketId){
+    const r=await fetch('/api/sub-tickets/'+_editSubTicketId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const saved=await r.json();
+    subTickets=subTickets.map(t=>t.id===_editSubTicketId?saved:t);
+    showToast('Request updated','success');
+  } else {
+    const r=await fetch('/api/sub-tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const saved=await r.json();
+    subTickets=[saved,...subTickets];
+    showToast('Request submitted — '+saved.ticketId,'success');
+  }
+  closeModal('sub-ticket-modal');
+  renderSubTickets();
+}
+
+async function updateSubTicketStatus(id,status){
+  const role=currentUser.role;
+  const updates={status};
+  if(status==='approved') updates.approvedBy=currentUser.name||currentUser.email||role;
+  const r=await fetch('/api/sub-tickets/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(updates)});
+  const saved=await r.json();
+  subTickets=subTickets.map(t=>t.id===id?saved:t);
+  const labels={approved:'Request approved',rejected:'Request rejected',pending:'Request reopened'};
+  showToast(labels[status]||'Updated','success');
+  renderSubTickets();
+}
+
+async function markSubTicketPaid(id){
+  const paidAt=new Date().toISOString();
+  const r=await fetch('/api/sub-tickets/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'paid',paidAt,paidBy:currentUser.name||currentUser.email||''})});
+  const saved=await r.json();
+  subTickets=subTickets.map(t=>t.id===id?saved:t);
+  showToast('Marked as paid ✓','success');
+  renderSubTickets();
+}
+
+function viewSubTicket(id){
+  const t=subTickets.find(x=>x.id===id);
+  if(!t)return;
+  const role=currentUser.role;
+  const canManage=['superadmin','manager','accounts_manager','senior_accountant'].includes(role);
+  const cycleLabel=t.billingCycle==='monthly'?'/ month':t.billingCycle==='annual'?'/ year':'(one-time)';
+  document.getElementById('subtd-title').textContent=t.ticketId+' — '+t.name;
+  document.getElementById('subtd-body').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="req-badge ${t.status}">${t.status==='pending'?'⏳ Pending':t.status==='approved'?'✓ Approved':t.status==='paid'?'✅ Paid':'✕ Rejected'}</span>
+        <span style="background:var(--bg);color:var(--g2);font-size:12px;padding:3px 10px;border-radius:10px;font-weight:600">${t.category}</span>
+        <span style="background:var(--bg);color:var(--g2);font-size:12px;padding:3px 10px;border-radius:10px">${t.billingCycle||'monthly'}</span>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:14px 16px">
+        <div style="font-size:13px;color:var(--g3);margin-bottom:4px">Amount</div>
+        <div style="font-size:22px;font-weight:700">₹${parseFloat(t.amount||0).toLocaleString('en-IN')} <span style="font-size:14px;font-weight:400;color:var(--g3)">${cycleLabel}</span></div>
+      </div>
+      <div><div style="font-size:12px;font-weight:600;color:var(--g3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Purpose</div>
+        <div style="font-size:13px;line-height:1.6;color:var(--text)">${t.purpose||'—'}</div>
+      </div>
+      ${t.link?`<div><div style="font-size:12px;font-weight:600;color:var(--g3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Website</div>
+        <a href="${t.link}" target="_blank" style="font-size:13px;color:#3498DB">${t.link}</a></div>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+        <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="color:var(--g3);margin-bottom:2px">Raised by</div><div style="font-weight:600">${t.raisedByName||'—'}</div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px"><div style="color:var(--g3);margin-bottom:2px">Raised on</div><div style="font-weight:600">${(t.createdAt||'').slice(0,10)||'—'}</div></div>
+        ${t.approvedBy?`<div style="background:var(--bg);border-radius:8px;padding:10px"><div style="color:var(--g3);margin-bottom:2px">Approved by</div><div style="font-weight:600">${t.approvedBy}</div></div>`:''}
+        ${t.paidBy?`<div style="background:var(--bg);border-radius:8px;padding:10px"><div style="color:var(--g3);margin-bottom:2px">Paid on</div><div style="font-weight:600">${(t.paidAt||'').slice(0,10)}</div></div>`:''}
+      </div>
+    </div>
+  `;
+  document.getElementById('subtd-footer').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal('sub-ticket-detail-modal')">Close</button>
+    ${(t.raisedById===currentUser.uid||t.raisedById===currentUser.id)&&t.status==='pending'?`<button class="btn btn-ghost" onclick="closeModal('sub-ticket-detail-modal');openSubTicketModal('${t.id}')">Edit</button>`:''}
+    ${canManage&&t.status==='pending'?`<button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="closeModal('sub-ticket-detail-modal');updateSubTicketStatus('${t.id}','rejected')">Reject</button>`:''}
+    ${canManage&&t.status==='pending'?`<button class="btn btn-primary" onclick="closeModal('sub-ticket-detail-modal');updateSubTicketStatus('${t.id}','approved')">Approve</button>`:''}
+    ${canManage&&t.status==='approved'?`<button class="btn btn-primary" style="background:#27AE60;border-color:#27AE60" onclick="closeModal('sub-ticket-detail-modal');markSubTicketPaid('${t.id}')">Mark as Paid</button>`:''}
+  `;
+  document.getElementById('sub-ticket-detail-modal').style.display='flex';
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
