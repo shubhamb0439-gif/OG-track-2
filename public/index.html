@@ -1085,11 +1085,6 @@ body { transition: background .3s ease, color .3s ease; }
       <div style="font-size:11px;color:#6A6A6A">by OGPlus</div>
     </div>
   </div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <div class="sk-dot" style="width:8px;height:8px;border-radius:50%;background:var(--red2);animation:skPulse 1.2s ease infinite"></div>
-    <div class="sk-dot" style="width:8px;height:8px;border-radius:50%;background:var(--red2);animation:skPulse 1.2s ease .2s infinite"></div>
-    <div class="sk-dot" style="width:8px;height:8px;border-radius:50%;background:var(--red2);animation:skPulse 1.2s ease .4s infinite"></div>
-  </div>
   <div style="font-size:13px;color:#6A6A6A" id="loading-msg">Checking session...</div>
   <canvas id="hex-canvas"></canvas>
 </div>
@@ -1098,27 +1093,69 @@ body { transition: background .3s ease, color .3s ease; }
   const c=document.getElementById('hex-canvas');
   if(!c)return;
   const ctx=c.getContext('2d');
-  const P=['#C0392B','#C0392B','#4A4A4A','#4A4A4A','#4A4A4A','#D8D8D8','#1e1e1e','#252525'];
-  const R=22,W=Math.sqrt(3)*R,H=2*R;
-  function draw(){
-    c.width=window.innerWidth;c.height=window.innerHeight;
-    ctx.fillStyle='#111';ctx.fillRect(0,0,c.width,c.height);
+  const P=['#C0392B','#C0392B','#4A4A4A','#4A4A4A','#D8D8D8','#1e1e1e','#252525'];
+  const R=250,W=Math.sqrt(3)*R,H=2*R;
+  let hexes=[];
+
+  function buildHexes(){
+    hexes=[];
     const cols=Math.ceil(c.width/W)+2,rows=Math.ceil(c.height/(H*0.75))+2;
     for(let row=-1;row<rows;row++){
       for(let col=-1;col<cols;col++){
         const cx=col*W+(row%2===0?0:W/2),cy=row*H*0.75;
         const k=Math.abs(row*7+col*3+row*col*2+row+col*13)%P.length;
-        const alpha=0.3+((Math.abs(row*3+col*11))%7)*0.08;
-        ctx.beginPath();
-        for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;ctx.lineTo(cx+(R-1.5)*Math.cos(a),cy+(R-1.5)*Math.sin(a));}
-        ctx.closePath();
-        ctx.fillStyle=P[k];ctx.globalAlpha=alpha;ctx.fill();
-        ctx.globalAlpha=1;ctx.strokeStyle='#0a0a0a';ctx.lineWidth=0.8;ctx.stroke();
+        const baseAlpha=0.35+((Math.abs(row*3+col*11))%7)*0.09;
+        hexes.push({cx,cy,color:P[k],baseAlpha,alpha:baseAlpha,startFadeAt:Infinity});
       }
     }
   }
+
+  function drawHex(h,alpha){
+    if(alpha<=0)return;
+    ctx.beginPath();
+    for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;ctx.lineTo(h.cx+(R-3)*Math.cos(a),h.cy+(R-3)*Math.sin(a));}
+    ctx.closePath();
+    ctx.fillStyle=h.color;ctx.globalAlpha=alpha;ctx.fill();
+    ctx.globalAlpha=1;ctx.strokeStyle='#0a0a0a';ctx.lineWidth=2;ctx.stroke();
+  }
+
+  function draw(){
+    c.width=window.innerWidth;c.height=window.innerHeight;
+    buildHexes();
+    ctx.fillStyle='#111';ctx.fillRect(0,0,c.width,c.height);
+    hexes.forEach(h=>drawHex(h,h.baseAlpha));
+  }
+
+  window.startHexReveal=function(showAuth){
+    const STAGGER=1400,FADE=500;
+    const order=[...hexes].sort(()=>Math.random()-0.5);
+    order.forEach((h,i)=>{h.startFadeAt=(i/order.length)*STAGGER;});
+    let t0=null;
+    function step(ts){
+      if(!t0)t0=ts;
+      const el=ts-t0;
+      ctx.fillStyle='#111';ctx.fillRect(0,0,c.width,c.height);
+      let done=true;
+      hexes.forEach(h=>{
+        if(el<h.startFadeAt){drawHex(h,h.baseAlpha);done=false;}
+        else{
+          const p=Math.min(1,(el-h.startFadeAt)/FADE);
+          const a=h.baseAlpha*(1-p);
+          if(a>0){drawHex(h,a);done=false;}
+        }
+      });
+      if(!done){requestAnimationFrame(step);}
+      else{
+        const ls=document.getElementById('loading-screen');
+        if(ls)ls.style.display='none';
+        if(showAuth)document.getElementById('auth-screen').style.display='flex';
+      }
+    }
+    requestAnimationFrame(step);
+  };
+
   draw();
-  window.addEventListener('resize',draw);
+  window.addEventListener('resize',()=>draw());
 })();
 </script>
 
@@ -4061,8 +4098,12 @@ async function deleteRole(id){
 function hideLoading(showAuth=false){
   const ls = document.getElementById('loading-screen');
   if(!ls) return;
-  ls.classList.add('hide');
-  setTimeout(()=>{ ls.style.display='none'; if(showAuth) document.getElementById('auth-screen').style.display='flex'; }, 320);
+  if(typeof startHexReveal==='function'){
+    startHexReveal(showAuth);
+  } else {
+    ls.classList.add('hide');
+    setTimeout(()=>{ ls.style.display='none'; if(showAuth) document.getElementById('auth-screen').style.display='flex'; }, 320);
+  }
 }
 
 // ── ACCOUNTANT MODULE ─────────────────────────────────────────────────────────
