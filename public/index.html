@@ -5006,12 +5006,17 @@ async function renderSubTickets(){
 
   const catColors={'AI Tools':'#8E44AD','Design':'#E91E63','Development':'#2980B9','Communication':'#27AE60','Productivity':'#F39C12','Infrastructure':'#E74C3C','Other':'#7F8C8D'};
 
+  if(_subFilter==='analytics') return _renderSubTicketsAnalytics();
+
   ca.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
       <div><h2 style="margin:0;font-size:18px">Subscription Requests</h2>
         <div style="font-size:13px;color:var(--g3)">${canManage?'All team requests':'Your requests'}</div>
       </div>
-      <button class="btn btn-primary" onclick="openSubTicketModal(null)">+ New Request</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="exportSubTicketsCSV()" title="Export to Excel">&#x2B07; Export</button>
+        <button class="btn btn-primary" onclick="openSubTicketModal(null)">+ New Request</button>
+      </div>
     </div>
 
     ${monthSpend>0?`<div class="req-spend-bar">
@@ -5030,6 +5035,7 @@ async function renderSubTickets(){
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" style="${_subFilter==='all'?'background:var(--red);color:#fff;border-color:var(--red)':''}" onclick="_subFilter='all';renderSubTickets()">All (${subTickets.length})</button>
       ${['pending','approved','paid','rejected'].map(s=>`<button class="btn btn-ghost btn-sm" style="${_subFilter===s?'background:var(--red);color:#fff;border-color:var(--red)':''}" onclick="_subFilter='${s}';renderSubTickets()">${s.charAt(0).toUpperCase()+s.slice(1)} (${counts[s]})</button>`).join('')}
+      <button class="btn btn-ghost btn-sm" onclick="_subFilter='analytics';renderSubTickets()">&#x1F4CA; Analytics</button>
     </div>
 
     ${!filtered.length?`<div class="empty-state"><p>${_subFilter==='all'?'No requests yet. Click "+ New Request" to raise one.':'No '+_subFilter+' requests.'}</p></div>`:`
@@ -5059,10 +5065,144 @@ async function renderSubTickets(){
             ${canManage&&t.status==='pending'?`<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="updateSubTicketStatus('${t.id}','rejected')">Reject</button>`:''}
             ${canManage&&t.status==='approved'?`<button class="btn btn-ghost btn-sm" style="color:#27AE60;border-color:#27AE60;font-weight:700" onclick="markSubTicketPaid('${t.id}')">Mark Paid</button>`:''}
             ${canManage&&t.status==='rejected'?`<button class="btn btn-ghost btn-sm" style="color:var(--g3)" onclick="updateSubTicketStatus('${t.id}','pending')">Reopen</button>`:''}
+            ${canManage?`<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteSubTicket('${t.id}')">Delete</button>`:''}
           </div>
         </div>`;
       }).join('')}
     </div>`}
+  `;
+}
+
+async function deleteSubTicket(id){
+  if(!confirm('Delete this subscription request? This cannot be undone.')) return;
+  const res=await fetch('/api/sub-tickets/'+id,{method:'DELETE'});
+  if(!res.ok){alert('Failed to delete ticket');return;}
+  subTickets=subTickets.filter(t=>t.id!==id);
+  renderSubTickets();
+}
+
+function exportSubTicketsCSV(){
+  const headers=['Ticket ID','Name','Category','Currency','Amount','Billing Cycle','Status','Raised By','Raised On','Approved By','Paid On','Purpose'];
+  const rows=subTickets.map(t=>[
+    t.ticketId||'',
+    '"'+(t.name||'').replace(/"/g,'""')+'"',
+    t.category||'',
+    t.currency||'₹',
+    t.amount||'',
+    t.billingCycle||'',
+    t.status||'',
+    '"'+(t.raisedByName||'').replace(/"/g,'""')+'"',
+    (t.createdAt||'').slice(0,10),
+    '"'+(t.approvedBy||'').replace(/"/g,'""')+'"',
+    (t.paidAt||'').slice(0,10),
+    '"'+(t.purpose||'').replace(/"/g,'""')+'"'
+  ]);
+  const csv='﻿'+[headers,...rows].map(r=>r.join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  const now=new Date();
+  a.download='subscription_requests_'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function _renderSubTicketsAnalytics(){
+  const ca=document.getElementById('content-area');
+  if(!ca) return;
+  const role=currentUser.role;
+  const canManage=['superadmin','manager','accounts_manager','senior_accountant'].includes(role);
+  const now=new Date();
+  const thisMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const thisYear=String(now.getFullYear());
+  const paidTickets=subTickets.filter(t=>t.status==='paid');
+  const catColors={'AI Tools':'#8E44AD','Design':'#E91E63','Development':'#2980B9','Communication':'#27AE60','Productivity':'#F39C12','Infrastructure':'#E74C3C','Other':'#7F8C8D'};
+
+  // Summary totals
+  const thisMonthSpend=paidTickets.filter(t=>(t.paidAt||t.updatedAt||'').slice(0,7)===thisMonth).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+  const thisYearSpend=paidTickets.filter(t=>(t.paidAt||t.updatedAt||'').slice(0,4)===thisYear).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+  const totalPaid=paidTickets.reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+
+  // Last 6 months bar chart
+  const months=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    months.push({label:d.toLocaleString('default',{month:'short'}),key,spend:0});
+  }
+  paidTickets.forEach(t=>{
+    const date=(t.paidAt||t.updatedAt||'').slice(0,7);
+    const m=months.find(m=>m.key===date);
+    if(m) m.spend+=(parseFloat(t.amount)||0);
+  });
+  const maxSpend=Math.max(...months.map(m=>m.spend),1);
+  const bw=40,bGap=12,chartH=110,padL=8,padR=8;
+  const chartW=months.length*(bw+bGap)+padL+padR-bGap;
+  const bars=months.map((m,i)=>{
+    const bh=Math.max(2,Math.round(m.spend/maxSpend*chartH));
+    const x=padL+i*(bw+bGap);
+    const y=chartH-bh;
+    const isCur=m.key===thisMonth;
+    return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="5" fill="${isCur?'#E74C3C':'#CBD5E0'}"/>
+      <text x="${x+bw/2}" y="${chartH+16}" text-anchor="middle" font-size="11" fill="#888">${m.label}</text>
+      ${m.spend>0?`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" font-size="10" fill="${isCur?'#E74C3C':'#888'}" font-weight="${isCur?700:400}">${m.spend>=1000?(m.spend/1000).toFixed(1)+'k':m.spend}</text>`:''}`;
+  }).join('');
+
+  // Category donut
+  const catMap={};
+  paidTickets.forEach(t=>{const c=t.category||'Other';catMap[c]=(catMap[c]||0)+(parseFloat(t.amount)||0);});
+  const categories=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  let donutHTML='<div style="color:var(--g3);font-size:13px;padding:20px 0">No paid tickets yet.</div>';
+  if(categories.length>0){
+    const r=54,cx=70,cy=70,sw=26,circumference=2*Math.PI*r;
+    let offset=0;
+    const slices=categories.map(([cat,amt])=>{
+      const pct=amt/totalPaid;
+      const dash=pct*circumference;
+      const slice=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${catColors[cat]||'#7F8C8D'}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${circumference.toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+      offset+=dash;
+      return slice;
+    }).join('');
+    const donutSVG=`<svg width="${cx*2}" height="${cy*2}" viewBox="0 0 ${cx*2} ${cy*2}" style="flex-shrink:0">${slices}<text x="${cx}" y="${cy-5}" text-anchor="middle" font-size="11" fill="#888">Total</text><text x="${cx}" y="${cy+13}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--text)">${totalPaid>=1000?(totalPaid/1000).toFixed(1)+'k':totalPaid}</text></svg>`;
+    const legend=categories.map(([cat,amt])=>`<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px"><div style="width:11px;height:11px;border-radius:3px;background:${catColors[cat]||'#7F8C8D'};flex-shrink:0"></div><div style="flex:1;color:var(--text)">${cat}</div><div style="font-weight:600;color:var(--text)">₹${amt.toLocaleString('en-IN')}</div></div>`).join('');
+    donutHTML=`<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">${donutSVG}<div style="flex:1;min-width:120px">${legend}</div></div>`;
+  }
+
+  ca.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div><h2 style="margin:0;font-size:18px">Subscription Requests</h2>
+        <div style="font-size:13px;color:var(--g3)">Expenditure Analytics</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="exportSubTicketsCSV()">&#x2B07; Export</button>
+        ${canManage?`<button class="btn btn-primary" onclick="openSubTicketModal(null)">+ New Request</button>`:''}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="_subFilter='all';renderSubTickets()">All</button>
+      ${['pending','approved','paid','rejected'].map(s=>`<button class="btn btn-ghost btn-sm" onclick="_subFilter='${s}';renderSubTickets()">${s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('')}
+      <button class="btn btn-ghost btn-sm" style="background:var(--red);color:#fff;border-color:var(--red)">&#x1F4CA; Analytics</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+      <div class="req-stat-card"><div class="req-stat-num" style="color:#E74C3C">₹${thisMonthSpend.toLocaleString('en-IN')}</div><div class="req-stat-label">This Month</div></div>
+      <div class="req-stat-card"><div class="req-stat-num" style="color:#3498DB">₹${thisYearSpend.toLocaleString('en-IN')}</div><div class="req-stat-label">This Year</div></div>
+      <div class="req-stat-card"><div class="req-stat-num" style="color:#27AE60">₹${totalPaid.toLocaleString('en-IN')}</div><div class="req-stat-label">All Time</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text)">Monthly Spend — Last 6 Months</div>
+        <div style="overflow-x:auto">
+          <svg width="${chartW}" height="${chartH+28}" viewBox="0 0 ${chartW} ${chartH+28}">${bars}</svg>
+        </div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text)">Spend by Category</div>
+        ${donutHTML}
+      </div>
+    </div>
   `;
 }
 
@@ -5164,6 +5304,7 @@ function viewSubTicket(id){
   `;
   document.getElementById('subtd-footer').innerHTML=`
     <button class="btn btn-ghost" onclick="closeModal('sub-ticket-detail-modal')">Close</button>
+    ${canManage?`<button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="closeModal('sub-ticket-detail-modal');deleteSubTicket('${t.id}')">Delete</button>`:''}
     ${(t.raisedById===currentUser.uid||t.raisedById===currentUser.id)&&t.status==='pending'?`<button class="btn btn-ghost" onclick="closeModal('sub-ticket-detail-modal');openSubTicketModal('${t.id}')">Edit</button>`:''}
     ${canManage&&t.status==='pending'?`<button class="btn btn-ghost" style="color:var(--red);border-color:var(--red)" onclick="closeModal('sub-ticket-detail-modal');updateSubTicketStatus('${t.id}','rejected')">Reject</button>`:''}
     ${canManage&&t.status==='pending'?`<button class="btn btn-primary" onclick="closeModal('sub-ticket-detail-modal');updateSubTicketStatus('${t.id}','approved')">Approve</button>`:''}
