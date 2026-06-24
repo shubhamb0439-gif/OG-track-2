@@ -667,6 +667,68 @@ app.patch('/api/eod-reports/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Sprints ───────────────────────────────────────────────────────────────────
+app.get('/api/sprints', async (req, res) => {
+  try {
+    const { projectId } = req.query;
+    let q = db.collection('sprints');
+    if (projectId) q = q.where('projectId', '==', projectId);
+    const snap = await q.get();
+    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/sprints', async (req, res) => {
+  try {
+    const data = { ...req.body, createdAt: new Date().toISOString() };
+    const ref = await db.collection('sprints').add(data);
+    res.json({ id: ref.id, ...data });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.patch('/api/sprints/:id', async (req, res) => {
+  try {
+    await db.collection('sprints').doc(req.params.id).update({ ...req.body, updatedAt: new Date().toISOString() });
+    const doc = await db.collection('sprints').doc(req.params.id).get();
+    res.json({ id: doc.id, ...doc.data() });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/sprints/:id', async (req, res) => {
+  try {
+    await db.collection('sprints').doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Stories ───────────────────────────────────────────────────────────────────
+app.get('/api/stories', async (req, res) => {
+  try {
+    const { projectId } = req.query;
+    let q = db.collection('stories');
+    if (projectId) q = q.where('projectId', '==', projectId);
+    const snap = await q.get();
+    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.post('/api/stories', async (req, res) => {
+  try {
+    const data = { ...req.body, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const ref = await db.collection('stories').add(data);
+    res.json({ id: ref.id, ...data });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.patch('/api/stories/:id', async (req, res) => {
+  try {
+    await db.collection('stories').doc(req.params.id).update({ ...req.body, updatedAt: new Date().toISOString() });
+    const doc = await db.collection('stories').doc(req.params.id).get();
+    res.json({ id: doc.id, ...doc.data() });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/stories/:id', async (req, res) => {
+  try {
+    await db.collection('stories').doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Socket ────────────────────────────────────────────────────────────────────
 io.on('connection', socket => {
   console.log('Client connected:', socket.id);

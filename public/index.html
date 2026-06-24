@@ -311,6 +311,32 @@ tr:hover td{background:#fafafa;}tr[onclick]{cursor:pointer;}tr[onclick]:hover td
 .role-badge.role-accounts_manager{background:#2c3e5022;color:#2C3E50;}
 .role-badge.role-senior_accountant{background:#8e44ad22;color:#8E44AD;}
 .role-badge.role-accountant{background:#16a08522;color:#16A085;}
+/* ── SPRINTS & STORIES ───────────────────────────────────────────────────── */
+.sprint-list{display:flex;flex-direction:column;gap:12px;}
+.sprint-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.sprint-card.active{border-color:#27AE60;border-width:1.5px;}
+.sprint-card.planned{border-color:#3498DB;border-width:1.5px;}
+.sprint-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}
+.sprint-badge.active{background:#27AE6020;color:#27AE60;}
+.sprint-badge.planned{background:#3498DB20;color:#3498DB;}
+.sprint-badge.completed{background:#6c757d20;color:#6c757d;}
+.sprint-progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0 4px;}
+.sprint-progress-fill{height:100%;border-radius:3px;transition:width .4s ease;}
+.sprint-board{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-items:start;}
+@media(max-width:700px){.sprint-board{grid-template-columns:1fr;}}
+.sprint-col{background:var(--bg);border-radius:10px;padding:14px;min-height:200px;}
+.sprint-col-header{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--g3);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.story-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;transition:box-shadow .15s;}
+.story-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08);}
+.story-pri{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;}
+.story-pri.high{background:#e74c3c22;color:#E74C3C;}
+.story-pri.medium{background:#f39c1222;color:#F39C12;}
+.story-pri.low{background:#27ae6022;color:#27AE60;}
+.story-pts{background:var(--bg);color:var(--g2);font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap;}
+.story-move-btn{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;line-height:1;}
+.story-move-btn:hover{background:var(--border);}
+.backlog-row{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.sprint-active-banner{background:linear-gradient(135deg,#C0392B,#8E2419);color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:20px;}
 .form-group textarea{resize:vertical;min-height:70px;}
 .modal-footer{padding:12px 18px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;bottom:0;background:var(--white);}
 
@@ -1412,6 +1438,73 @@ body { transition: background .3s ease, color .3s ease; }
   </div>
 </div>
 
+<!-- Sprint Modal -->
+<div class="modal-overlay" id="sprint-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h2 id="sprint-modal-title">New Sprint</h2><button class="modal-close" onclick="closeModal('sprint-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Sprint Name *</label><input id="sm-name" placeholder="e.g. Sprint 1 — Auth & Onboarding"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label>Start Date *</label><input type="date" id="sm-start" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)"></div>
+        <div class="form-group"><label>End Date *</label><input type="date" id="sm-end" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)"></div>
+      </div>
+      <div class="form-group"><label>Sprint Goal</label><textarea id="sm-goal" style="min-height:70px" placeholder="What does this sprint aim to achieve?"></textarea></div>
+      <div class="form-group"><label>Status</label>
+        <select id="sm-status" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+          <option value="planned">Planned</option>
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('sprint-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSprint()">Save Sprint</button>
+    </div>
+  </div>
+</div>
+
+<!-- Story Modal -->
+<div class="modal-overlay" id="story-modal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header"><h2 id="story-modal-title">New Story</h2><button class="modal-close" onclick="closeModal('story-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Title *</label><input id="stm-title" placeholder="As a [user], I want to..."></div>
+      <div class="form-group"><label>Description</label><textarea id="stm-desc" style="min-height:65px" placeholder="What needs to be built?"></textarea></div>
+      <div class="form-group"><label>Acceptance Criteria</label><textarea id="stm-ac" style="min-height:55px" placeholder="How do we know it's done?"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="form-group"><label>Priority</label>
+          <select id="stm-priority" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Story Points</label>
+          <select id="stm-points" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+            <option value="1">1 pt</option><option value="2">2 pt</option><option value="3" selected>3 pt</option>
+            <option value="5">5 pt</option><option value="8">8 pt</option><option value="13">13 pt</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Assignee</label>
+          <select id="stm-assignee" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+            <option value="">Unassigned</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Sprint</label>
+        <select id="stm-sprint" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+          <option value="">Backlog (no sprint)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('story-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStory()">Save Story</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="edit-entry-modal">
   <div class="modal" style="max-width:420px">
     <div class="modal-header"><h2>Edit Session</h2><button class="modal-close" onclick="closeModal('edit-entry-modal')">×</button></div>
@@ -1506,6 +1599,13 @@ let allUsers       = [];
 let allProjects    = [];
 let allCustomRoles = [];
 let bugs           = [];
+let sprints        = [];
+let stories        = [];
+let _sprintSubview = 'list';
+let _boardSprintId = null;
+let _editSprintId  = null;
+let _editStoryId   = null;
+let _sprintsLoaded = false;
 let notifications  = [];
 let openDetailId   = null;
 let currentView    = 'dashboard';
@@ -1757,10 +1857,10 @@ function buildSidebar(){
   let navItems;
   if(BUILTIN_ROLES.includes(role)){
     const items={
-      superadmin:       [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['admin','User Management','#D0D0D0'],['roles','Role Manager','#9B59B6'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      manager:          [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['summary','Team Summary','#D0D0D0'],['bugs','All Bugs','#4A4A4A'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      tester:           [['dashboard','Dashboard','var(--red2)'],['bugs','All Bugs','#7F7F7F'],['mybugs','My Bugs','#D0D0D0'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
-      developer:        [['dashboard','Dashboard','var(--red2)'],['mybugs','My Bugs','#7F7F7F'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      superadmin:       [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['sprints','Sprints','#8E44AD'],['admin','User Management','#D0D0D0'],['roles','Role Manager','#9B59B6'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      manager:          [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['sprints','Sprints','#8E44AD'],['summary','Team Summary','#D0D0D0'],['bugs','All Bugs','#4A4A4A'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      tester:           [['dashboard','Dashboard','var(--red2)'],['sprints','Sprints','#8E44AD'],['bugs','All Bugs','#7F7F7F'],['mybugs','My Bugs','#D0D0D0'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      developer:        [['dashboard','Dashboard','var(--red2)'],['sprints','Sprints','#8E44AD'],['mybugs','My Bugs','#7F7F7F'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
       accounts_manager: [['dashboard','Dashboard','var(--red2)'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
       senior_accountant:[['dashboard','Dashboard','var(--red2)'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
       accountant:       [['dashboard','Dashboard','var(--red2)'],['acc_clients','My Clients','#16A085'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Report','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
@@ -1911,6 +2011,7 @@ function renderView(){
   if(currentView==='acc_clients') return renderAccClients();
   if(currentView==='acc_timer')   return renderAccTimer();
   if(currentView==='acc_eod')     return renderAccEod();
+  if(currentView==='sprints')     return renderSprints();
   renderBugTable();
 }
 
@@ -2105,6 +2206,7 @@ function renderProjects(){
         <span class="pcard-stat pcard-done">${pb.filter(b=>b.status==='Resolved'||b.status==='Fixed'||b.status==='Closed').length} done</span>
         <span class="pcard-stat pcard-total">${pb.length} total</span>
       </div>
+      ${(()=>{const tot=pb.length,done=pb.filter(b=>b.status==='Resolved'||b.status==='Fixed'||b.status==='Closed').length,pct=tot>0?Math.round(done/tot*100):0,clr=pct>=75?'#27AE60':pct>=40?'#F39C12':'var(--red)';return tot>0?`<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--g3);margin-bottom:4px"><span>Bug Resolution</span><span style="font-weight:600;color:${clr}">${pct}%</span></div><div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${clr};border-radius:3px;transition:width .4s ease"></div></div></div>`:'';})()}
       <div class="pcard-members">
         <div>👨‍💻 ${(p.developers||[]).join(', ')||'No devs'}</div>
         <div>🧪 ${(p.testers||[]).join(', ')||'No testers'}</div>
@@ -4682,6 +4784,336 @@ async function reviewEodReport(id){
   accEodReports=accEodReports.map(x=>x.id===id?saved:x);
   showToast('Report marked as reviewed ✓','success');
   renderSeniorEod();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SPRINTS & STORIES MODULE
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function loadSprintsData(){
+  if(!currentProject||currentProject.id==='__all__'||currentProject.id==='__acc__')return;
+  const [sr,str]=await Promise.all([
+    fetch('/api/sprints?projectId='+currentProject.id).then(r=>r.json()),
+    fetch('/api/stories?projectId='+currentProject.id).then(r=>r.json())
+  ]);
+  sprints=Array.isArray(sr)?sr:[];
+  stories=Array.isArray(str)?str:[];
+  _sprintsLoaded=true;
+}
+
+async function renderSprints(){
+  const ca=document.getElementById('content-area');
+  if(!ca)return;
+  if(!_sprintsLoaded){
+    ca.innerHTML='<div class="empty-state"><p>Loading sprints…</p></div>';
+    await loadSprintsData();
+  }
+  if(_sprintSubview==='board'&&_boardSprintId) return _renderBoard();
+  if(_sprintSubview==='backlog') return _renderBacklog();
+  _renderSprintList();
+}
+
+function _sprintProgress(sprintId){
+  const ss=stories.filter(s=>s.sprintId===sprintId);
+  const done=ss.filter(s=>s.status==='done').length;
+  const total=ss.length;
+  const pct=total>0?Math.round(done/total*100):0;
+  const clr=pct>=75?'#27AE60':pct>=40?'#F39C12':'#E74C3C';
+  return {done,total,pct,clr};
+}
+
+function _renderSprintList(){
+  const role=currentUser.role;
+  const isManager=role==='manager'||role==='superadmin';
+  const active=sprints.find(s=>s.status==='active');
+  const order=['active','planned','completed'];
+  const sorted=[...sprints].sort((a,b)=>order.indexOf(a.status)-order.indexOf(b.status)||(b.createdAt||'').localeCompare(a.createdAt||''));
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px">
+      <div><h2 style="margin:0;font-size:18px">Sprints</h2><div style="font-size:13px;color:var(--g3)">${currentProject.name}</div></div>
+      ${isManager?`<div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="openStoryModal(null)">+ Story</button>
+        <button class="btn btn-primary" onclick="openSprintModal(null)">+ New Sprint</button>
+      </div>`:''}
+    </div>
+    ${active?`<div class="sprint-active-banner">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:11px;opacity:.75;text-transform:uppercase;letter-spacing:1px">Active Sprint</div>
+          <div style="font-size:20px;font-weight:700;margin-top:3px">${active.name}</div>
+          <div style="font-size:12px;opacity:.75;margin-top:2px">${active.startDate} → ${active.endDate}</div>
+        </div>
+        <button class="btn" style="background:#fff;color:#C0392B;font-weight:700;padding:8px 18px" onclick="_boardSprintId='${active.id}';_sprintSubview='board';renderSprints()">View Board →</button>
+      </div>
+      ${active.goal?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.25);font-size:13px;opacity:.85">🎯 ${active.goal}</div>`:''}
+      ${(()=>{const {done,total,pct,clr}=_sprintProgress(active.id);return total>0?`<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;opacity:.8;margin-bottom:5px"><span>${done}/${total} stories done</span><span>${pct}%</span></div><div class="sprint-progress-bar" style="background:rgba(255,255,255,.2)"><div class="sprint-progress-fill" style="width:${pct}%;background:#fff"></div></div></div>`:'';})()}
+    </div>`:''}
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn btn-ghost" style="${_sprintSubview!=='backlog'?'background:var(--red);color:#fff;border-color:var(--red)':''}" onclick="_sprintSubview='list';renderSprints()">All Sprints (${sprints.length})</button>
+      <button class="btn btn-ghost" style="${_sprintSubview==='backlog'?'background:var(--red);color:#fff;border-color:var(--red)':''}" onclick="_sprintSubview='backlog';renderSprints()">Backlog (${stories.filter(s=>!s.sprintId).length})</button>
+    </div>
+    ${!sorted.length?`<div class="empty-state"><p>No sprints yet.${isManager?' Create your first sprint to start planning.':''}</p></div>`:`
+    <div class="sprint-list">
+      ${sorted.map(sp=>{
+        const {done,total,pct,clr}=_sprintProgress(sp.id);
+        return `<div class="sprint-card ${sp.status}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span class="sprint-badge ${sp.status}">${sp.status==='active'?'● Active':sp.status==='planned'?'○ Planned':'✓ Completed'}</span>
+              </div>
+              <div style="font-size:16px;font-weight:700">${sp.name}</div>
+              <div style="font-size:12px;color:var(--g3);margin-top:2px">${sp.startDate} → ${sp.endDate}</div>
+              ${sp.goal?`<div style="font-size:12px;color:var(--g3);margin-top:4px">🎯 ${sp.goal}</div>`:''}
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="_boardSprintId='${sp.id}';_sprintSubview='board';renderSprints()">View Board</button>
+              ${isManager?`<button class="btn btn-ghost btn-sm" onclick="openSprintModal('${sp.id}')">Edit</button>`:''}
+              ${isManager&&sp.status==='planned'?`<button class="btn btn-ghost btn-sm" style="color:#27AE60;border-color:#27AE60" onclick="activateSprint('${sp.id}')">Activate</button>`:''}
+              ${isManager&&sp.status==='active'?`<button class="btn btn-ghost btn-sm" style="color:#6c757d;border-color:#6c757d" onclick="completeSprint('${sp.id}')">Mark Complete</button>`:''}
+              ${isManager?`<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteSprint('${sp.id}')">✕</button>`:''}
+            </div>
+          </div>
+          ${total>0?`<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--g3);margin-bottom:4px"><span>${done}/${total} stories · ${total-done} remaining</span><span style="color:${clr};font-weight:600">${pct}%</span></div><div class="sprint-progress-bar"><div class="sprint-progress-fill" style="width:${pct}%;background:${clr}"></div></div></div>`:
+          `<div style="font-size:12px;color:var(--g3);margin-top:10px">No stories added yet</div>`}
+        </div>`;
+      }).join('')}
+    </div>`}
+  `;
+}
+
+function _renderBoard(){
+  const sprint=sprints.find(s=>s.id===_boardSprintId);
+  if(!sprint)return _sprintSubview='list',renderSprints();
+  const role=currentUser.role;
+  const isManager=role==='manager'||role==='superadmin';
+  const ss=stories.filter(s=>s.sprintId===_boardSprintId);
+  const cols=[{key:'todo',label:'To Do',color:'#6c757d'},{key:'in_progress',label:'In Progress',color:'#F39C12'},{key:'done',label:'Done',color:'#27AE60'}];
+  const {done,total,pct,clr}=_sprintProgress(_boardSprintId);
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="_sprintSubview='list';renderSprints()">← Back</button>
+      <div style="flex:1"><div style="font-size:17px;font-weight:700">${sprint.name}</div>
+        <div style="font-size:12px;color:var(--g3)">${sprint.startDate} → ${sprint.endDate}</div>
+      </div>
+      ${isManager?`<button class="btn btn-primary btn-sm" onclick="openStoryModal('${_boardSprintId}')">+ Add Story</button>`:''}
+    </div>
+    ${sprint.goal?`<div style="font-size:13px;color:var(--g3);margin-bottom:8px">🎯 ${sprint.goal}</div>`:''}
+    ${total>0?`<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--g3);margin-bottom:4px"><span>${done}/${total} stories done</span><span style="color:${clr};font-weight:600">${pct}%</span></div><div class="sprint-progress-bar"><div class="sprint-progress-fill" style="width:${pct}%;background:${clr}"></div></div></div>`:''}
+    <div class="sprint-board">
+      ${cols.map(col=>{
+        const colStories=ss.filter(s=>s.status===col.key);
+        return `<div class="sprint-col">
+          <div class="sprint-col-header" style="color:${col.color}">${col.label} <span style="background:var(--border);color:var(--g2);padding:1px 7px;border-radius:10px;font-size:11px">${colStories.length}</span></div>
+          ${colStories.map(s=>_storyCard(s,isManager)).join('')}
+          ${!colStories.length?`<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--g3)">No stories</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function _renderBacklog(){
+  const role=currentUser.role;
+  const isManager=role==='manager'||role==='superadmin';
+  const backlog=stories.filter(s=>!s.sprintId);
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn btn-ghost btn-sm" onclick="_sprintSubview='list';renderSprints()">← Back</button>
+        <div><div style="font-size:17px;font-weight:700">Backlog</div><div style="font-size:12px;color:var(--g3)">${backlog.length} unassigned stories</div></div>
+      </div>
+      ${isManager?`<button class="btn btn-primary btn-sm" onclick="openStoryModal(null)">+ Add Story</button>`:''}
+    </div>
+    ${!backlog.length?`<div class="empty-state"><p>Backlog is empty. All stories are assigned to sprints.</p></div>`:`
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${backlog.map(s=>`<div class="backlog-row">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span class="story-pri ${s.priority}">${s.priority}</span>
+            <span class="story-pts">${s.points}pt</span>
+          </div>
+          <div style="font-weight:600;font-size:14px">${s.title}</div>
+          ${s.description?`<div style="font-size:12px;color:var(--g3);margin-top:2px">${s.description.substring(0,100)}${s.description.length>100?'…':''}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          ${s.assigneeName?`<span style="font-size:12px;color:var(--g3)">@${s.assigneeName}</span>`:''}
+          ${isManager&&sprints.filter(sp=>sp.status!=='completed').length?`<select style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--white);outline:none" onchange="moveStoryToSprint('${s.id}',this.value);this.value=''">
+            <option value="">Add to sprint…</option>
+            ${sprints.filter(sp=>sp.status!=='completed').map(sp=>`<option value="${sp.id}">${sp.name}</option>`).join('')}
+          </select>`:''}
+          ${isManager?`<button class="btn btn-ghost btn-sm" onclick="openStoryModal(null,'${s.id}')">Edit</button>`:''}
+          ${isManager?`<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteStory('${s.id}')">✕</button>`:''}
+        </div>
+      </div>`).join('')}
+    </div>`}
+  `;
+}
+
+function _storyCard(s,isManager){
+  const statusOrder=['todo','in_progress','done'];
+  const idx=statusOrder.indexOf(s.status);
+  return `<div class="story-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span class="story-pri ${s.priority}">${s.priority}</span>
+      <span class="story-pts">${s.points}pt</span>
+    </div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:4px">${s.title}</div>
+    ${s.description?`<div style="font-size:12px;color:var(--g3);margin-bottom:6px;line-height:1.4">${s.description.substring(0,80)}${s.description.length>80?'…':''}</div>`:''}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:4px">
+      <span style="font-size:11px;color:var(--g3)">${s.assigneeName?'@'+s.assigneeName:'Unassigned'}</span>
+      <div style="display:flex;gap:4px">
+        ${isManager?`<button class="btn btn-ghost btn-sm" style="padding:2px 7px;font-size:11px" onclick="openStoryModal('${s.sprintId||''}','${s.id}')">Edit</button>`:''}
+        ${idx>0?`<button class="story-move-btn" title="Move left" onclick="updateStoryStatus('${s.id}','${statusOrder[idx-1]}')">←</button>`:''}
+        ${idx<2?`<button class="story-move-btn" title="Move right" onclick="updateStoryStatus('${s.id}','${statusOrder[idx+1]}')">→</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Sprint CRUD ───────────────────────────────────────────────────────────────
+function openSprintModal(id){
+  _editSprintId=id||null;
+  const sp=id?sprints.find(s=>s.id===id):null;
+  document.getElementById('sprint-modal-title').textContent=sp?'Edit Sprint':'New Sprint';
+  document.getElementById('sm-name').value=sp?.name||'';
+  document.getElementById('sm-start').value=sp?.startDate||'';
+  document.getElementById('sm-end').value=sp?.endDate||'';
+  document.getElementById('sm-goal').value=sp?.goal||'';
+  document.getElementById('sm-status').value=sp?.status||'planned';
+  document.getElementById('sprint-modal').classList.add('open');
+}
+
+async function saveSprint(){
+  const name=document.getElementById('sm-name').value.trim();
+  const startDate=document.getElementById('sm-start').value;
+  const endDate=document.getElementById('sm-end').value;
+  if(!name||!startDate||!endDate){showToast('Sprint name and dates are required','alert');return;}
+  const payload={name,startDate,endDate,goal:document.getElementById('sm-goal').value.trim(),
+    status:document.getElementById('sm-status').value,projectId:currentProject.id,
+    createdBy:currentUser.name};
+  if(_editSprintId){
+    const r=await fetch('/api/sprints/'+_editSprintId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const saved=await r.json();
+    sprints=sprints.map(s=>s.id===_editSprintId?saved:s);
+  } else {
+    const r=await fetch('/api/sprints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const saved=await r.json();
+    sprints.push(saved);
+  }
+  closeModal('sprint-modal');
+  showToast(_editSprintId?'Sprint updated ✓':'Sprint created ✓','success');
+  _editSprintId=null;
+  _renderSprintList();
+}
+
+async function activateSprint(id){
+  // Deactivate any currently active sprint first
+  const currentActive=sprints.find(s=>s.status==='active'&&s.id!==id);
+  if(currentActive){
+    await fetch('/api/sprints/'+currentActive.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'planned'})});
+    sprints=sprints.map(s=>s.id===currentActive.id?{...s,status:'planned'}:s);
+  }
+  const r=await fetch('/api/sprints/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'active'})});
+  const saved=await r.json();
+  sprints=sprints.map(s=>s.id===id?saved:s);
+  showToast('Sprint activated ✓','success');
+  _renderSprintList();
+}
+
+async function completeSprint(id){
+  if(!confirm('Mark this sprint as completed? Stories not done will remain in this sprint.'))return;
+  const r=await fetch('/api/sprints/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'completed',completedAt:new Date().toISOString()})});
+  const saved=await r.json();
+  sprints=sprints.map(s=>s.id===id?saved:s);
+  showToast('Sprint completed ✓','success');
+  _renderSprintList();
+}
+
+async function deleteSprint(id){
+  if(!confirm('Delete this sprint? Stories will be moved to the backlog.'))return;
+  await fetch('/api/sprints/'+id,{method:'DELETE'});
+  sprints=sprints.filter(s=>s.id!==id);
+  // Unlink stories from deleted sprint
+  const linked=stories.filter(s=>s.sprintId===id);
+  await Promise.all(linked.map(s=>fetch('/api/stories/'+s.id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({sprintId:null})})));
+  stories=stories.map(s=>s.sprintId===id?{...s,sprintId:null}:s);
+  showToast('Sprint deleted','success');
+  _renderSprintList();
+}
+
+// ── Story CRUD ────────────────────────────────────────────────────────────────
+function openStoryModal(sprintId,storyId){
+  _editStoryId=storyId||null;
+  const st=storyId?stories.find(s=>s.id===storyId):null;
+  document.getElementById('story-modal-title').textContent=st?'Edit Story':'New Story';
+  document.getElementById('stm-title').value=st?.title||'';
+  document.getElementById('stm-desc').value=st?.description||'';
+  document.getElementById('stm-ac').value=st?.acceptanceCriteria||'';
+  document.getElementById('stm-priority').value=st?.priority||'medium';
+  document.getElementById('stm-points').value=st?.points||3;
+  // Populate assignee dropdown
+  const assignSel=document.getElementById('stm-assignee');
+  const devs=(allUsers||[]).filter(u=>u.role==='developer'||u.role==='tester');
+  assignSel.innerHTML='<option value="">Unassigned</option>'+devs.map(u=>`<option value="${u.id}" ${st?.assigneeId===u.id?'selected':''}>${u.name}</option>`).join('');
+  // Populate sprint dropdown
+  const sprintSel=document.getElementById('stm-sprint');
+  const activeSprints=sprints.filter(s=>s.status!=='completed');
+  sprintSel.innerHTML='<option value="">Backlog (no sprint)</option>'+activeSprints.map(s=>`<option value="${s.id}" ${(st?.sprintId||sprintId)===s.id?'selected':''}>${s.name}</option>`).join('');
+  document.getElementById('story-modal').classList.add('open');
+}
+
+async function saveStory(){
+  const title=document.getElementById('stm-title').value.trim();
+  if(!title){showToast('Story title is required','alert');return;}
+  const assignSel=document.getElementById('stm-assignee');
+  const assigneeId=assignSel.value;
+  const assigneeName=assignSel.options[assignSel.selectedIndex].text==='Unassigned'?'':assignSel.options[assignSel.selectedIndex].text;
+  const sprintVal=document.getElementById('stm-sprint').value;
+  const payload={title,description:document.getElementById('stm-desc').value.trim(),
+    acceptanceCriteria:document.getElementById('stm-ac').value.trim(),
+    priority:document.getElementById('stm-priority').value,
+    points:parseInt(document.getElementById('stm-points').value),
+    assigneeId,assigneeName,sprintId:sprintVal||null,
+    projectId:currentProject.id,status:_editStoryId?(stories.find(s=>s.id===_editStoryId)?.status||'todo'):'todo',
+    createdBy:currentUser.name};
+  if(_editStoryId){
+    const r=await fetch('/api/stories/'+_editStoryId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const saved=await r.json();
+    stories=stories.map(s=>s.id===_editStoryId?saved:s);
+  } else {
+    const r=await fetch('/api/stories',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const saved=await r.json();
+    stories.push(saved);
+  }
+  closeModal('story-modal');
+  showToast(_editStoryId?'Story updated ✓':'Story created ✓','success');
+  _editStoryId=null;
+  renderSprints();
+}
+
+async function updateStoryStatus(id,status){
+  const r=await fetch('/api/stories/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
+  const saved=await r.json();
+  stories=stories.map(s=>s.id===id?saved:s);
+  _renderBoard();
+}
+
+async function moveStoryToSprint(storyId,sprintId){
+  if(!sprintId)return;
+  const r=await fetch('/api/stories/'+storyId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({sprintId})});
+  const saved=await r.json();
+  stories=stories.map(s=>s.id===storyId?saved:s);
+  showToast('Story moved to sprint ✓','success');
+  _renderBacklog();
+}
+
+async function deleteStory(id){
+  if(!confirm('Delete this story?'))return;
+  await fetch('/api/stories/'+id,{method:'DELETE'});
+  stories=stories.filter(s=>s.id!==id);
+  showToast('Story deleted','success');
+  renderSprints();
 }
 </script>
 </body>
