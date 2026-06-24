@@ -1456,8 +1456,16 @@ body { transition: background .3s ease, color .3s ease; }
     <div class="modal-header"><h2 id="subtm-title">Raise Subscription Request</h2><button class="modal-close" onclick="closeModal('sub-ticket-modal')">×</button></div>
     <div class="modal-body">
       <div class="form-group"><label>Subscription / Tool Name *</label><input id="subtm-name" placeholder="e.g. ChatGPT Plus, Figma, GitHub Copilot"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label>Amount (₹) *</label><input id="subtm-amount" type="number" min="0" placeholder="e.g. 1999" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)"></div>
+      <div style="display:grid;grid-template-columns:90px 1fr 1fr;gap:12px">
+        <div class="form-group"><label>Currency</label>
+          <select id="subtm-currency" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
+            <option value="₹">₹ INR</option>
+            <option value="$">$ USD</option>
+            <option value="€">€ EUR</option>
+            <option value="£">£ GBP</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Amount *</label><input id="subtm-amount" type="number" min="0" placeholder="e.g. 1999" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)"></div>
         <div class="form-group"><label>Billing Cycle</label>
           <select id="subtm-cycle" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white)">
             <option value="monthly">Monthly</option>
@@ -4895,7 +4903,7 @@ async function renderSubTickets(){
 
     ${monthSpend>0?`<div class="req-spend-bar">
       <div style="font-size:11px;opacity:.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Total Paid — ${monthName}</div>
-      <div style="font-size:28px;font-weight:700">₹${monthSpend.toLocaleString('en-IN')}</div>
+      <div style="font-size:28px;font-weight:700">${paidThisMonth.length?paidThisMonth[0].currency||'₹':'₹'}${monthSpend.toLocaleString('en-IN')}</div>
       <div style="font-size:12px;opacity:.75;margin-top:4px">${paidThisMonth.length} payment${paidThisMonth.length!==1?'s':''} processed this month</div>
     </div>`:''}
 
@@ -4926,7 +4934,7 @@ async function renderSubTickets(){
             <div style="font-weight:600;font-size:14px;margin-bottom:3px">${t.name}</div>
             <div style="font-size:12px;color:var(--g3);line-height:1.4">${(t.purpose||'').substring(0,100)}${(t.purpose||'').length>100?'…':''}</div>
             <div style="display:flex;align-items:center;gap:12px;margin-top:6px;flex-wrap:wrap">
-              <span style="font-size:13px;font-weight:700;color:var(--text)">₹${parseFloat(t.amount||0).toLocaleString('en-IN')}${cycleLabel}</span>
+              <span style="font-size:13px;font-weight:700;color:var(--text)">${t.currency||'₹'}${parseFloat(t.amount||0).toLocaleString('en-IN')}${cycleLabel}</span>
               <span style="font-size:11px;color:var(--g3)">by ${t.raisedByName||'—'}</span>
               <span style="font-size:11px;color:var(--g3)">${(t.createdAt||'').slice(0,10)}</span>
               ${t.status==='paid'&&t.paidAt?`<span style="font-size:11px;color:#27AE60">Paid ${t.paidAt.slice(0,10)}</span>`:''}
@@ -4950,6 +4958,7 @@ function openSubTicketModal(id){
   const t=id?subTickets.find(x=>x.id===id):null;
   document.getElementById('subtm-title').textContent=t?'Edit Request':'Raise Subscription Request';
   document.getElementById('subtm-name').value=t?.name||'';
+  document.getElementById('subtm-currency').value=t?.currency||'₹';
   document.getElementById('subtm-amount').value=t?.amount||'';
   document.getElementById('subtm-cycle').value=t?.billingCycle||'monthly';
   document.getElementById('subtm-category').value=t?.category||'AI Tools';
@@ -4965,6 +4974,7 @@ async function saveSubTicket(){
   if(!name||!amount||!purpose){showToast('Name, amount, and purpose are required','alert');return;}
   const payload={
     name, amount:parseFloat(amount),
+    currency:document.getElementById('subtm-currency').value,
     billingCycle:document.getElementById('subtm-cycle').value,
     category:document.getElementById('subtm-category').value,
     purpose,
@@ -5024,7 +5034,7 @@ function viewSubTicket(id){
       </div>
       <div style="background:var(--bg);border-radius:10px;padding:14px 16px">
         <div style="font-size:13px;color:var(--g3);margin-bottom:4px">Amount</div>
-        <div style="font-size:22px;font-weight:700">₹${parseFloat(t.amount||0).toLocaleString('en-IN')} <span style="font-size:14px;font-weight:400;color:var(--g3)">${cycleLabel}</span></div>
+        <div style="font-size:22px;font-weight:700">${t.currency||'₹'}${parseFloat(t.amount||0).toLocaleString('en-IN')} <span style="font-size:14px;font-weight:400;color:var(--g3)">${cycleLabel}</span></div>
       </div>
       <div><div style="font-size:12px;font-weight:600;color:var(--g3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px">Purpose</div>
         <div style="font-size:13px;line-height:1.6;color:var(--text)">${t.purpose||'—'}</div>
