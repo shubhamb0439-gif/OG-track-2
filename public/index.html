@@ -770,6 +770,7 @@ tr:hover .badge { transform: scale(1.08); }
 #loading-screen.hide { opacity:0; pointer-events:none; }
 #hex-canvas{position:absolute;inset:0;z-index:0;display:block;}
 #loading-screen > *:not(#hex-canvas){position:relative;z-index:1;}
+#bg-hex-canvas{position:fixed;inset:0;z-index:9996;pointer-events:none;opacity:0.07;}
 
 /* ── FONT PICKER ─────────────────────────────────────────────────────────── */
 .font-picker-panel {
@@ -1075,6 +1076,9 @@ body { transition: background .3s ease, color .3s ease; }
   </div>
 </div>
 
+<!-- BG HEX TEXTURE (permanent, behind everything) -->
+<canvas id="bg-hex-canvas"></canvas>
+
 <!-- AUTH -->
 <!-- LOADING SCREEN (shows while checking auth state) -->
 <div id="loading-screen" style="position:fixed;inset:0;background:#111;z-index:9998;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;">
@@ -1163,6 +1167,30 @@ body { transition: background .3s ease, color .3s ease; }
 
   draw();
   window.addEventListener('resize',()=>draw());
+
+  // ── Persistent bg hex texture ──────────────────────────────────────────────
+  const bgc=document.getElementById('bg-hex-canvas');
+  if(bgc){
+    const bgx=bgc.getContext('2d');
+    function drawBg(){
+      bgc.width=window.innerWidth;bgc.height=window.innerHeight;
+      bgx.clearRect(0,0,bgc.width,bgc.height);
+      const bc=Math.ceil(bgc.width/W)+2,br=Math.ceil(bgc.height/(H*0.75))+2;
+      for(let row=-1;row<br;row++){
+        for(let col=-1;col<bc;col++){
+          const cx=col*W+(row%2===0?0:W/2),cy=row*H*0.75;
+          const k=Math.abs(row*7+col*3+row*col*2+row+col*13)%P.length;
+          bgx.beginPath();
+          for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;bgx.lineTo(cx+(R-3)*Math.cos(a),cy+(R-3)*Math.sin(a));}
+          bgx.closePath();
+          bgx.fillStyle=P[k];bgx.globalAlpha=0.75;bgx.fill();
+          bgx.globalAlpha=1;bgx.strokeStyle='rgba(0,0,0,0.6)';bgx.lineWidth=2.5;bgx.stroke();
+        }
+      }
+    }
+    drawBg();
+    window.addEventListener('resize',drawBg);
+  }
 })();
 </script>
 
