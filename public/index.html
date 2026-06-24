@@ -183,7 +183,7 @@ body{font-family:var(--font);background:var(--g5);color:var(--dark);font-size:14
 .content{flex:1;overflow-y:auto;padding:16px;}
 
 /* ── SIDEBAR ── */
-.sidebar-logo{padding:18px 16px 10px;border-bottom:1px solid #3a3a3a;display:flex;align-items:center;gap:8px;position:relative;}
+.sidebar-logo{padding:18px 16px 10px;border-bottom:1px solid #3a3a3a;display:flex;align-items:center;gap:8px;}
 .sidebar-logo h2{font-size:15px;font-weight:600;color:var(--red2);}
 .conn-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#555;margin-right:4px;vertical-align:middle;flex-shrink:0;}
 .conn-dot.online{background:#27AE60;}
@@ -202,16 +202,20 @@ body{font-family:var(--font);background:var(--g5);color:var(--dark);font-size:14
 .sidebar-user .urole{font-size:11px;color:var(--g3);margin-top:1px;text-transform:capitalize;transition:opacity .2s;}
 .logout-btn{margin-top:8px;width:100%;padding:7px;background:none;border:1px solid #3a3a3a;color:#ccc;border-radius:7px;cursor:pointer;font-size:12px;transition:opacity .2s;}
 .logout-btn:hover{background:#3a3a3a;}
-/* Collapse toggle button */
-.sidebar-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:none;background:none;color:#666;cursor:pointer;flex-shrink:0;transition:background .15s,color .15s,transform .25s;}
-.sidebar-toggle:hover{background:#3a3a3a;color:#fff;}
-.sidebar-toggle svg{transition:transform .25s;}
+/* Collapse row */
+.sidebar-collapse-row{padding:2px 8px 6px;display:flex;align-items:center;gap:8px;}
+.sidebar-collapse-row button{display:flex;align-items:center;gap:7px;background:none;border:none;color:#666;cursor:pointer;border-radius:7px;padding:7px 10px;font-size:12px;width:100%;transition:background .15s,color .15s;}
+.sidebar-collapse-row button:hover{background:#3a3a3a;color:#fff;}
+.sidebar-collapse-row .cr-label{white-space:nowrap;overflow:hidden;transition:opacity .2s,width .25s;}
+.sidebar-collapse-row .cr-icon svg{transition:transform .25s;flex-shrink:0;}
 /* Collapsed state */
 .sidebar.collapsed{width:58px;}
 .sidebar.collapsed .sidebar-logo .sb-wordmark{opacity:0;width:0;overflow:hidden;margin:0;transition:opacity .15s,width .25s;}
-.sidebar.collapsed .sidebar-logo{padding:16px 0 12px;justify-content:center;gap:0;}
-.sidebar.collapsed .sidebar-toggle{right:50%;transform:translate(50%,-50%) rotate(180deg);opacity:.5;}
-.sidebar.collapsed .sidebar-toggle:hover{background:#3a3a3a;opacity:1;}
+.sidebar.collapsed .sidebar-logo{padding:16px 0 14px;justify-content:center;gap:0;}
+.sidebar.collapsed .sidebar-collapse-row{justify-content:center;padding:2px 0 6px;}
+.sidebar.collapsed .sidebar-collapse-row button{width:auto;padding:7px;justify-content:center;}
+.sidebar.collapsed .sidebar-collapse-row .cr-label{opacity:0;width:0;}
+.sidebar.collapsed .sidebar-collapse-row .cr-icon svg{transform:rotate(180deg);}
 .sidebar.collapsed .nav-btn{padding:10px 0;justify-content:center;gap:0;}
 .sidebar.collapsed .nav-btn .nav-label{opacity:0;width:0;}
 .sidebar.collapsed .nav-btn #msg-badge{display:none!important;}
@@ -1322,7 +1326,6 @@ body { transition: background .3s ease, color .3s ease; }
         <div style="font-size:15px;font-weight:700;color:#fff;line-height:1.2;white-space:nowrap">OGTrack</div>
         <div style="font-size:10px;color:var(--g3);letter-spacing:.3px;white-space:nowrap">by OGPlus</div>
       </div>
-      <button class="sidebar-toggle" onclick="toggleSidebar()" title="Collapse sidebar"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,2 4,7 9,12"/></svg></button>
     </div>
     <div id="conn-status-wrap" style="padding:6px 14px 8px;border-bottom:1px solid #3a3a3a;">
       <p style="font-size:10px;color:var(--g3)"><span class="conn-dot" id="conn-dot"></span><span id="conn-status">Connecting...</span></p>
@@ -1333,6 +1336,12 @@ body { transition: background .3s ease, color .3s ease; }
       <div style="font-size:10px;color:var(--g3);margin-top:1px">tap to switch →</div>
     </div>
     <div class="sidebar-nav" id="sidebar-nav"></div>
+    <div class="sidebar-collapse-row">
+      <button onclick="toggleSidebar()" title="Collapse sidebar">
+        <span class="cr-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,2 4,7 9,12"/></svg></span>
+        <span class="cr-label">Collapse</span>
+      </button>
+    </div>
     <div class="sidebar-user">
       <div id="sidebar-avatar" style="width:30px;height:30px;border-radius:50%;background:var(--red);display:none;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer;margin:0 auto 4px" title="Sign out" onclick="doLogout()"></div>
       <div class="uname" id="sidebar-uname"></div>
@@ -2040,11 +2049,11 @@ function connectSocket(){
   socket.on('bug:created',bug=>{
     if(currentUser.role==='superadmin'||!currentProject||currentProject.id==='__all__'||bug.projectId===currentProject?.id){
       if(!bugs.find(b=>b.id===bug.id)) bugs.unshift(bug);
-      renderView();
+      if(currentView!=='messages') renderView();
     }
   });
-  socket.on('bug:updated',bug=>{bugs=bugs.map(b=>b.id===bug.id?bug:b);renderView();if(openDetailId===bug.id)viewBug(bug.id);});
-  socket.on('bug:deleted',({id})=>{bugs=bugs.filter(b=>b.id!==id);if(openDetailId===id){closeModal('detail-modal');openDetailId=null;}renderView();});
+  socket.on('bug:updated',bug=>{bugs=bugs.map(b=>b.id===bug.id?bug:b);if(openDetailId===bug.id)viewBug(bug.id);if(currentView!=='messages') renderView();});
+  socket.on('bug:deleted',({id})=>{bugs=bugs.filter(b=>b.id!==id);if(openDetailId===id){closeModal('detail-modal');openDetailId=null;}if(currentView!=='messages') renderView();});
   socket.on('project:created',p=>{if(!allProjects.find(x=>x.id===p.id))allProjects.unshift(p);if(currentView==='projects')renderView();});
   socket.on('project:updated',p=>{allProjects=allProjects.map(x=>x.id===p.id?p:x);if(currentView==='projects')renderView();});
   socket.on('project:deleted',({id})=>{allProjects=allProjects.filter(p=>p.id!==id);if(currentView==='projects')renderView();});
@@ -2748,12 +2757,19 @@ function viewBug(id){
   openDetailId=id;
   document.getElementById('detail-title').textContent=`${id}`;
   const role=currentUser.role;
-  const canStart  =role==='developer'&&bug.status==='Open';
-  const canResolve=role==='developer'&&bug.status==='In Progress';
-  const canRetest =role==='tester'&&(bug.status==='Resolved'||bug.status==='Fixed');
-  const canReopen =role==='developer'&&['Wont Fix','Not a Bug','Expected Behavior','Resolved','Fixed','Closed'].includes(bug.status);
-  const canComment=role==='developer'||role==='tester'||role==='manager';
-  const canChange =canComment; // kept for backward compat
+  const isAssignee=bug.assignee===currentUser.name;
+  const isReporter=bug.reporter===currentUser.name;
+  const isMgr=role==='manager'||role==='superadmin';
+  // Dev-capable: assigned to this bug, OR has developer/manager/superadmin role
+  const isDevCapable=role==='developer'||isMgr||isAssignee;
+  // Tester-capable: reporter of this bug, OR has tester/manager/superadmin role
+  const isTesterCapable=role==='tester'||isMgr||isReporter;
+  const canStart  =isDevCapable&&bug.status==='Open';
+  const canResolve=isDevCapable&&bug.status==='In Progress';
+  const canRetest =isTesterCapable&&(bug.status==='Resolved'||bug.status==='Fixed');
+  const canReopen =isDevCapable&&['Wont Fix','Not a Bug','Expected Behavior','Resolved','Fixed','Closed'].includes(bug.status);
+  const canComment=isDevCapable||isTesterCapable;
+  const canChange =canComment;
 
   document.getElementById('detail-body').innerHTML=`
     <div style="font-size:14px;font-weight:500;margin-bottom:14px">${bug.title}</div>
@@ -2766,7 +2782,7 @@ function viewBug(id){
         <div class="detail-field"><div class="dl">Component</div><div class="dv">${bug.component}</div></div>
         <div class="detail-field"><div class="dl">Assigned To</div><div class="dv">${bug.assignee||'Unassigned'}</div></div>
         <div class="detail-field"><div class="dl">Reporter</div><div class="dv">${bug.reporter}</div></div>
-        <div class="detail-field"><div class="dl">Repro Rate</div><div class="dv">${role==='tester'?`<select onchange="patchBug('${bug.id}',{reproRate:this.value,updatedAt:new Date().toISOString()})" style="padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px"><option value="">— Select —</option>${['100%','80%','60%','40%','20%','10%','Once'].map(o=>`<option${bug.reproRate===o?' selected':''}>${o}</option>`).join('')}</select>`:bug.reproRate||'<span style="color:var(--g4)">—</span>'}</div></div>
+        <div class="detail-field"><div class="dl">Repro Rate</div><div class="dv">${isTesterCapable?`<select onchange="patchBug('${bug.id}',{reproRate:this.value,updatedAt:new Date().toISOString()})" style="padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px"><option value="">— Select —</option>${['100%','80%','60%','40%','20%','10%','Once'].map(o=>`<option${bug.reproRate===o?' selected':''}>${o}</option>`).join('')}</select>`:bug.reproRate||'<span style="color:var(--g4)">—</span>'}</div></div>
         <div class="detail-field"><div class="dl">Created</div><div class="dv" style="font-size:12px">${fmt(bug.createdAt)}</div></div>
         ${bug.resolvedAt?`<div class="detail-field"><div class="dl">Resolved</div><div class="dv" style="font-size:12px">${fmt(bug.resolvedAt)}</div></div>`:''}
         ${bug.retestedAt?`<div class="detail-field"><div class="dl">Retested</div><div class="dv" style="font-size:12px">${fmt(bug.retestedAt)}</div></div>`:''}
@@ -2796,7 +2812,7 @@ function viewBug(id){
       </div>
       ${canComment?`<div style="margin-top:8px;display:flex;gap:8px"><input type="text" id="further-change-input" placeholder="Add a comment..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:0"><button class="btn btn-ghost btn-sm" onclick="addFurtherChange('${bug.id}')">Post</button></div>`:''}
     </div>
-    ${role==='developer'?`<div class="detail-section"><h4>Developer Notes</h4>
+    ${isDevCapable?`<div class="detail-section"><h4>Developer Notes</h4>
       <div class="changes-box">
         ${(bug.developerNotes||[]).length
           ?(bug.developerNotes||[]).map(n=>`<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e0e0e0"><div style="font-size:12px;font-weight:500">${n.who} <span style="font-size:10px;background:#eaf0fb;color:#1a5276;border-radius:3px;padding:1px 4px;margin-left:4px">developer</span> <span style="font-weight:400;color:var(--g3)">· ${fmt(n.when)}</span></div><div style="font-size:13px;margin-top:2px">${n.note}</div></div>`).join('')
@@ -2812,9 +2828,11 @@ function viewBug(id){
   const footer=document.getElementById('detail-footer');
   footer.innerHTML='';footer.style.justifyContent='space-between';
   const left=document.createElement('div');left.style.cssText='display:flex;gap:8px';
-  if(role==='tester'&&bug.reporter===currentUser.name){
+  if(isReporter||isMgr){
     const be=document.createElement('button');be.className='btn btn-ghost btn-sm';be.textContent='✏️ Edit';
     be.onclick=()=>openEditBugModal(bug.id);left.appendChild(be);
+  }
+  if(isReporter||isMgr){
     const bd=document.createElement('button');bd.className='btn btn-danger btn-sm';bd.textContent='🗑 Delete';
     bd.onclick=()=>confirmDelete(bug.id);left.appendChild(bd);
   }
@@ -3396,6 +3414,10 @@ async function renderMessages() {
   renderConvoList();
   // Register socket listeners for new messages
   setupMsgSocket();
+  // Restore active conversation if one was open before this re-render
+  if(activeConvoId && conversations.find(c=>c.id===activeConvoId)){
+    openConversation(activeConvoId);
+  }
 }
 
 function renderConvoList() {
