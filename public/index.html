@@ -1572,6 +1572,13 @@ body { transition: background .3s ease, color .3s ease; }
           <option value="completed">Completed</option>
         </select>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--border);margin-top:4px">
+        <input type="checkbox" id="sm-dev-edit" style="width:16px;height:16px;accent-color:var(--red);cursor:pointer;flex-shrink:0">
+        <div>
+          <label for="sm-dev-edit" style="margin:0;font-size:13px;cursor:pointer;font-weight:500">Allow developers to edit sprint content</label>
+          <div style="font-size:11px;color:var(--g3);margin-top:1px">Developers assigned to this project can add, edit, and move stories on the board</div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('sprint-modal')">Cancel</button>
@@ -5511,8 +5518,9 @@ function _renderSprintList(){
         return `<div class="sprint-card ${sp.status}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
             <div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
                 <span class="sprint-badge ${sp.status}">${sp.status==='active'?'● Active':sp.status==='planned'?'○ Planned':'✓ Completed'}</span>
+                ${sp.devEditEnabled?`<span style="font-size:10px;padding:1px 7px;border-radius:8px;background:#3498DB18;color:#3498DB;font-weight:600;border:1px solid #3498DB40">✏ Dev edit</span>`:''}
               </div>
               <div style="font-size:16px;font-weight:700">${sp.name}</div>
               <div style="font-size:12px;color:var(--g3);margin-top:2px">${sp.startDate} → ${sp.endDate}</div>
@@ -5557,6 +5565,8 @@ function _renderBoard(){
   if(!sprint)return _sprintSubview='list',renderSprints();
   const role=currentUser.role;
   const isManager=role==='manager'||role==='superadmin';
+  const isProjectDev=(currentProject?.developers||[]).includes(currentUser.name)||(currentProject?.testers||[]).includes(currentUser.name);
+  const canEditContent=isManager||(sprint.devEditEnabled&&isProjectDev);
   const ss=stories.filter(s=>s.sprintId===_boardSprintId);
   const sb=bugs.filter(b=>b.sprintId===_boardSprintId);
   const cols=[{key:'todo',label:'To Do',color:'#6c757d'},{key:'in_progress',label:'In Progress',color:'#F39C12'},{key:'done',label:'Done',color:'#27AE60'}];
@@ -5564,10 +5574,15 @@ function _renderBoard(){
   document.getElementById('content-area').innerHTML=`
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="_sprintSubview='list';renderSprints()">← Back</button>
-      <div style="flex:1"><div style="font-size:17px;font-weight:700">${sprint.name}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:17px;font-weight:700">${sprint.name}</div>
+          ${sprint.devEditEnabled&&!isManager?`<span style="font-size:10px;padding:2px 8px;border-radius:8px;background:#3498DB18;color:#3498DB;font-weight:600;border:1px solid #3498DB40">✏ Edit access granted</span>`:''}
+          ${sprint.devEditEnabled&&isManager?`<span style="font-size:10px;padding:2px 8px;border-radius:8px;background:#27AE6018;color:#27AE60;font-weight:600;border:1px solid #27AE6040">✏ Dev edit on</span>`:''}
+        </div>
         <div style="font-size:12px;color:var(--g3)">${sprint.startDate} → ${sprint.endDate}</div>
       </div>
-      ${isManager?`<button class="btn btn-primary btn-sm" onclick="openStoryModal('${_boardSprintId}')">+ Add Story</button>`:''}
+      ${canEditContent?`<button class="btn btn-primary btn-sm" onclick="openStoryModal('${_boardSprintId}')">+ Add Story</button>`:''}
     </div>
     ${sprint.goal?`<div style="font-size:13px;color:var(--g3);margin-bottom:8px">🎯 ${sprint.goal}</div>`:''}
     ${total>0?`<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--g3);margin-bottom:4px"><span>${done}/${total} items done</span><span style="color:${clr};font-weight:600">${pct}%</span></div><div class="sprint-progress-bar"><div class="sprint-progress-fill" style="width:${pct}%;background:${clr}"></div></div></div>`:''}
@@ -5578,13 +5593,13 @@ function _renderBoard(){
         const count=colStories.length+colBugs.length;
         return `<div class="sprint-col">
           <div class="sprint-col-header" style="color:${col.color}">${col.label} <span style="background:var(--border);color:var(--g2);padding:1px 7px;border-radius:10px;font-size:11px">${count}</span></div>
-          ${colStories.map(s=>_storyCard(s,isManager)).join('')}
-          ${colBugs.map(b=>_bugCard(b,isManager)).join('')}
+          ${colStories.map(s=>_storyCard(s,canEditContent)).join('')}
+          ${colBugs.map(b=>_bugCard(b,canEditContent)).join('')}
           ${!count?`<div style="text-align:center;padding:24px 0;font-size:13px;color:var(--g3)">Empty</div>`:''}
         </div>`;
       }).join('')}
     </div>
-    ${isManager?`<div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
+    ${canEditContent?`<div style="border-top:1px solid var(--border);margin-top:20px;padding-top:16px">
       <div style="font-size:13px;font-weight:600;color:var(--g2);margin-bottom:10px">Link Existing Items to Sprint</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <div style="display:flex;gap:6px;flex:1;min-width:220px">
@@ -5717,6 +5732,7 @@ function openSprintModal(id){
   document.getElementById('sm-end').value=sp?.endDate||'';
   document.getElementById('sm-goal').value=sp?.goal||'';
   document.getElementById('sm-status').value=sp?.status||'planned';
+  document.getElementById('sm-dev-edit').checked=sp?.devEditEnabled||false;
   document.getElementById('sprint-modal').classList.add('open');
 }
 
@@ -5727,7 +5743,7 @@ async function saveSprint(){
   if(!name||!startDate||!endDate){showToast('Sprint name and dates are required','alert');return;}
   const payload={name,startDate,endDate,goal:document.getElementById('sm-goal').value.trim(),
     status:document.getElementById('sm-status').value,projectId:currentProject.id,
-    createdBy:currentUser.name};
+    createdBy:currentUser.name,devEditEnabled:document.getElementById('sm-dev-edit').checked};
   if(_editSprintId){
     const r=await fetch('/api/sprints/'+_editSprintId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const saved=await r.json();
