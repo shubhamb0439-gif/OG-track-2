@@ -723,6 +723,16 @@ tr:hover .badge { transform: scale(1.08); }
 .msg-bubble-wrap.mine .msg-reply-btn{left:-32px;}
 .read-tick{font-size:11px;color:var(--g3);margin-left:4px;}
 .read-tick.seen{color:#27AE60;}
+.msg-mention{background:rgba(52,152,219,.18);color:#3498DB;border-radius:3px;padding:0 3px;font-weight:600;}
+.msg-mention-all{background:rgba(231,76,60,.15);color:#E74C3C;border-radius:3px;padding:0 3px;font-weight:600;}
+.msg-bubble-wrap.mentioned .msg-bubble{border-left:3px solid #3498DB !important;padding-left:10px !important;}
+.msg-bubble-wrap.urgent:not(.mine) .msg-bubble{border-left:3px solid #E74C3C !important;background:rgba(231,76,60,.08) !important;}
+.msg-bubble-wrap.urgent.mine .msg-bubble{border-right:3px solid #ffaaaa !important;}
+.msg-urgent-badge{font-size:10px;font-weight:700;color:#E74C3C;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
+.msg-bubble-wrap.mine .msg-urgent-badge{text-align:right;}
+#mention-dropdown{display:none;background:var(--card);border:1px solid var(--border);border-radius:10px 10px 0 0;overflow:hidden;margin-bottom:0;box-shadow:0 -4px 12px rgba(0,0,0,.08);}
+#mention-dropdown .mention-item{padding:8px 14px;cursor:pointer;font-size:13px;color:var(--text);transition:background .1s;}
+#mention-dropdown .mention-item:hover,#mention-dropdown .mention-item.active{background:var(--bg);}
 .color-picker-panel{position:absolute;top:42px;right:0;background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);padding:12px;z-index:100;display:none;}
 [data-theme="dark"] .color-picker-panel{background:#1E1E1E;border-color:#333;}
 .color-picker-panel.open{display:block;}
@@ -3517,10 +3527,12 @@ async function openConversation(id) {
         <div><div class="msg-reply-name" id="reply-name"></div><div class="msg-reply-preview" id="reply-preview"></div></div>
         <button onclick="clearReply()" style="background:none;border:none;cursor:pointer;color:var(--g3);font-size:16px;flex-shrink:0">×</button>
       </div>
+      <div id="mention-dropdown"></div>
       <div class="msg-input-area">
         <button class="color-btn" onclick="toggleColorPicker(event)" title="Change bubble color">🎨</button>
         <label class="color-btn" title="Attach file" style="cursor:pointer">📎<input type="file" id="msg-file-input" style="display:none" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileAttach(this,'${id}')"></label>
-        <textarea class="msg-input" id="msg-input" placeholder="Type a message..." rows="1"
+        <button id="msg-urgent-btn" class="color-btn" onclick="toggleUrgent()" title="Mark as urgent" style="opacity:.4;font-size:17px">🚨</button>
+        <textarea class="msg-input" id="msg-input" placeholder="Type a message… (@name to mention)" rows="1"
           onkeydown="handleMsgKeydown(event,'${id}')"
           oninput="handleTyping('${id}')"></textarea>
         <button class="msg-send-btn" onclick="sendMessage('${id}')">➤</button>
@@ -3532,6 +3544,7 @@ async function openConversation(id) {
 function renderMsgBubbles() {
   if (!msgMessages.length) return '<div style="text-align:center;color:var(--g3);font-size:13px;padding:20px">No messages yet. Say hello! 👋</div>';
   let lastDate = '';
+  const myFirst = (currentUser.name||'').split(' ')[0].toLowerCase();
   return msgMessages.map(m => {
     const mine = m.senderId === currentUser.id;
     const d = new Date(m.sentAt);
@@ -3541,12 +3554,17 @@ function renderMsgBubbles() {
     if (dateStr !== lastDate) { lastDate=dateStr; divider=`<div class="msg-date-divider">${dateStr}</div>`; }
     const seen = mine && m.read && m.read.length > 0;
     const replyQuote = m.replyTo ? `<div class="msg-reply-quote">↩ ${escHtml(m.replyTo.senderName)}: ${escHtml(m.replyTo.text.slice(0,60))}${m.replyTo.text.length>60?'...':''}</div>` : '';
-    return `${divider}<div class="msg-bubble-wrap ${mine?'mine':''}" id="msg-${m.id}">
+    const tl = (m.text||'').toLowerCase();
+    const isMentioned = !mine && (tl.includes('@all') || tl.includes('@'+myFirst));
+    const wrapClass = ['msg-bubble-wrap', mine?'mine':'', m.urgent?'urgent':'', isMentioned?'mentioned':''].filter(Boolean).join(' ');
+    const urgentBadge = m.urgent ? `<div class="msg-urgent-badge">🚨 URGENT</div>` : '';
+    return `${divider}<div class="${wrapClass}" id="msg-${m.id}">
       ${!mine?`<div class="msg-avatar" style="width:28px;height:28px;font-size:11px;flex-shrink:0">${m.senderName?.charAt(0)||'?'}</div>`:''}
       <div class="msg-inner">
         ${!mine?`<div class="msg-sender">${m.senderName}</div>`:''}
+        ${urgentBadge}
         ${replyQuote}
-        <div class="msg-bubble">${escHtml(m.text)}</div>
+        <div class="msg-bubble">${renderMsgText(m.text)}</div>
         <div class="msg-time" style="display:flex;align-items:center;gap:2px;${mine?'justify-content:flex-end':''}">
           ${timeStr}
           ${mine?`<span class="read-tick ${seen?'seen':''}">✓${seen?'✓':''}</span>`:''}
@@ -3555,6 +3573,15 @@ function renderMsgBubbles() {
       <button class="msg-reply-btn" onclick="setReplyById('${m.id}')" title="Reply">↩</button>
     </div>`;
   }).join('');
+}
+
+function renderMsgText(text) {
+  if (!text) return '';
+  if (text.startsWith('[img]') || text.startsWith('[video]') || text.match(/^\[file name=/)) return escHtml(text);
+  const esc = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  return esc.replace(/@(\w+)/g, (_,w) => w.toLowerCase()==='all'
+    ? `<span class="msg-mention-all">@all</span>`
+    : `<span class="msg-mention">@${w}</span>`);
 }
 
 function escHtml(t) {
@@ -3579,6 +3606,26 @@ function scrollMsgs() {
 }
 
 function handleMsgKeydown(e, id) {
+  const dd = document.getElementById('mention-dropdown');
+  const ddOpen = dd && dd.style.display === 'block';
+  if (ddOpen) {
+    if (e.key==='Escape') { e.preventDefault(); hideMentionDropdown(); return; }
+    if (e.key==='ArrowDown'||e.key==='ArrowUp') {
+      e.preventDefault();
+      const items = dd.querySelectorAll('.mention-item');
+      if (!items.length) return;
+      if (dd._sel===undefined) dd._sel=-1;
+      dd._sel = e.key==='ArrowDown' ? Math.min(dd._sel+1, items.length-1) : Math.max(dd._sel-1, 0);
+      items.forEach((el,i)=>el.classList.toggle('active', i===dd._sel));
+      return;
+    }
+    if (e.key==='Enter'||e.key==='Tab') {
+      e.preventDefault();
+      const idx = (dd._sel>=0) ? dd._sel : 0;
+      if (dd._names && dd._names[idx]) insertMention(dd._names[idx]);
+      return;
+    }
+  }
   if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(id); }
 }
 
@@ -3586,11 +3633,57 @@ function handleTyping(id) {
   const convo = conversations.find(c=>c.id===id);
   if (!convo) return;
   clearTimeout(typingTimer);
-  // Would need socket ref — skip for now since socket is in connectSocket scope
   typingTimer = setTimeout(() => {}, 1000);
-  // Auto-resize textarea
   const ta = document.getElementById('msg-input');
-  if (ta) { ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight,100)+'px'; }
+  if (!ta) return;
+  ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight,100)+'px';
+  // @mention autocomplete
+  const pos = ta.selectionStart;
+  const before = ta.value.slice(0, pos);
+  const atMatch = before.match(/@(\w*)$/);
+  if (atMatch) {
+    const q = atMatch[1].toLowerCase();
+    const others = (convo.memberNames||[]).filter(n=>n!==currentUser.name);
+    const names = ['all',...others].filter(n=>n.toLowerCase().startsWith(q));
+    if (names.length) { showMentionDropdown(names); return; }
+  }
+  hideMentionDropdown();
+}
+
+function showMentionDropdown(names) {
+  const dd = document.getElementById('mention-dropdown');
+  if (!dd) return;
+  dd._names = names; dd._sel = -1;
+  dd.innerHTML = names.map((n,i)=>
+    `<div class="mention-item" data-i="${i}" onmousedown="insertMention('${n.replace(/'/g,"\\'")}')">
+      ${n==='all'?'👥 <strong>@all</strong> — Everyone':'👤 @'+escHtml(n.split(' ')[0])+' <span style="color:var(--g3);font-size:11px">'+escHtml(n)+'</span>'}
+    </div>`).join('');
+  dd.style.display='block';
+}
+
+function hideMentionDropdown() {
+  const dd = document.getElementById('mention-dropdown');
+  if (dd) { dd.style.display='none'; dd._names=null; dd._sel=-1; }
+}
+
+function insertMention(fullName) {
+  const ta = document.getElementById('msg-input');
+  if (!ta) return;
+  const pos = ta.selectionStart;
+  const before = ta.value.slice(0, pos);
+  const after = ta.value.slice(pos);
+  const mention = (fullName==='all' ? '@all' : '@'+fullName.split(' ')[0]) + ' ';
+  const newBefore = before.replace(/@\w*$/, mention);
+  ta.value = newBefore + after;
+  const newPos = newBefore.length;
+  ta.focus(); ta.setSelectionRange(newPos, newPos);
+  hideMentionDropdown();
+}
+
+function toggleUrgent() {
+  _msgUrgent = !_msgUrgent;
+  const btn = document.getElementById('msg-urgent-btn');
+  if (btn) btn.style.opacity = _msgUrgent ? '1' : '.4';
 }
 
 async function sendMessage(convoId) {
@@ -3599,9 +3692,15 @@ async function sendMessage(convoId) {
   if (!text) return;
   input.value = '';
   input.style.height = 'auto';
+  hideMentionDropdown();
+
+  const urgent = _msgUrgent;
+  _msgUrgent = false;
+  const urgentBtn = document.getElementById('msg-urgent-btn');
+  if (urgentBtn) urgentBtn.style.opacity = '.4';
 
   const tempMsg = { id:'tmp'+Date.now(), senderId:currentUser.id, senderName:currentUser.name,
-    text, sentAt: new Date().toISOString(), replyTo: replyTo||null };
+    text, urgent, sentAt: new Date().toISOString(), replyTo: replyTo||null };
   msgMessages.push(tempMsg);
   const capturedReply = replyTo;
   clearReply();
@@ -3611,7 +3710,7 @@ async function sendMessage(convoId) {
   try {
     const r = await fetch(`/api/conversations/${convoId}/messages`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ senderId:currentUser.id, senderName:currentUser.name, text, replyTo: capturedReply||null })
+      body: JSON.stringify({ senderId:currentUser.id, senderName:currentUser.name, text, urgent, replyTo: capturedReply||null })
     });
     const saved = await r.json();
     // Replace temp with saved (dedup: only push if not already delivered by socket)
@@ -3651,6 +3750,23 @@ function playMsgSound() {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.3);
+  } catch(e) {}
+}
+
+function playUrgentSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.2, 0.4].forEach(t => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(1320, ctx.currentTime + t);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + t + 0.13);
+      gain.gain.setValueAtTime(0.6, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.15);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.15);
+    });
   } catch(e) {}
 }
 
@@ -3698,8 +3814,9 @@ function handleIncomingMessage(convoId, message) {
   }
   // Play sound and show OS notification if message is from someone else
   if (message.senderId !== currentUser.id) {
-    playMsgSound();
-    fireOsNotif(`💬 ${message.senderName}`, message.text);
+    if (message.urgent) playUrgentSound(); else playMsgSound();
+    const notifBody = message.urgent ? '🚨 URGENT: ' + message.text : message.text;
+    fireOsNotif(`💬 ${message.senderName}`, notifBody);
   }
   updateUnreadBadge();
   renderConvoList();
@@ -3716,6 +3833,7 @@ function handleNewConversation(convo) {
 
 // ── Reply State ───────────────────────────────────────────────────────────────
 let replyTo = null;
+let _msgUrgent = false;
 
 function setReplyById(msgId) {
   const m = msgMessages.find(x => x.id === msgId);
