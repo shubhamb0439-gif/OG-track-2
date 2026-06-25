@@ -356,6 +356,66 @@ tr:hover td{background:#fafafa;}tr[onclick]{cursor:pointer;}tr[onclick]:hover td
 .req-badge.paid{background:#27AE6020;color:#27AE60;}
 .req-badge.rejected{background:#E74C3C20;color:#E74C3C;}
 .req-spend-bar{background:linear-gradient(135deg,#16A085,#1ABC9C);color:#fff;border-radius:12px;padding:16px 20px;margin-bottom:20px;}
+/* ── HR MODULE ───────────────────────────────────────────────────────────── */
+.role-badge.role-hr{background:#e74c3c22;color:#C0392B;}
+.hr-dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.hr-stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 14px;text-align:center;cursor:pointer;transition:box-shadow .15s,transform .15s;}
+.hr-stat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-2px);}
+.hr-stat-num{font-size:28px;font-weight:800;line-height:1.2;}
+.hr-stat-label{font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
+.hr-pipeline{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:20px;}
+.hr-pipe-col{flex:0 0 200px;background:var(--bg);border-radius:10px;padding:10px;}
+.hr-pipe-head{font-size:12px;font-weight:700;color:var(--g2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.hr-pipe-count{background:var(--border);color:var(--g3);border-radius:10px;padding:1px 7px;font-size:11px;}
+.hr-cand-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:box-shadow .12s;}
+.hr-cand-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.hr-cand-name{font-weight:700;font-size:13px;margin-bottom:2px;}
+.hr-cand-meta{font-size:11px;color:var(--g3);}
+.hr-score-bar{height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:6px;}
+.hr-score-fill{height:100%;border-radius:3px;transition:width .4s;}
+.hr-job-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;transition:box-shadow .15s;}
+.hr-job-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08);}
+.hr-job-title{font-size:16px;font-weight:700;margin-bottom:6px;}
+.hr-job-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.hr-tag{background:var(--bg);color:var(--g2);padding:3px 10px;border-radius:20px;font-size:12px;border:1px solid var(--border);}
+.hr-status-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;}
+.hr-status-badge.draft{background:#6c757d22;color:#6c757d;}
+.hr-status-badge.published{background:#27AE6022;color:#27AE60;}
+.hr-status-badge.closed{background:#E74C3C22;color:#E74C3C;}
+.hr-status-badge.applied{background:#3498DB22;color:#3498DB;}
+.hr-status-badge.ai_screened{background:#9B59B622;color:#9B59B6;}
+.hr-status-badge.shortlisted{background:#27AE6022;color:#27AE60;}
+.hr-status-badge.hr_review{background:#F39C1222;color:#F39C12;}
+.hr-status-badge.interview_scheduled{background:#1ABC9C22;color:#1ABC9C;}
+.hr-status-badge.interview_completed{background:#2ECC7122;color:#2ECC71;}
+.hr-status-badge.selected{background:#27AE6022;color:#27AE60;}
+.hr-status-badge.offer_released{background:#8E44AD22;color:#8E44AD;}
+.hr-status-badge.joined{background:#2980B922;color:#2980B9;}
+.hr-status-badge.rejected{background:#E74C3C22;color:#E74C3C;}
+.hr-status-badge.scheduled{background:#1ABC9C22;color:#1ABC9C;}
+.hr-status-badge.completed{background:#2ECC7122;color:#2ECC71;}
+.hr-status-badge.cancelled{background:#E74C3C22;color:#E74C3C;}
+.hr-ai-score{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.hr-ai-score.high{background:#27AE6022;color:#27AE60;}
+.hr-ai-score.medium{background:#F39C1222;color:#F39C12;}
+.hr-ai-score.low{background:#E74C3C22;color:#E74C3C;}
+.hr-timeline{display:flex;flex-direction:column;gap:0;}
+.hr-tl-item{display:flex;gap:12px;padding-bottom:12px;position:relative;}
+.hr-tl-item:not(:last-child):before{content:'';position:absolute;left:9px;top:20px;bottom:0;width:2px;background:var(--border);}
+.hr-tl-dot{width:20px;height:20px;border-radius:50%;background:var(--red);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;margin-top:1px;}
+.hr-tl-content{flex:1;font-size:13px;}
+.hr-tl-status{font-weight:700;text-transform:capitalize;}
+.hr-tl-time{font-size:11px;color:var(--g3);}
+.hr-cand-list-item{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:8px;cursor:pointer;transition:box-shadow .12s;}
+.hr-cand-list-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.hr-cand-avatar{width:38px;height:38px;border-radius:50%;background:var(--red2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;}
+.hr-section-tabs{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:10px;margin-bottom:16px;width:fit-content;}
+.hr-section-tab{padding:6px 16px;border-radius:7px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--g2);transition:all .15s;}
+.hr-section-tab.active{background:var(--white);color:var(--dark);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.hr-int-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;}
+.hr-int-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.hr-report-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px;}
+.hr-report-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;}
 /* ── SPRINTS & STORIES ───────────────────────────────────────────────────── */
 .sprint-list{display:flex;flex-direction:column;gap:12px;}
 .sprint-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
@@ -1299,7 +1359,7 @@ body { transition: background .3s ease, color .3s ease; }
       <div class="field"><label>Full Name</label><input type="text" id="r-name" placeholder="Your name"></div>
       <div class="field"><label>Email</label><input type="email" id="r-email" placeholder="you@example.com"></div>
       <div class="field"><label>Password</label><input type="password" id="r-pass" placeholder="Min 6 characters"></div>
-      <div class="field"><label>Role</label><select id="r-role"><option value="developer">Developer</option><option value="tester">Tester</option><option value="manager">Manager</option><option value="accountant">Accountant</option><option value="senior_accountant">Senior Accountant</option><option value="accounts_manager">Accounts Manager</option></select></div>
+      <div class="field"><label>Role</label><select id="r-role"><option value="developer">Developer</option><option value="tester">Tester</option><option value="manager">Manager</option><option value="accountant">Accountant</option><option value="senior_accountant">Senior Accountant</option><option value="accounts_manager">Accounts Manager</option><option value="hr">HR</option></select></div>
       <button class="auth-btn" onclick="doRegister()">Request Access</button>
       <div class="pending-msg" id="pending-msg">✅ Registration submitted! Pending Super Admin approval.</div>
     </div>
@@ -1753,6 +1813,17 @@ let accTimerInterval = null;
 let editingClientId  = null;
 let stoppingEntryId  = null;
 let editingEntryId   = null;
+// ── HR Module state ───────────────────────────────────────────────────────────
+let hrJobs         = [];
+let hrCandidates   = [];
+let hrInterviews   = [];
+let _hrDataLoaded  = false;
+let _editJobId     = null;
+let _editIntId     = null;
+let _hrJobFilter   = '';
+let _hrCandFilter  = '';
+let _hrCandStatus  = '';
+let _hrCandSubview = 'pipeline';
 
 // ── Mobile sidebar ────────────────────────────────────────────────────────────
 function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('open'); }
@@ -1973,7 +2044,7 @@ async function launchApp(){
   initSidebarCollapse();
   // Show project switcher bar only for bug-tracker roles
   const projBar=document.getElementById('sidebar-project-bar');
-  const _hideBar=currentUser.role==='superadmin'||currentUser.role==='accounts_manager'||currentUser.role==='senior_accountant'||currentUser.role==='accountant';
+  const _hideBar=currentUser.role==='superadmin'||currentUser.role==='accounts_manager'||currentUser.role==='senior_accountant'||currentUser.role==='accountant'||currentUser.role==='hr';
   if(projBar) projBar.style.display=_hideBar?'none':'block';
   connectSocket();
   requestNotifPermission();
@@ -1992,6 +2063,17 @@ async function launchApp(){
     document.getElementById('sp-name').textContent='Accounting';
     document.getElementById('content-area').innerHTML='<div class="loading">Loading...</div>';
     await loadAccData();
+    renderView();
+  } else if(currentUser.role==='hr'){
+    currentProject={id:'__hr__',name:'HR'};
+    localStorage.setItem('bt_project',JSON.stringify(currentProject));
+    document.getElementById('new-bug-btn').style.display='none';
+    document.getElementById('import-btn').style.display='none';
+    document.getElementById('main-app').style.display='flex';
+    document.getElementById('sp-name').textContent='HR';
+    document.getElementById('content-area').innerHTML='<div class="loading">Loading...</div>';
+    await loadHrData();
+    currentView='hr_dashboard';
     renderView();
   } else if(currentProject){
     document.getElementById('main-app').style.display='flex';
@@ -2013,7 +2095,7 @@ async function launchApp(){
 
 function buildSidebar(){
   const role=currentUser.role;
-  const BUILTIN_ROLES=['superadmin','manager','developer','tester','senior_accountant','accountant','accounts_manager'];
+  const BUILTIN_ROLES=['superadmin','manager','developer','tester','senior_accountant','accountant','accounts_manager','hr'];
   let navItems;
   if(BUILTIN_ROLES.includes(role)){
     const items={
@@ -2024,6 +2106,7 @@ function buildSidebar(){
       accounts_manager: [['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
       senior_accountant:[['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
       accountant:       [['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','My Clients','#16A085'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Report','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
+      hr:               [['hr_dashboard','HR Dashboard','#C0392B'],['hr_jobs','Job Openings','#8E44AD'],['hr_candidates','Candidates','#2980B9'],['hr_interviews','Interviews','#F39C12'],['hr_reports','Reports','#27AE60'],['attendance','Attendance','#16A085'],['messages','Messages','#E74C3C']],
     };
     navItems=items[role]||[];
   } else {
@@ -2059,6 +2142,11 @@ function buildSidebar(){
     acc_clients:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><circle cx="9" cy="5.5" r="3"/><path d="M3 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>`,
     acc_timer:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><circle cx="9" cy="10.5" r="5.5"/><polyline points="9,8 9,10.5 11,12"/><line x1="7" y1="2" x2="11" y2="2"/><line x1="9" y1="2" x2="9" y2="5"/></svg>`,
     acc_eod:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><rect x="3.5" y="2.5" width="11" height="13" rx="1"/><line x1="3.5" y1="6.5" x2="14.5" y2="6.5"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="6" y1="10" x2="12" y2="10"/><line x1="6" y1="13" x2="10" y2="13"/></svg>`,
+    hr_dashboard:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><circle cx="7" cy="6" r="2.5"/><path d="M2 16c0-2.8 2.2-5 5-5s5 2.2 5 5"/><circle cx="13.5" cy="6" r="2"/><path d="M16 16c0-2-1.3-3.8-3-4.5"/></svg>`,
+    hr_jobs:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><rect x="2" y="6" width="14" height="10" rx="1"/><path d="M6 6V4a2 2 0 014 0v2"/><line x1="2" y1="10" x2="16" y2="10"/></svg>`,
+    hr_candidates:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><circle cx="9" cy="6" r="3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6"/><polyline points="12,2 14,4 16,2"/></svg>`,
+    hr_interviews:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><rect x="2" y="3.5" width="14" height="12" rx="1"/><line x1="2" y1="7.5" x2="16" y2="7.5"/><line x1="6" y1="1.5" x2="6" y2="5.5"/><line x1="12" y1="1.5" x2="12" y2="5.5"/><circle cx="9" cy="11.5" r="1.5"/></svg>`,
+    hr_reports:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><line x1="3" y1="15" x2="3" y2="8"/><line x1="7" y1="15" x2="7" y2="4"/><line x1="11" y1="15" x2="11" y2="10"/><line x1="15" y1="15" x2="15" y2="6"/><line x1="1" y1="15" x2="17" y2="15"/></svg>`,
   };
   document.getElementById('sidebar-nav').innerHTML=navItems.map(([v,label,color])=>
     `<button class="nav-btn ${v==='dashboard'?'active':''}" id="nav-${v}" data-label="${label}" onclick="showView('${v}');closeSidebar()">
@@ -2159,10 +2247,10 @@ function showView(v){
     if (ca) ca.style.padding = '16px';
   }
   document.querySelectorAll('.nav-btn').forEach(b=>{
-    const map={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints',acc_clients:'Clients',acc_timer:'Timer',acc_eod:'EOD Reports',acc_clients_my:'My Clients',acc_eod_own:'EOD Report'};
+    const map={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints',acc_clients:'Clients',acc_timer:'Timer',acc_eod:'EOD Reports',acc_clients_my:'My Clients',acc_eod_own:'EOD Report',hr_dashboard:'HR Dashboard',hr_jobs:'Job Openings',hr_candidates:'Candidates',hr_interviews:'Interviews',hr_reports:'Reports'};
     b.classList.toggle('active',b.textContent.trim()===map[v]);
   });
-  document.getElementById('view-title').textContent={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints'}[v]||v;
+  document.getElementById('view-title').textContent={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints',hr_dashboard:'HR Dashboard',hr_jobs:'Job Openings',hr_candidates:'Candidates',hr_interviews:'Interviews',hr_reports:'HR Reports'}[v]||v;
   document.getElementById('filter-bar').style.display=(v==='bugs'||v==='mybugs')?'flex':'none';
   // Animate content area on tab switch
   const ca = document.getElementById('content-area');
@@ -2192,8 +2280,13 @@ function renderView(){
   if(currentView==='acc_clients') return renderAccClients();
   if(currentView==='acc_timer')   return renderAccTimer();
   if(currentView==='acc_eod')     return renderAccEod();
-  if(currentView==='sprints')     return renderSprints();
-  if(currentView==='sub_tickets') return renderSubTickets();
+  if(currentView==='sprints')       return renderSprints();
+  if(currentView==='sub_tickets')   return renderSubTickets();
+  if(currentView==='hr_dashboard')  return renderHrDashboard();
+  if(currentView==='hr_jobs')       return renderHrJobs();
+  if(currentView==='hr_candidates') return renderHrCandidates();
+  if(currentView==='hr_interviews') return renderHrInterviews();
+  if(currentView==='hr_reports')    return renderHrReports();
   renderBugTable();
 }
 
@@ -2201,6 +2294,7 @@ function renderView(){
 function renderDashboard(){
   const role=currentUser.role;
   if(role==='accounts_manager'||role==='senior_accountant'||role==='accountant') return renderAccDashboard();
+  if(role==='hr') return renderHrDashboard();
   let base=bugs;
   if(role==='developer') base=bugs.filter(b=>b.assignee===currentUser.name);
   if(role==='tester')    base=bugs.filter(b=>b.reporter===currentUser.name);
@@ -2616,7 +2710,7 @@ function renderManagerSummary(){
 // ── Admin ─────────────────────────────────────────────────────────────────────
 function renderAdmin(){
   const users=allUsers.filter(u=>u.role!=='superadmin');
-  const builtinRoles=['manager','developer','tester','accounts_manager','senior_accountant','accountant'];
+  const builtinRoles=['manager','developer','tester','accounts_manager','senior_accountant','accountant','hr'];
   const customRoleOpts=allCustomRoles.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
   const allRoleOpts=builtinRoles.map(r=>`<option value="${r}">${r}</option>`).join('')+customRoleOpts;
   const rows=users.map(u=>{
@@ -5867,6 +5961,802 @@ async function deleteStory(id){
   showToast('Story deleted','success');
   renderSprints();
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HR MODULE
+// ═══════════════════════════════════════════════════════════════════════════════
+async function loadHrData(){
+  try{
+    const [jr,cr,ir]=await Promise.all([
+      fetch('/api/jobs').then(r=>r.json()).catch(()=>[]),
+      fetch('/api/candidates').then(r=>r.json()).catch(()=>[]),
+      fetch('/api/interviews').then(r=>r.json()).catch(()=>[]),
+    ]);
+    hrJobs=Array.isArray(jr)?jr:[];
+    hrCandidates=Array.isArray(cr)?cr:[];
+    hrInterviews=Array.isArray(ir)?ir:[];
+    _hrDataLoaded=true;
+  }catch(e){hrJobs=[];hrCandidates=[];hrInterviews=[];_hrDataLoaded=true;}
+}
+
+// ── HR Dashboard ──────────────────────────────────────────────────────────────
+function renderHrDashboard(){
+  const open=hrJobs.filter(j=>j.status==='published').length;
+  const closed=hrJobs.filter(j=>j.status==='closed').length;
+  const total=hrCandidates.length;
+  const shortlisted=hrCandidates.filter(c=>c.status==='shortlisted'||c.status==='hr_review').length;
+  const intSched=hrCandidates.filter(c=>c.status==='interview_scheduled'||c.status==='interview_completed').length;
+  const offers=hrCandidates.filter(c=>c.status==='offer_released').length;
+  const joined=hrCandidates.filter(c=>c.status==='joined').length;
+  const rejected=hrCandidates.filter(c=>c.status==='rejected').length;
+
+  // Recent candidates
+  const recent=hrCandidates.slice(0,5);
+  const recentRows=recent.map(c=>{
+    const job=hrJobs.find(j=>j.id===c.jobId);
+    const score=c.aiScore!=null?`<span class="hr-ai-score ${c.aiScore>=70?'high':c.aiScore>=50?'medium':'low'}">${c.aiScore}%</span>`:'<span style="font-size:11px;color:var(--g3)">Pending</span>';
+    return `<div class="hr-cand-list-item" onclick="showView('hr_candidates')">
+      <div class="hr-cand-avatar">${(c.name||'?').charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div class="hr-cand-name">${c.name}</div>
+        <div class="hr-cand-meta">${job?job.title:'Unknown Job'} · ${c.currentLocation||''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">${score}<span class="hr-status-badge ${c.status||'applied'}">${_hrStatusLabel(c.status)}</span></div>
+    </div>`;
+  }).join('');
+
+  // Pipeline chart bars
+  const pipeData=[
+    {label:'Applied',val:total,color:'#3498DB'},
+    {label:'AI Screened',val:hrCandidates.filter(c=>c.status==='ai_screened'||c.status==='shortlisted'||c.status==='hr_review'||c.status==='interview_scheduled'||c.status==='interview_completed'||c.status==='selected'||c.status==='offer_released'||c.status==='joined').length,color:'#9B59B6'},
+    {label:'Shortlisted',val:shortlisted,color:'#27AE60'},
+    {label:'Interview',val:intSched,color:'#1ABC9C'},
+    {label:'Offers',val:offers,color:'#8E44AD'},
+    {label:'Joined',val:joined,color:'#2980B9'},
+  ];
+  const maxVal=Math.max(1,...pipeData.map(d=>d.val));
+  const barChart=`<svg width="100%" height="120" viewBox="0 0 360 120" preserveAspectRatio="none" style="overflow:visible">
+    ${pipeData.map((d,i)=>{
+      const bw=44,gap=16,x=i*(bw+gap)+8,h=Math.max(4,(d.val/maxVal)*90),y=100-h;
+      return `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="4" fill="${d.color}" opacity=".85"/>
+        <text x="${x+bw/2}" y="${y-4}" text-anchor="middle" font-size="11" font-weight="700" fill="${d.color}">${d.val}</text>
+        <text x="${x+bw/2}" y="115" text-anchor="middle" font-size="9" fill="#999">${d.label}</text>`;
+    }).join('')}
+  </svg>`;
+
+  document.getElementById('content-area').innerHTML=`
+    <div class="hr-dash-grid">
+      <div class="hr-stat-card" onclick="showView('hr_jobs')"><div class="hr-stat-num" style="color:#27AE60">${open}</div><div class="hr-stat-label">Open Positions</div></div>
+      <div class="hr-stat-card" onclick="showView('hr_jobs')"><div class="hr-stat-num" style="color:#6c757d">${closed}</div><div class="hr-stat-label">Closed Positions</div></div>
+      <div class="hr-stat-card" onclick="showView('hr_candidates')"><div class="hr-stat-num" style="color:#3498DB">${total}</div><div class="hr-stat-label">Applications</div></div>
+      <div class="hr-stat-card" onclick="showView('hr_candidates')"><div class="hr-stat-num" style="color:#27AE60">${shortlisted}</div><div class="hr-stat-label">Shortlisted</div></div>
+      <div class="hr-stat-card" onclick="showView('hr_interviews')"><div class="hr-stat-num" style="color:#1ABC9C">${intSched}</div><div class="hr-stat-label">Interviews</div></div>
+      <div class="hr-stat-card"><div class="hr-stat-num" style="color:#8E44AD">${offers}</div><div class="hr-stat-label">Offers Released</div></div>
+      <div class="hr-stat-card"><div class="hr-stat-num" style="color:#2980B9">${joined}</div><div class="hr-stat-label">Joined</div></div>
+      <div class="hr-stat-card"><div class="hr-stat-num" style="color:#E74C3C">${rejected}</div><div class="hr-stat-label">Rejected</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">Hiring Pipeline</div>
+        ${barChart}
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:700">Recent Applications</div>
+          <button class="btn-sm" onclick="showView('hr_candidates')">View All</button>
+        </div>
+        ${recentRows||'<div style="color:var(--g3);font-size:13px;padding:20px 0;text-align:center">No applications yet</div>'}
+      </div>
+    </div>
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700">Active Job Openings</div>
+        <button class="btn-primary btn-sm" onclick="openJobModal(null)">+ Post Job</button>
+      </div>
+      ${hrJobs.filter(j=>j.status==='published').slice(0,3).map(j=>`
+        <div class="hr-job-card" style="margin-bottom:8px;padding:12px 14px" onclick="showView('hr_jobs')">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="hr-job-title" style="font-size:14px">${j.title}</div>
+              <div class="hr-cand-meta">${j.department} · ${j.location} · ${j.workMode}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-weight:700;font-size:16px;color:var(--red)">${hrCandidates.filter(c=>c.jobId===j.id).length}</div>
+              <div style="font-size:11px;color:var(--g3)">applicants</div>
+            </div>
+          </div>
+        </div>`).join('')||'<div style="color:var(--g3);font-size:13px;padding:20px 0;text-align:center">No active openings. <a href="#" onclick="openJobModal(null);return false" style="color:var(--red)">Post a job</a></div>'}
+    </div>`;
+}
+
+// ── HR Jobs ───────────────────────────────────────────────────────────────────
+function renderHrJobs(){
+  const filtered=hrJobs.filter(j=>!_hrJobFilter||j.title.toLowerCase().includes(_hrJobFilter.toLowerCase())||j.department.toLowerCase().includes(_hrJobFilter.toLowerCase()));
+  const cards=filtered.map(j=>{
+    const cands=hrCandidates.filter(c=>c.jobId===j.id);
+    const skills=Array.isArray(j.skills)?j.skills:(j.skills||'').split(',').map(s=>s.trim()).filter(Boolean);
+    return `<div class="hr-job-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+            <span class="hr-status-badge ${j.status||'draft'}">${j.status||'draft'}</span>
+            <span style="font-size:11px;color:var(--g3)">${j.jobId||''}</span>
+          </div>
+          <div class="hr-job-title">${j.title}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn-sm" onclick="openJobModal('${j.id}')">Edit</button>
+          <button class="btn-sm" onclick="viewJobCandidates('${j.id}')">Candidates (${cands.length})</button>
+          <button class="btn-sm danger" onclick="deleteJob('${j.id}')">Del</button>
+        </div>
+      </div>
+      <div class="hr-job-meta">
+        <span class="hr-tag">📁 ${j.department}</span>
+        <span class="hr-tag">⏱ ${j.employmentType}</span>
+        <span class="hr-tag">📍 ${j.location}</span>
+        <span class="hr-tag">💻 ${j.workMode}</span>
+        ${j.experience?`<span class="hr-tag">🏆 ${j.experience}</span>`:''}
+        ${j.salaryRange?`<span class="hr-tag">💰 ${j.salaryRange}</span>`:''}
+        ${j.vacancies?`<span class="hr-tag">📌 ${j.vacancies} opening${j.vacancies>1?'s':''}</span>`:''}
+      </div>
+      ${skills.length?`<div style="margin-bottom:8px">${skills.slice(0,6).map(s=>`<span class="hr-tag" style="font-size:11px;margin:2px">${s}</span>`).join('')}</div>`:''}
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:12px;color:var(--g3)">${cands.length} applicant${cands.length!==1?'s':''}</span>
+        ${j.lastDate?`<span style="font-size:12px;color:var(--g3)">· Apply by ${j.lastDate}</span>`:''}
+        <div style="margin-left:auto;display:flex;gap:6px">
+          ${j.status==='draft'?`<button class="btn-sm" onclick="changeJobStatus('${j.id}','published')">Publish</button>`:''}
+          ${j.status==='published'?`<button class="btn-sm" onclick="changeJobStatus('${j.id}','closed')">Close</button><a href="/careers/${j.id}" target="_blank" class="btn-sm" style="text-decoration:none">View Page ↗</a>`:''}
+          ${j.status==='closed'?`<button class="btn-sm" onclick="changeJobStatus('${j.id}','published')">Reopen</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+      <input type="text" value="${_hrJobFilter}" placeholder="Search jobs..." oninput="_hrJobFilter=this.value;renderHrJobs()" style="flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white);color:var(--dark);font-family:inherit">
+      <a href="/careers" target="_blank" class="btn-sm" style="text-decoration:none;white-space:nowrap">View Career Page ↗</a>
+      <button class="btn-primary" onclick="openJobModal(null)">+ Post Job</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      ${['all','draft','published','closed'].map(s=>`<button class="hr-section-tab ${_hrJobFilter===s||(!_hrJobFilter&&s==='all')?'active':''}" onclick="_hrJobFilter=this.dataset.v;renderHrJobs()" data-v="${s==='all'?'':s}">${s==='all'?'All Jobs':s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('')}
+    </div>
+    ${cards||'<div style="text-align:center;padding:60px 20px;color:var(--g3)"><div style="font-size:40px;margin-bottom:12px">📋</div><p>No jobs found.</p><button class="btn-primary" style="margin-top:12px" onclick="openJobModal(null)">Post Your First Job</button></div>'}`;
+}
+
+function viewJobCandidates(jobId){
+  _hrJobFilter=jobId;
+  showView('hr_candidates');
+}
+
+async function changeJobStatus(id,status){
+  try{
+    const updated=await fetch('/api/jobs/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).then(r=>r.json());
+    hrJobs=hrJobs.map(j=>j.id===id?updated:j);
+    showToast(status==='published'?'Job published — now live on career page ✓':status==='closed'?'Job closed':'Job updated','success');
+    renderHrJobs();
+  }catch(e){showToast('Update failed','alert');}
+}
+
+async function deleteJob(id){
+  if(!confirm('Delete this job posting?'))return;
+  await fetch('/api/jobs/'+id,{method:'DELETE'});
+  hrJobs=hrJobs.filter(j=>j.id!==id);
+  showToast('Job deleted','success');
+  renderHrJobs();
+}
+
+function openJobModal(id){
+  _editJobId=id;
+  const j=id?hrJobs.find(x=>x.id===id):null;
+  const skills=j?( Array.isArray(j.skills)?j.skills.join(', '):(j.skills||'') ):'';
+  document.getElementById('jm-title').value=j?j.title:'';
+  document.getElementById('jm-dept').value=j?j.department:'';
+  document.getElementById('jm-type').value=j?j.employmentType:'Full-time';
+  document.getElementById('jm-exp').value=j?j.experience:'';
+  document.getElementById('jm-salary').value=j?j.salaryRange:'';
+  document.getElementById('jm-location').value=j?j.location:'';
+  document.getElementById('jm-mode').value=j?j.workMode:'Hybrid';
+  document.getElementById('jm-vacancies').value=j?j.vacancies:'1';
+  document.getElementById('jm-skills').value=skills;
+  document.getElementById('jm-qual').value=j?j.qualification:'';
+  document.getElementById('jm-lastdate').value=j?j.lastDate:'';
+  document.getElementById('jm-desc').value=j?j.description:'';
+  document.getElementById('jm-resp').value=j?j.responsibilities:'';
+  document.getElementById('jm-status').value=j?j.status:'draft';
+  document.getElementById('jm-modal-title').textContent=id?'Edit Job':'Post New Job';
+  document.getElementById('job-modal').classList.add('open');
+}
+
+async function saveJob(){
+  const title=document.getElementById('jm-title').value.trim();
+  if(!title){showToast('Job title is required','alert');return;}
+  const skillsRaw=document.getElementById('jm-skills').value;
+  const skills=skillsRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  const payload={
+    title, department:document.getElementById('jm-dept').value.trim(),
+    employmentType:document.getElementById('jm-type').value,
+    experience:document.getElementById('jm-exp').value.trim(),
+    salaryRange:document.getElementById('jm-salary').value.trim(),
+    location:document.getElementById('jm-location').value.trim(),
+    workMode:document.getElementById('jm-mode').value,
+    vacancies:parseInt(document.getElementById('jm-vacancies').value)||1,
+    skills, qualification:document.getElementById('jm-qual').value.trim(),
+    lastDate:document.getElementById('jm-lastdate').value,
+    description:document.getElementById('jm-desc').value.trim(),
+    responsibilities:document.getElementById('jm-resp').value.trim(),
+    status:document.getElementById('jm-status').value,
+    createdBy:currentUser.name
+  };
+  try{
+    if(_editJobId){
+      const r=await fetch('/api/jobs/'+_editJobId,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const saved=await r.json();
+      hrJobs=hrJobs.map(j=>j.id===_editJobId?saved:j);
+      showToast('Job updated ✓','success');
+    } else {
+      const r=await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const saved=await r.json();
+      hrJobs.unshift(saved);
+      showToast(payload.status==='published'?'Job posted & live on career page ✓':'Job saved as draft ✓','success');
+    }
+    closeModal('job-modal');
+    renderHrJobs();
+  }catch(e){showToast('Save failed','alert');}
+}
+
+// ── HR Candidates ─────────────────────────────────────────────────────────────
+function _hrStatusLabel(s){
+  const map={applied:'Applied',ai_screened:'AI Screened',shortlisted:'Shortlisted',hr_review:'HR Review',interview_scheduled:'Interview',interview_completed:'Int. Done',selected:'Selected',offer_released:'Offer Out',joined:'Joined',rejected:'Rejected'};
+  return map[s]||s||'Applied';
+}
+
+function _aiScoreClass(score){
+  if(score>=70) return 'high'; if(score>=50) return 'medium'; return 'low';
+}
+
+function renderHrCandidates(){
+  const PIPELINE_STAGES=[
+    {key:'applied',label:'Applied',color:'#3498DB'},
+    {key:'ai_screened',label:'AI Screened',color:'#9B59B6'},
+    {key:'shortlisted',label:'Shortlisted',color:'#27AE60'},
+    {key:'hr_review',label:'HR Review',color:'#F39C12'},
+    {key:'interview_scheduled',label:'Interview Sched.',color:'#1ABC9C'},
+    {key:'interview_completed',label:'Int. Completed',color:'#2ECC71'},
+    {key:'selected',label:'Selected',color:'#27AE60'},
+    {key:'offer_released',label:'Offer Released',color:'#8E44AD'},
+    {key:'joined',label:'Joined',color:'#2980B9'},
+    {key:'rejected',label:'Rejected',color:'#E74C3C'},
+  ];
+
+  let base=hrCandidates;
+  if(_hrJobFilter && _hrJobFilter.length>4) base=base.filter(c=>c.jobId===_hrJobFilter);
+  if(_hrCandStatus) base=base.filter(c=>c.status===_hrCandStatus);
+  if(_hrCandFilter){const q=_hrCandFilter.toLowerCase();base=base.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.skills||'').toLowerCase().includes(q));}
+
+  const pipelineHTML=PIPELINE_STAGES.map(stage=>{
+    const stageCands=base.filter(c=>c.status===stage.key);
+    return `<div class="hr-pipe-col">
+      <div class="hr-pipe-head" style="color:${stage.color}">${stage.label}<span class="hr-pipe-count">${stageCands.length}</span></div>
+      ${stageCands.map(c=>{
+        const job=hrJobs.find(j=>j.id===c.jobId);
+        const score=c.aiScore!=null?`<span class="hr-ai-score ${_aiScoreClass(c.aiScore)}" style="font-size:10px">${c.aiScore}%</span>`:'';
+        return `<div class="hr-cand-card" onclick="viewCandidate('${c.id}')">
+          <div class="hr-cand-name">${c.name}</div>
+          <div class="hr-cand-meta">${job?job.title:'Job N/A'}</div>
+          <div class="hr-cand-meta">${c.currentLocation||''} ${c.experienceYears?'· '+c.experienceYears+'yr':''}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">${score}
+            <span style="font-size:10px;color:var(--g3)">${c.appliedAt?new Date(c.appliedAt).toLocaleDateString():''}</span>
+          </div>
+          ${c.aiScore!=null?`<div class="hr-score-bar"><div class="hr-score-fill" style="width:${c.aiScore}%;background:${c.aiScore>=70?'#27AE60':c.aiScore>=50?'#F39C12':'#E74C3C'}"></div></div>`:''}
+        </div>`;
+      }).join('')||'<div style="font-size:11px;color:var(--g3);text-align:center;padding:12px 0">Empty</div>'}
+    </div>`;
+  }).join('');
+
+  const listHTML=base.sort((a,b)=>(b.aiScore||0)-(a.aiScore||0)).map(c=>{
+    const job=hrJobs.find(j=>j.id===c.jobId);
+    const score=c.aiScore!=null?`<span class="hr-ai-score ${_aiScoreClass(c.aiScore)}">${c.aiScore}%</span>`:'<span style="font-size:11px;color:var(--g3)">AI Pending</span>';
+    const intCount=hrInterviews.filter(i=>i.candidateId===c.id).length;
+    return `<div class="hr-cand-list-item" onclick="viewCandidate('${c.id}')">
+      <div class="hr-cand-avatar">${(c.name||'?').charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div class="hr-cand-name">${c.name}</div>
+        <div class="hr-cand-meta">${job?job.title:'Unknown'} · ${c.email} · ${c.currentLocation||''}</div>
+        <div class="hr-cand-meta">${c.experienceYears?c.experienceYears+'yr exp':''} ${c.education?'· '+c.education:''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        ${score}
+        <span class="hr-status-badge ${c.status||'applied'}">${_hrStatusLabel(c.status)}</span>
+        ${intCount?`<span style="font-size:11px;color:var(--g3)">${intCount} interview${intCount>1?'s':''}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const jobFilterOpts=`<option value="">All Jobs</option>`+hrJobs.map(j=>`<option value="${j.id}" ${_hrJobFilter===j.id?'selected':''}>${j.title}</option>`).join('');
+  const statusOpts=`<option value="">All Statuses</option>applied,ai_screened,shortlisted,hr_review,interview_scheduled,interview_completed,selected,offer_released,joined,rejected`.split(',').map(s=>`<option value="${s}" ${_hrCandStatus===s?'selected':''}>${_hrStatusLabel(s)}</option>`).join('');
+
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <input type="text" value="${_hrCandFilter}" placeholder="Search name, email, skills..." oninput="_hrCandFilter=this.value;renderHrCandidates()" style="flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white);color:var(--dark);font-family:inherit">
+      <select onchange="_hrJobFilter=this.value;renderHrCandidates()" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white);color:var(--dark)">${jobFilterOpts}</select>
+      <select onchange="_hrCandStatus=this.value;renderHrCandidates()" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--white);color:var(--dark)">${statusOpts}</select>
+      <button class="btn-sm" onclick="_hrCandFilter='';_hrJobFilter='';_hrCandStatus='';renderHrCandidates()">Clear</button>
+    </div>
+    <div class="hr-section-tabs">
+      <button class="hr-section-tab ${_hrCandSubview==='pipeline'?'active':''}" onclick="_hrCandSubview='pipeline';renderHrCandidates()">Pipeline View</button>
+      <button class="hr-section-tab ${_hrCandSubview==='list'?'active':''}" onclick="_hrCandSubview='list';renderHrCandidates()">List View</button>
+    </div>
+    <div style="font-size:13px;color:var(--g3);margin-bottom:10px">${base.length} candidate${base.length!==1?'s':''}</div>
+    ${_hrCandSubview==='pipeline'?`<div class="hr-pipeline">${pipelineHTML||'<div style="padding:40px;color:var(--g3)">No candidates</div>'}</div>`:listHTML||'<div style="text-align:center;padding:60px 20px;color:var(--g3)">No candidates found</div>'}`;
+}
+
+async function viewCandidate(id){
+  const c=hrCandidates.find(x=>x.id===id);
+  if(!c) return;
+  const job=hrJobs.find(j=>j.id===c.jobId);
+  const interviews=hrInterviews.filter(i=>i.candidateId===id);
+  const analysis=c.aiAnalysis;
+
+  // Timeline
+  const tlHTML=(c.statusHistory||[{status:'applied',timestamp:c.appliedAt||new Date().toISOString(),by:'Candidate'}]).map(h=>`
+    <div class="hr-tl-item">
+      <div class="hr-tl-dot">${(h.status||'').charAt(0).toUpperCase()}</div>
+      <div class="hr-tl-content">
+        <div class="hr-tl-status">${_hrStatusLabel(h.status)}</div>
+        <div class="hr-tl-time">${h.by||'System'} · ${h.timestamp?new Date(h.timestamp).toLocaleString():''}</div>
+      </div>
+    </div>`).join('');
+
+  // AI analysis
+  let aiHTML='<div style="color:var(--g3);font-size:13px;padding:12px 0">AI analysis not run yet. <button class="btn-sm" onclick="runAiAnalysis(\''+id+'\')">Run Analysis</button></div>';
+  if(analysis){
+    const sColor=analysis.score>=70?'#27AE60':analysis.score>=50?'#F39C12':'#E74C3C';
+    const ms=(analysis.matchedSkills||[]).map(s=>`<span class="hr-tag" style="background:#e8f8f0;color:#27AE60;font-size:11px;margin:2px">${s}</span>`).join('');
+    const miss=(analysis.missingSkills||[]).map(s=>`<span class="hr-tag" style="background:#fdf0f0;color:#E74C3C;font-size:11px;margin:2px">${s}</span>`).join('');
+    aiHTML=`
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
+        <div style="text-align:center">
+          <div style="font-size:36px;font-weight:800;color:${sColor}">${analysis.score}%</div>
+          <div style="font-size:11px;color:var(--g3)">Match Score</div>
+        </div>
+        <div style="flex:1">
+          <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${analysis.score}%;background:${sColor};border-radius:4px;transition:width .4s"></div></div>
+          <div style="font-size:12px;color:var(--g2);font-weight:600">${analysis.recommendation||''}</div>
+          <div style="font-size:11px;color:var(--g3);margin-top:2px">Priority: <span style="font-weight:700;color:${sColor}">${analysis.priority||'Low'}</span></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg);border-radius:8px;padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#27AE60">${analysis.skillScore||0}</div><div style="font-size:10px;color:var(--g3)">Skills /40</div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#3498DB">${analysis.expScore||0}</div><div style="font-size:10px;color:var(--g3)">Exp /30</div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#9B59B6">${analysis.eduScore||0}</div><div style="font-size:10px;color:var(--g3)">Edu /15</div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:8px;text-align:center"><div style="font-size:16px;font-weight:700;color:#F39C12">${analysis.jdScore||0}</div><div style="font-size:10px;color:var(--g3)">JD Match /15</div></div>
+      </div>
+      <div style="margin-bottom:8px"><div style="font-size:11px;color:var(--g3);margin-bottom:4px">MATCHED SKILLS</div>${ms||'<span style="font-size:12px;color:var(--g3)">None matched</span>'}</div>
+      <div><div style="font-size:11px;color:var(--g3);margin-bottom:4px">MISSING SKILLS</div>${miss||'<span style="font-size:12px;color:#27AE60">All skills matched!</span>'}</div>
+      <div style="margin-top:8px;font-size:12px;color:var(--g2)">${analysis.experienceMatch||''}</div>`;
+  }
+
+  // Interviews
+  const intHTML=interviews.map(i=>`
+    <div class="hr-int-card">
+      <div class="hr-int-header">
+        <div>
+          <div style="font-weight:700;font-size:13px">${i.round||'Round 1'}</div>
+          <div style="font-size:12px;color:var(--g3)">${i.scheduledAt?new Date(i.scheduledAt).toLocaleString():''}</div>
+        </div>
+        <span class="hr-status-badge ${i.status||'scheduled'}">${i.status||'Scheduled'}</span>
+      </div>
+      ${i.interviewers?`<div style="font-size:12px;color:var(--g2);margin-bottom:4px">Interviewers: ${i.interviewers}</div>`:''}
+      ${i.meetingLink?`<a href="${i.meetingLink}" target="_blank" style="font-size:12px;color:var(--red)">Meeting Link ↗</a>`:''}
+      ${i.rating?`<div style="font-size:12px;margin-top:6px">Rating: ${'★'.repeat(i.rating)}${'☆'.repeat(5-i.rating)} (${i.rating}/5)</div>`:''}
+      ${i.feedback?`<div style="font-size:12px;color:var(--g2);margin-top:4px;background:var(--bg);padding:8px;border-radius:6px">${i.feedback}</div>`:''}
+    </div>`).join('');
+
+  const statusSelect=`applied,ai_screened,shortlisted,hr_review,interview_scheduled,interview_completed,selected,offer_released,joined,rejected`.split(',').map(s=>`<option value="${s}" ${c.status===s?'selected':''}>${_hrStatusLabel(s)}</option>`).join('');
+
+  document.getElementById('cand-detail-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div class="hr-cand-avatar" style="width:52px;height:52px;font-size:22px">${(c.name||'?').charAt(0).toUpperCase()}</div>
+          <div>
+            <div style="font-size:18px;font-weight:800">${c.name}</div>
+            <div style="font-size:13px;color:var(--g3)">${c.email} · ${c.phone||''}</div>
+            <div style="font-size:12px;color:var(--g3)">${c.currentLocation||''}</div>
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+            <div><span style="color:var(--g3)">Experience:</span> <strong>${c.experienceYears?c.experienceYears+'yr':'N/A'}</strong></div>
+            <div><span style="color:var(--g3)">Education:</span> <strong>${c.education||'N/A'}</strong></div>
+            <div><span style="color:var(--g3)">Expected:</span> <strong>${c.expectedSalary||'N/A'}</strong></div>
+            <div><span style="color:var(--g3)">Source:</span> <strong>${c.source||'Direct'}</strong></div>
+          </div>
+        </div>
+        ${c.skills?`<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--g3);font-weight:600;margin-bottom:6px">SKILLS</div><div>${c.skills.split(',').map(s=>`<span class="hr-tag" style="font-size:11px;margin:2px">${s.trim()}</span>`).join('')}</div></div>`:''}
+        ${c.portfolio?`<div style="margin-bottom:10px"><a href="${c.portfolio}" target="_blank" style="color:var(--red);font-size:13px">Portfolio / LinkedIn ↗</a></div>`:''}
+        ${c.resumeUrl?`<div style="margin-bottom:10px"><a href="${c.resumeUrl}" target="_blank" style="color:var(--red);font-size:13px">📎 Download Resume</a></div>`:''}
+        <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--g3);font-weight:600;margin-bottom:6px">JOB APPLIED FOR</div><div style="font-size:13px;font-weight:600">${job?job.title:'Unknown Job'}</div>${job?`<div style="font-size:12px;color:var(--g3)">${job.department} · ${job.location}</div>`:''}</div>
+        ${c.coverLetter?`<div style="margin-bottom:12px"><div style="font-size:11px;color:var(--g3);font-weight:600;margin-bottom:6px">COVER LETTER</div><div style="font-size:13px;color:var(--g2);line-height:1.6;background:var(--bg);padding:10px;border-radius:8px;max-height:150px;overflow-y:auto">${c.coverLetter}</div></div>`:''}
+        <div style="margin-top:12px">
+          <div style="font-size:11px;color:var(--g3);font-weight:600;margin-bottom:6px">UPDATE STATUS</div>
+          <div style="display:flex;gap:8px">
+            <select id="cand-status-sel" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:13px;outline:none;background:var(--white);color:var(--dark)">${statusSelect}</select>
+            <button class="btn-primary btn-sm" onclick="updateCandidateStatus('${id}')">Update</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn-sm" onclick="openInterviewModal('${id}','${c.jobId||''}')">+ Schedule Interview</button>
+          <button class="btn-sm danger" onclick="deleteCandidate('${id}')">Delete</button>
+        </div>
+      </div>
+      <div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px">AI Analysis</div>
+          ${aiHTML}
+          ${!analysis?'':''}
+          <button class="btn-sm" style="margin-top:8px" onclick="runAiAnalysis('${id}')">Re-run AI Analysis</button>
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px">Interview History (${interviews.length})</div>
+          ${intHTML||'<div style="color:var(--g3);font-size:13px">No interviews scheduled</div>'}
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px">Status Timeline</div>
+          <div class="hr-timeline">${tlHTML}</div>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('cand-detail-modal').classList.add('open');
+}
+
+async function updateCandidateStatus(id){
+  const status=document.getElementById('cand-status-sel').value;
+  try{
+    const updated=await fetch('/api/candidates/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status,changedBy:currentUser.name})}).then(r=>r.json());
+    hrCandidates=hrCandidates.map(c=>c.id===id?updated:c);
+    showToast('Status updated ✓','success');
+    closeModal('cand-detail-modal');
+    renderHrCandidates();
+  }catch(e){showToast('Update failed','alert');}
+}
+
+async function deleteCandidate(id){
+  if(!confirm('Delete this candidate?'))return;
+  await fetch('/api/candidates/'+id,{method:'DELETE'});
+  hrCandidates=hrCandidates.filter(c=>c.id!==id);
+  showToast('Candidate deleted','success');
+  closeModal('cand-detail-modal');
+  renderHrCandidates();
+}
+
+async function runAiAnalysis(id){
+  showToast('Running AI analysis...','success');
+  try{
+    const r=await fetch('/api/candidates/'+id+'/analyze',{method:'POST'});
+    const data=await r.json();
+    hrCandidates=hrCandidates.map(c=>c.id===id?{...c,aiScore:data.aiScore,aiAnalysis:data.aiAnalysis}:c);
+    showToast('AI analysis complete ✓','success');
+    viewCandidate(id);
+  }catch(e){showToast('Analysis failed','alert');}
+}
+
+// ── HR Interviews ─────────────────────────────────────────────────────────────
+function renderHrInterviews(){
+  const upcoming=hrInterviews.filter(i=>i.status==='scheduled'&&new Date(i.scheduledAt)>new Date()).sort((a,b)=>new Date(a.scheduledAt)-new Date(b.scheduledAt));
+  const past=hrInterviews.filter(i=>i.status!=='scheduled'||new Date(i.scheduledAt)<=new Date());
+
+  const renderIntCard=(i)=>{
+    const cand=hrCandidates.find(c=>c.id===i.candidateId);
+    const job=hrJobs.find(j=>j.id===i.jobId);
+    return `<div class="hr-int-card">
+      <div class="hr-int-header">
+        <div>
+          <div style="font-weight:700;font-size:14px">${cand?cand.name:'Unknown Candidate'}</div>
+          <div style="font-size:12px;color:var(--g3)">${job?job.title:''} · ${i.round||'Round 1'}</div>
+          <div style="font-size:12px;color:var(--g2);margin-top:2px">${i.scheduledAt?new Date(i.scheduledAt).toLocaleString():''}</div>
+        </div>
+        <div style="text-align:right">
+          <span class="hr-status-badge ${i.status||'scheduled'}" style="display:block;margin-bottom:4px">${i.status||'scheduled'}</span>
+          ${i.rating?`<span style="font-size:12px">${'★'.repeat(i.rating)}${'☆'.repeat(5-i.rating)}</span>`:''}
+        </div>
+      </div>
+      ${i.interviewers?`<div style="font-size:12px;color:var(--g2)">👤 ${i.interviewers}</div>`:''}
+      ${i.meetingLink?`<a href="${i.meetingLink}" target="_blank" style="font-size:12px;color:var(--red);display:block;margin-top:4px">🔗 Join Meeting ↗</a>`:''}
+      ${i.feedback?`<div style="font-size:12px;color:var(--g2);margin-top:8px;background:var(--bg);padding:8px;border-radius:6px">${i.feedback}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        ${i.status==='scheduled'?`<button class="btn-sm" onclick="markInterviewComplete('${i.id}')">Mark Complete</button><button class="btn-sm" onclick="openInterviewFeedback('${i.id}')">Add Feedback</button>`:''}
+        <button class="btn-sm danger" onclick="deleteInterview('${i.id}')">Del</button>
+      </div>
+    </div>`;
+  };
+
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div></div>
+      <button class="btn-primary" onclick="openInterviewModal(null,null)">+ Schedule Interview</button>
+    </div>
+    <div class="hr-section-tabs">
+      <button class="hr-section-tab active" onclick="this.parentNode.querySelectorAll('.hr-section-tab').forEach((b,i)=>{b.classList.toggle('active',i===0);document.querySelectorAll('.hr-int-section').forEach((s,j)=>s.style.display=i===0&&j===0||i===1&&j===1?'block':'none')})">Upcoming (${upcoming.length})</button>
+      <button class="hr-section-tab" onclick="this.parentNode.querySelectorAll('.hr-section-tab').forEach((b,i)=>{b.classList.toggle('active',i===1);document.querySelectorAll('.hr-int-section').forEach((s,j)=>s.style.display=i===0&&j===0||i===1&&j===1?'block':'none')})">Past (${past.length})</button>
+    </div>
+    <div class="hr-int-section">${upcoming.map(renderIntCard).join('')||'<div style="color:var(--g3);font-size:13px;text-align:center;padding:40px 0">No upcoming interviews</div>'}</div>
+    <div class="hr-int-section" style="display:none">${past.map(renderIntCard).join('')||'<div style="color:var(--g3);font-size:13px;text-align:center;padding:40px 0">No past interviews</div>'}</div>`;
+}
+
+function openInterviewModal(candidateId, jobId){
+  _editIntId=null;
+  const cOpts=hrCandidates.map(c=>`<option value="${c.id}" ${c.id===candidateId?'selected':''}>${c.name}</option>`).join('');
+  const jOpts=hrJobs.map(j=>`<option value="${j.id}" ${j.id===jobId?'selected':''}>${j.title}</option>`).join('');
+  document.getElementById('intm-cand').innerHTML='<option value="">Select Candidate</option>'+cOpts;
+  document.getElementById('intm-job').innerHTML='<option value="">Select Job</option>'+jOpts;
+  document.getElementById('intm-round').value='HR Round';
+  document.getElementById('intm-scheduledAt').value='';
+  document.getElementById('intm-interviewers').value='';
+  document.getElementById('intm-meetingLink').value='';
+  document.getElementById('intm-notes').value='';
+  document.getElementById('int-modal').classList.add('open');
+}
+
+function openInterviewFeedback(id){
+  _editIntId=id;
+  const i=hrInterviews.find(x=>x.id===id);
+  if(!i) return;
+  document.getElementById('intfb-id').value=id;
+  document.getElementById('intfb-rating').value=i.rating||'';
+  document.getElementById('intfb-feedback').value=i.feedback||'';
+  document.getElementById('intfb-modal').classList.add('open');
+}
+
+async function saveInterviewFeedback(){
+  const id=document.getElementById('intfb-id').value;
+  const rating=parseInt(document.getElementById('intfb-rating').value)||null;
+  const feedback=document.getElementById('intfb-feedback').value.trim();
+  try{
+    const updated=await fetch('/api/interviews/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({rating,feedback,status:'completed'})}).then(r=>r.json());
+    hrInterviews=hrInterviews.map(i=>i.id===id?updated:i);
+    showToast('Feedback saved ✓','success');
+    closeModal('intfb-modal');
+    renderHrInterviews();
+  }catch(e){showToast('Save failed','alert');}
+}
+
+async function saveInterview(){
+  const candidateId=document.getElementById('intm-cand').value;
+  const jobId=document.getElementById('intm-job').value;
+  if(!candidateId){showToast('Select a candidate','alert');return;}
+  const payload={
+    candidateId, jobId,
+    round:document.getElementById('intm-round').value,
+    scheduledAt:document.getElementById('intm-scheduledAt').value,
+    interviewers:document.getElementById('intm-interviewers').value.trim(),
+    meetingLink:document.getElementById('intm-meetingLink').value.trim(),
+    notes:document.getElementById('intm-notes').value.trim(),
+    scheduledBy:currentUser.name
+  };
+  try{
+    const saved=await fetch('/api/interviews',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json());
+    hrInterviews.unshift(saved);
+    const cand=hrCandidates.find(c=>c.id===candidateId);
+    if(cand){cand.status='interview_scheduled';}
+    showToast('Interview scheduled ✓','success');
+    closeModal('int-modal');
+    renderHrInterviews();
+  }catch(e){showToast('Save failed','alert');}
+}
+
+async function markInterviewComplete(id){
+  try{
+    const updated=await fetch('/api/interviews/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'completed'})}).then(r=>r.json());
+    hrInterviews=hrInterviews.map(i=>i.id===id?updated:i);
+    showToast('Interview marked complete','success');
+    renderHrInterviews();
+  }catch(e){showToast('Update failed','alert');}
+}
+
+async function deleteInterview(id){
+  if(!confirm('Delete this interview?'))return;
+  await fetch('/api/interviews/'+id,{method:'DELETE'});
+  hrInterviews=hrInterviews.filter(i=>i.id!==id);
+  showToast('Interview deleted','success');
+  renderHrInterviews();
+}
+
+// ── HR Reports ────────────────────────────────────────────────────────────────
+function renderHrReports(){
+  const totalJobs=hrJobs.length;
+  const openJobs=hrJobs.filter(j=>j.status==='published').length;
+  const totalCands=hrCandidates.length;
+  const avgScore=hrCandidates.filter(c=>c.aiScore!=null).length?Math.round(hrCandidates.filter(c=>c.aiScore!=null).reduce((s,c)=>s+(c.aiScore||0),0)/hrCandidates.filter(c=>c.aiScore!=null).length):0;
+  const joined=hrCandidates.filter(c=>c.status==='joined').length;
+  const rejected=hrCandidates.filter(c=>c.status==='rejected').length;
+  const convRate=totalCands>0?Math.round((joined/totalCands)*100):0;
+
+  // By job data
+  const byJob=hrJobs.map(j=>{
+    const cands=hrCandidates.filter(c=>c.jobId===j.id);
+    const avgSc=cands.filter(c=>c.aiScore!=null).length?Math.round(cands.filter(c=>c.aiScore!=null).reduce((s,c)=>s+(c.aiScore||0),0)/cands.filter(c=>c.aiScore!=null).length):'-';
+    return {title:j.title,dept:j.department,total:cands.length,shortlisted:cands.filter(c=>c.status==='shortlisted'||c.status==='hr_review').length,joined:cands.filter(c=>c.status==='joined').length,avgScore:avgSc};
+  });
+
+  // Pipeline funnel
+  const stages=['applied','ai_screened','shortlisted','hr_review','interview_scheduled','selected','offer_released','joined'];
+  const stageLabels={applied:'Applied',ai_screened:'Screened',shortlisted:'Shortlisted',hr_review:'HR Review',interview_scheduled:'Interview',selected:'Selected',offer_released:'Offer',joined:'Joined'};
+  const funnelMax=Math.max(1,hrCandidates.length);
+  const funnelBars=stages.map(s=>{
+    const count=hrCandidates.filter(c=>{
+      const idx=stages.indexOf(c.status);
+      return idx>=stages.indexOf(s);
+    }).length;
+    const pct=Math.round((count/funnelMax)*100);
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${stageLabels[s]}</span><span style="font-weight:700">${count}</span></div>
+      <div style="background:var(--border);border-radius:4px;height:8px"><div style="width:${pct}%;height:100%;border-radius:4px;background:var(--red);transition:width .4s"></div></div>
+    </div>`;
+  }).join('');
+
+  // Source chart
+  const sourceMap={};
+  hrCandidates.forEach(c=>{const s=c.source||'Direct';sourceMap[s]=(sourceMap[s]||0)+1;});
+  const sourceEntries=Object.entries(sourceMap).sort((a,b)=>b[1]-a[1]);
+  const sourceColors=['#E74C3C','#3498DB','#27AE60','#F39C12','#9B59B6'];
+  const sourceTotal=hrCandidates.length||1;
+
+  document.getElementById('content-area').innerHTML=`
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:16px">
+      <button class="btn-sm" onclick="_exportHrReport('csv')">Export CSV</button>
+      <button class="btn-sm" onclick="_exportHrReport('excel')">Export Excel</button>
+    </div>
+    <div class="hr-report-grid">
+      <div class="hr-report-card"><div style="font-size:28px;font-weight:800;color:var(--red)">${totalJobs}</div><div style="font-size:12px;color:var(--g3)">Total Job Postings</div><div style="font-size:12px;color:#27AE60;margin-top:4px">${openJobs} currently open</div></div>
+      <div class="hr-report-card"><div style="font-size:28px;font-weight:800;color:#3498DB">${totalCands}</div><div style="font-size:12px;color:var(--g3)">Total Applications</div><div style="font-size:12px;color:var(--g3);margin-top:4px">Avg AI Score: <strong>${avgScore}%</strong></div></div>
+      <div class="hr-report-card"><div style="font-size:28px;font-weight:800;color:#27AE60">${joined}</div><div style="font-size:12px;color:var(--g3)">Candidates Joined</div><div style="font-size:12px;color:var(--g3);margin-top:4px">Conversion: <strong>${convRate}%</strong></div></div>
+      <div class="hr-report-card"><div style="font-size:28px;font-weight:800;color:#F39C12">${hrInterviews.length}</div><div style="font-size:12px;color:var(--g3)">Interviews Conducted</div><div style="font-size:12px;color:var(--g3);margin-top:4px">${hrInterviews.filter(i=>i.status==='completed').length} completed</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div class="hr-report-card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px">Hiring Funnel</div>
+        ${funnelBars}
+      </div>
+      <div class="hr-report-card">
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px">Applications by Source</div>
+        ${sourceEntries.map((e,i)=>`
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:10px;height:10px;border-radius:50%;background:${sourceColors[i%sourceColors.length]};flex-shrink:0"></div>
+            <div style="font-size:13px;flex:1">${e[0]}</div>
+            <div style="font-size:13px;font-weight:700">${e[1]}</div>
+            <div style="background:var(--border);border-radius:3px;height:6px;width:80px;overflow:hidden"><div style="width:${Math.round(e[1]/sourceTotal*100)}%;height:100%;background:${sourceColors[i%sourceColors.length]}"></div></div>
+          </div>`).join('')||'<div style="color:var(--g3);font-size:13px">No data</div>'}
+      </div>
+    </div>
+    <div class="hr-report-card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px">Applications by Job Opening</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:var(--bg)">${['Job Title','Department','Total','Shortlisted','Joined','Avg AI Score'].map(h=>`<th style="padding:8px 10px;text-align:left;font-weight:600;color:var(--g2);border-bottom:1px solid var(--border)">${h}</th>`).join('')}</tr></thead>
+          <tbody>${byJob.map(r=>`<tr style="border-bottom:1px solid var(--border)">${[r.title,r.dept,r.total,r.shortlisted,r.joined,r.avgScore+'%'].map(v=>`<td style="padding:8px 10px">${v}</td>`).join('')}</tr>`).join('')||'<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--g3)">No jobs yet</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function _exportHrReport(format){
+  const rows=[['Candidate Name','Email','Job Applied','Experience','AI Score','Status','Applied Date']];
+  hrCandidates.forEach(c=>{
+    const job=hrJobs.find(j=>j.id===c.jobId);
+    rows.push([c.name||'',c.email||'',job?job.title:'',c.experienceYears||'',c.aiScore!=null?c.aiScore+'%':'N/A',c.status||'applied',c.appliedAt?new Date(c.appliedAt).toLocaleDateString():'']);
+  });
+  const csvContent='﻿'+rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csvContent],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='hr_report.csv'; a.click(); URL.revokeObjectURL(url);
+  showToast('Report exported ✓','success');
+}
 </script>
+
+<!-- ── HR: Job Modal ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="job-modal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header"><h2 id="jm-modal-title">Post New Job</h2><button class="modal-close" onclick="closeModal('job-modal')">×</button></div>
+    <div class="modal-body" style="max-height:75vh;overflow-y:auto">
+      <div class="form-row">
+        <div class="form-group"><label>Job Title *</label><input id="jm-title" placeholder="e.g. Senior React Developer"></div>
+        <div class="form-group"><label>Department *</label><input id="jm-dept" placeholder="e.g. Engineering"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Employment Type</label>
+          <select id="jm-type"><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option><option>Freelance</option></select></div>
+        <div class="form-group"><label>Work Mode</label>
+          <select id="jm-mode"><option>Office</option><option>Remote</option><option>Hybrid</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Location</label><input id="jm-location" placeholder="e.g. Bangalore"></div>
+        <div class="form-group"><label>Experience Required</label><input id="jm-exp" placeholder="e.g. 3-5 years"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Salary Range</label><input id="jm-salary" placeholder="e.g. ₹8L - ₹15L"></div>
+        <div class="form-group"><label>Number of Vacancies</label><input id="jm-vacancies" type="number" min="1" value="1"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Qualification</label><input id="jm-qual" placeholder="e.g. B.Tech / BE in CS or related"></div>
+        <div class="form-group"><label>Last Date to Apply</label><input id="jm-lastdate" type="date"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Required Skills (comma-separated)</label><input id="jm-skills" placeholder="React, Node.js, MongoDB, AWS"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Job Description *</label><textarea id="jm-desc" rows="4" placeholder="Describe the role, team, and what the candidate will work on..."></textarea></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Key Responsibilities</label><textarea id="jm-resp" rows="3" placeholder="• Develop and maintain...&#10;• Collaborate with..."></textarea></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Status</label>
+          <select id="jm-status"><option value="draft">Draft</option><option value="published">Published (Live)</option><option value="closed">Closed</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('job-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveJob()">Save Job</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HR: Candidate Detail Modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="cand-detail-modal">
+  <div class="modal" style="max-width:860px">
+    <div class="modal-header"><h2>Candidate Profile</h2><button class="modal-close" onclick="closeModal('cand-detail-modal')">×</button></div>
+    <div class="modal-body" style="max-height:80vh;overflow-y:auto" id="cand-detail-content"></div>
+  </div>
+</div>
+
+<!-- ── HR: Interview Modal ────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="int-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h2>Schedule Interview</h2><button class="modal-close" onclick="closeModal('int-modal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Candidate *</label><select id="intm-cand" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:13px;outline:none;background:var(--white);color:var(--dark)"></select></div>
+        <div class="form-group"><label>Job</label><select id="intm-job" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:13px;outline:none;background:var(--white);color:var(--dark)"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Round</label>
+          <select id="intm-round"><option>HR Round</option><option>Technical Round</option><option>Manager Round</option><option>Final Round</option><option>Assignment Review</option></select></div>
+        <div class="form-group"><label>Scheduled Date & Time *</label><input id="intm-scheduledAt" type="datetime-local"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Interviewers (names / emails)</label><input id="intm-interviewers" placeholder="John Doe, Jane Smith"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Meeting Link</label><input id="intm-meetingLink" type="url" placeholder="https://meet.google.com/..."></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group"><label>Notes</label><textarea id="intm-notes" rows="2" placeholder="Any special instructions..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('int-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveInterview()">Schedule Interview</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HR: Interview Feedback Modal ──────────────────────────────────────── -->
+<div class="modal-overlay" id="intfb-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><h2>Interview Feedback</h2><button class="modal-close" onclick="closeModal('intfb-modal')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="intfb-id">
+      <div class="form-group"><label>Rating (1-5)</label>
+        <select id="intfb-rating"><option value="">No rating</option><option value="1">1 - Poor</option><option value="2">2 - Below Average</option><option value="3">3 - Average</option><option value="4">4 - Good</option><option value="5">5 - Excellent</option></select></div>
+      <div class="form-group" style="margin-top:10px"><label>Feedback / Notes</label><textarea id="intfb-feedback" rows="4" placeholder="Interviewer comments, strengths, weaknesses..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('intfb-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveInterviewFeedback()">Save Feedback</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

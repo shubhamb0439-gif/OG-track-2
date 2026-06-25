@@ -801,6 +801,333 @@ app.delete('/api/sub-tickets/:id', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── HR: AI Candidate Analysis ─────────────────────────────────────────────────
+function analyzeCandidate(candidate, job) {
+  const text = [candidate.coverLetter||'', candidate.skills||'', candidate.experienceSummary||'', candidate.education||''].join(' ').toLowerCase();
+  const requiredSkills = Array.isArray(job.skills) ? job.skills : (job.skills||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const matchedSkills = requiredSkills.filter(s => text.includes(s.toLowerCase()));
+  const missingSkills = requiredSkills.filter(s => !text.includes(s.toLowerCase()));
+  const skillScore = requiredSkills.length > 0 ? Math.round((matchedSkills.length / requiredSkills.length) * 40) : 20;
+  const reqExpStr = (job.experience||'').replace(/[^\d.]/g,' ').trim().split(/\s+/)[0];
+  const reqExp = parseFloat(reqExpStr)||0;
+  const candExp = parseFloat(candidate.experienceYears)||0;
+  let expScore = 0;
+  if(candExp >= reqExp) expScore = 30;
+  else if(reqExp>0 && candExp >= reqExp*0.7) expScore = 20;
+  else if(reqExp>0 && candExp >= reqExp*0.5) expScore = 12;
+  else if(candExp > 0) expScore = 8;
+  const qualReq = (job.qualification||'').toLowerCase();
+  let eduScore = 8;
+  if(qualReq.includes('phd')||qualReq.includes('doctor')) {
+    if(text.includes('phd')||text.includes('doctor')) eduScore=15; else if(text.includes('master')||text.includes('mba')) eduScore=10; else eduScore=5;
+  } else if(qualReq.includes('master')||qualReq.includes('mba')) {
+    if(text.includes('master')||text.includes('mba')) eduScore=15; else if(text.includes('bachelor')||text.includes('b.tech')||text.includes('b.e.')) eduScore=10;
+  } else {
+    if(text.includes('master')||text.includes('mba')||text.includes('phd')) eduScore=15;
+    else if(text.includes('bachelor')||text.includes('b.tech')||text.includes('b.e.')||text.includes('bsc')) eduScore=12;
+  }
+  const jdText=(job.description||'').toLowerCase();
+  const jdWords=jdText.split(/\W+/).filter(w=>w.length>4);
+  const jdSet=new Set(jdWords);
+  const textWords=text.split(/\W+/).filter(w=>w.length>4);
+  const jdMatchCount=textWords.filter(w=>jdSet.has(w)).length;
+  const jdScore=Math.min(15, jdWords.length>0 ? Math.round((jdMatchCount/jdWords.length)*100) : 10);
+  const totalScore=Math.min(100, skillScore+expScore+eduScore+jdScore);
+  let priority='Low'; if(totalScore>=80) priority='High'; else if(totalScore>=60) priority='Medium';
+  return {
+    score:totalScore, skillScore, expScore, eduScore, jdScore,
+    matchedSkills, missingSkills,
+    experienceMatch: candExp>=reqExp ? 'Meets requirement' : `${candExp}yr (${reqExp}+ required)`,
+    priority,
+    recommendation: totalScore>=80?'Strongly recommended':totalScore>=60?'Recommended for HR review':totalScore>=40?'Consider with screening':'Below minimum requirements',
+    analyzedAt: new Date().toISOString()
+  };
+}
+
+// ── HR: Jobs ──────────────────────────────────────────────────────────────────
+app.get('/api/jobs', async (req, res) => {
+  try {
+    const snap = await db.collection('jobs').orderBy('createdAt','desc').get();
+    res.json(snap.docs.map(d=>({id:d.id,...d.data()})));
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.get('/api/jobs/public', async (req, res) => {
+  try {
+    const snap = await db.collection('jobs').where('status','==','published').get();
+    res.json(snap.docs.map(d=>({id:d.id,...d.data()})));
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.post('/api/jobs', async (req, res) => {
+  try {
+    const snap = await db.collection('jobs').get();
+    const jobId = 'JOB-'+String(snap.size+1).padStart(3,'0');
+    const data = {...req.body, jobId, applications:0, createdAt:new Date().toISOString()};
+    const ref = await db.collection('jobs').add(data);
+    res.json({id:ref.id,...data});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.patch('/api/jobs/:id', async (req, res) => {
+  try {
+    await db.collection('jobs').doc(req.params.id).update({...req.body, updatedAt:new Date().toISOString()});
+    const doc = await db.collection('jobs').doc(req.params.id).get();
+    res.json({id:doc.id,...doc.data()});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.delete('/api/jobs/:id', async (req, res) => {
+  try {
+    await db.collection('jobs').doc(req.params.id).delete();
+    res.json({ok:true});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── HR: Candidates ────────────────────────────────────────────────────────────
+app.get('/api/candidates', async (req, res) => {
+  try {
+    let snap;
+    if(req.query.jobId) snap = await db.collection('candidates').where('jobId','==',req.query.jobId).get();
+    else snap = await db.collection('candidates').orderBy('appliedAt','desc').get();
+    res.json(snap.docs.map(d=>({id:d.id,...d.data()})));
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.get('/api/candidates/:id', async (req, res) => {
+  try {
+    const doc = await db.collection('candidates').doc(req.params.id).get();
+    if(!doc.exists) return res.status(404).json({error:'Not found'});
+    res.json({id:doc.id,...doc.data()});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.post('/api/candidates', async (req, res) => {
+  try {
+    const snap = await db.collection('candidates').get();
+    const candidateId = 'CAND-'+String(snap.size+1).padStart(4,'0');
+    const now = new Date().toISOString();
+    const data = {
+      ...req.body, candidateId, status:'applied', appliedAt:now, aiScore:null, aiAnalysis:null,
+      statusHistory:[{status:'applied',timestamp:now,by:'Candidate'}]
+    };
+    if(data.jobId){
+      const jobRef = db.collection('jobs').doc(data.jobId);
+      const job = await jobRef.get();
+      if(job.exists) await jobRef.update({applications:(job.data().applications||0)+1});
+    }
+    const ref = await db.collection('candidates').add(data);
+    // Auto AI analysis
+    if(data.jobId){
+      try {
+        const job = await db.collection('jobs').doc(data.jobId).get();
+        if(job.exists){
+          const analysis = analyzeCandidate(data,job.data());
+          const newStatus = analysis.score>=60?'shortlisted':'ai_screened';
+          await ref.update({aiScore:analysis.score,aiAnalysis:analysis,status:newStatus,
+            statusHistory:[...data.statusHistory,{status:'ai_screened',timestamp:new Date().toISOString(),by:'AI System'}]});
+        }
+      } catch(ae){}
+    }
+    const saved = await ref.get();
+    res.json({id:ref.id,...saved.data()});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.patch('/api/candidates/:id', async (req, res) => {
+  try {
+    const doc = await db.collection('candidates').doc(req.params.id).get();
+    const current = doc.data();
+    const updates = {...req.body, updatedAt:new Date().toISOString()};
+    if(req.body.status && req.body.status !== current.status){
+      updates.statusHistory = [...(current.statusHistory||[]),{status:req.body.status,timestamp:new Date().toISOString(),by:req.body.changedBy||'HR'}];
+    }
+    delete updates.changedBy;
+    await db.collection('candidates').doc(req.params.id).update(updates);
+    const updated = await db.collection('candidates').doc(req.params.id).get();
+    res.json({id:updated.id,...updated.data()});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.delete('/api/candidates/:id', async (req, res) => {
+  try {
+    await db.collection('candidates').doc(req.params.id).delete();
+    res.json({ok:true});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.post('/api/candidates/:id/analyze', async (req, res) => {
+  try {
+    const doc = await db.collection('candidates').doc(req.params.id).get();
+    if(!doc.exists) return res.status(404).json({error:'Not found'});
+    const candidate = doc.data();
+    if(!candidate.jobId) return res.status(400).json({error:'No job linked'});
+    const job = await db.collection('jobs').doc(candidate.jobId).get();
+    if(!job.exists) return res.status(404).json({error:'Job not found'});
+    const analysis = analyzeCandidate(candidate, job.data());
+    await db.collection('candidates').doc(req.params.id).update({aiScore:analysis.score,aiAnalysis:analysis});
+    res.json({id:req.params.id,aiScore:analysis.score,aiAnalysis:analysis});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── HR: Interviews ────────────────────────────────────────────────────────────
+app.get('/api/interviews', async (req, res) => {
+  try {
+    let snap;
+    if(req.query.candidateId) snap=await db.collection('interviews').where('candidateId','==',req.query.candidateId).get();
+    else snap=await db.collection('interviews').orderBy('scheduledAt','desc').get();
+    res.json(snap.docs.map(d=>({id:d.id,...d.data()})));
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.post('/api/interviews', async (req, res) => {
+  try {
+    const snap = await db.collection('interviews').get();
+    const interviewId = 'INT-'+String(snap.size+1).padStart(4,'0');
+    const data = {...req.body, interviewId, status:'scheduled', createdAt:new Date().toISOString()};
+    const ref = await db.collection('interviews').add(data);
+    if(data.candidateId){
+      const cand = await db.collection('candidates').doc(data.candidateId).get();
+      if(cand.exists){
+        const cd=cand.data();
+        await db.collection('candidates').doc(data.candidateId).update({
+          status:'interview_scheduled',
+          statusHistory:[...(cd.statusHistory||[]),{status:'interview_scheduled',timestamp:new Date().toISOString(),by:data.scheduledBy||'HR'}]
+        });
+      }
+    }
+    res.json({id:ref.id,...data});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.patch('/api/interviews/:id', async (req, res) => {
+  try {
+    await db.collection('interviews').doc(req.params.id).update({...req.body,updatedAt:new Date().toISOString()});
+    const doc = await db.collection('interviews').doc(req.params.id).get();
+    res.json({id:doc.id,...doc.data()});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+app.delete('/api/interviews/:id', async (req, res) => {
+  try {
+    await db.collection('interviews').doc(req.params.id).delete();
+    res.json({ok:true});
+  } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+// ── Career Page ───────────────────────────────────────────────────────────────
+app.get('/careers', async (req, res) => {
+  try {
+    const snap = await db.collection('jobs').where('status','==','published').get();
+    const jobs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    res.send(buildCareersHTML(jobs));
+  } catch(e){ res.status(500).send('<h2>Error loading careers page</h2>'); }
+});
+
+app.get('/careers/:jobId', async (req, res) => {
+  try {
+    const doc = await db.collection('jobs').doc(req.params.jobId).get();
+    if(!doc.exists||doc.data().status!=='published') return res.redirect('/careers');
+    res.send(buildJobDetailHTML({id:doc.id,...doc.data()}));
+  } catch(e){ res.redirect('/careers'); }
+});
+
+function buildCareersHTML(jobs) {
+  const cards = jobs.length ? jobs.map(j=>`
+    <div class="jc"><div class="jc-vac">📌 ${j.vacancies||1} opening${(j.vacancies||1)>1?'s':''}</div>
+    <div class="jc-title">${j.title}</div>
+    <div class="jc-meta"><span class="tag">${j.department}</span><span class="tag">${j.employmentType}</span><span class="tag">📍 ${j.location}</span><span class="tag">💻 ${j.workMode}</span>${j.experience?`<span class="tag">🏆 ${j.experience}</span>`:''}</div>
+    <div class="jc-desc">${(j.description||'').substring(0,200)}${(j.description||'').length>200?'...':''}</div>
+    <a href="/careers/${j.id}" class="abtn">View & Apply →</a></div>`).join('')
+    : '<div class="empty"><h3>No open positions</h3><p>Check back soon!</p></div>';
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Careers — OGPlus</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a}
+.hdr{background:#C0392B;color:#fff;padding:48px 20px;text-align:center}.hdr h1{font-size:32px;font-weight:800;margin-bottom:8px}.hdr p{opacity:.85}
+.wrap{max-width:900px;margin:32px auto;padding:0 16px}.jc{background:#fff;border-radius:12px;padding:24px;margin-bottom:14px;border:1px solid #e0e0e0;transition:box-shadow .15s}.jc:hover{box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.jc-vac{font-size:12px;color:#27AE60;font-weight:600;margin-bottom:4px}.jc-title{font-size:18px;font-weight:700;margin-bottom:8px}
+.jc-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.tag{background:#f0f0f0;color:#666;padding:3px 10px;border-radius:20px;font-size:12px}
+.jc-desc{font-size:13px;color:#666;line-height:1.6;margin-bottom:14px}.abtn{background:#C0392B;color:#fff;padding:10px 20px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+.abtn:hover{background:#a93226}.empty{text-align:center;padding:60px 20px;color:#999}</style></head>
+<body><div class="hdr"><h1>Join Our Team</h1><p>Explore exciting career opportunities</p></div>
+<div class="wrap">${cards}</div></body></html>`;
+}
+
+function buildJobDetailHTML(job) {
+  const skills = Array.isArray(job.skills)?job.skills:(job.skills||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const skillTags = skills.map(s=>`<span style="background:#e8f4fd;color:#2980b9;padding:3px 10px;border-radius:20px;font-size:12px;margin:3px 2px;display:inline-block">${s}</span>`).join('');
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${job.title} — Careers</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a}
+.hdr{background:#C0392B;color:#fff;padding:28px 20px}.hdr a{color:rgba(255,255,255,.75);font-size:13px;text-decoration:none;display:block;margin-bottom:8px}.hdr h1{font-size:24px;font-weight:800;margin-bottom:8px}
+.wrap{max-width:820px;margin:28px auto;padding:0 16px;display:grid;grid-template-columns:1fr 300px;gap:18px}@media(max-width:650px){.wrap{grid-template-columns:1fr}}
+.card{background:#fff;border-radius:12px;padding:22px;border:1px solid #e0e0e0;margin-bottom:14px}h2{font-size:17px;font-weight:700;margin-bottom:12px}
+.desc{font-size:13px;line-height:1.75;color:#555;white-space:pre-line}.mr{display:flex;align-items:center;gap:8px;font-size:13px;color:#555;margin-bottom:8px}
+label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px;margin-top:10px}
+input,textarea,select{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:7px;font-size:13px;outline:none;font-family:inherit}
+input:focus,textarea:focus{border-color:#C0392B}textarea{min-height:80px;resize:vertical}
+.sbtn{width:100%;background:#C0392B;color:#fff;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:14px}
+.sbtn:hover{background:#a93226}.sbtn:disabled{opacity:.6;cursor:not-allowed}
+.ok{background:#e8f5e9;color:#2e7d32;padding:16px;border-radius:8px;text-align:center;display:none;font-weight:600}</style></head>
+<body>
+<div class="hdr"><a href="/careers">← All Openings</a><h1>${job.title}</h1>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+<span style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:12px;font-size:12px">${job.department}</span>
+<span style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:12px;font-size:12px">${job.employmentType}</span>
+<span style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:12px;font-size:12px">📍 ${job.location}</span></div></div>
+<div class="wrap">
+<div>
+  <div class="card"><h2>About the Role</h2><div class="desc">${job.description||'No description provided.'}</div></div>
+  ${job.responsibilities?`<div class="card"><h2>Responsibilities</h2><div class="desc">${job.responsibilities}</div></div>`:''}
+  ${skills.length?`<div class="card"><h2>Required Skills</h2><div style="margin-top:6px">${skillTags}</div></div>`:''}
+  ${job.qualification?`<div class="card"><h2>Qualification</h2><p style="font-size:13px;color:#555">${job.qualification}</p></div>`:''}
+</div>
+<div>
+<div class="card">
+<div style="margin-bottom:18px">
+  <div class="mr">📌 ${job.vacancies||1} opening${(job.vacancies||1)>1?'s':''}</div>
+  <div class="mr">💰 ${job.salaryRange||'Competitive'}</div>
+  <div class="mr">🏆 ${job.experience||'Any'} experience</div>
+  <div class="mr">💻 ${job.workMode||'Office'}</div>
+  ${job.lastDate?`<div class="mr">📅 Apply by ${job.lastDate}</div>`:''}
+</div>
+<div id="ok" class="ok">✅ Application submitted! We'll review your profile shortly.</div>
+<form id="af" onsubmit="submit(event,'${job.id}','${job.title}')">
+<h2>Apply Now</h2>
+<label>Full Name *</label><input id="cn" required placeholder="Your name">
+<label>Email *</label><input type="email" id="ce" required placeholder="you@example.com">
+<label>Phone *</label><input type="tel" id="cp" required placeholder="+91 XXXXX XXXXX">
+<label>Current Location *</label><input id="cl" required placeholder="City, State">
+<label>Years of Experience *</label><input type="number" id="cexp" required min="0" max="50" step="0.5" placeholder="3.5">
+<label>Education</label><input id="cedu" placeholder="B.Tech Computer Science">
+<label>Skills (comma-separated)</label><input id="csk" placeholder="React, Node.js, MongoDB">
+<label>Expected Salary</label><input id="csal" placeholder="₹12L per annum">
+<label>LinkedIn / Portfolio</label><input type="url" id="cpf" placeholder="https://linkedin.com/in/...">
+<label>Cover Letter / About You *</label><textarea id="ccv" required placeholder="Tell us about yourself..."></textarea>
+<label>Resume (PDF/DOC)</label><input type="file" id="cres" accept=".pdf,.doc,.docx">
+<button type="submit" class="sbtn" id="sb">Submit Application →</button>
+</form>
+</div></div></div>
+<script>
+async function submit(e,jobId,jobTitle){
+  e.preventDefault();
+  const btn=document.getElementById('sb'); btn.textContent='Submitting...'; btn.disabled=true;
+  let resumeUrl='';
+  const file=document.getElementById('cres').files[0];
+  if(file){try{const fd=new FormData();fd.append('file',file);const r=await fetch('/api/upload',{method:'POST',body:fd});const d=await r.json();resumeUrl=d.url||'';}catch(err){}}
+  const data={jobId,jobTitle,name:document.getElementById('cn').value.trim(),email:document.getElementById('ce').value.trim(),
+    phone:document.getElementById('cp').value.trim(),currentLocation:document.getElementById('cl').value.trim(),
+    experienceYears:parseFloat(document.getElementById('cexp').value)||0,education:document.getElementById('cedu').value.trim(),
+    skills:document.getElementById('csk').value.trim(),expectedSalary:document.getElementById('csal').value.trim(),
+    portfolio:document.getElementById('cpf').value.trim(),coverLetter:document.getElementById('ccv').value.trim(),
+    resumeUrl,source:'Career Page'};
+  try{
+    await fetch('/api/candidates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    document.getElementById('af').style.display='none'; document.getElementById('ok').style.display='block';
+  }catch(err){btn.textContent='Submit Application →';btn.disabled=false;alert('Failed to submit. Try again.');}
+}
+</script></body></html>`;
+}
+
 // ── Socket ────────────────────────────────────────────────────────────────────
 io.on('connection', socket => {
   console.log('Client connected:', socket.id);
