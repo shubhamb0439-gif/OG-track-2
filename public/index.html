@@ -416,6 +416,33 @@ tr:hover td{background:#fafafa;}tr[onclick]{cursor:pointer;}tr[onclick]:hover td
 .hr-int-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
 .hr-report-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px;}
 .hr-report-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;}
+/* ── CEO EXECUTIVE DASHBOARD ─────────────────────────────────────────────── */
+.ceo-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.ceo-kpi-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 14px;position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s;cursor:pointer;}
+.ceo-kpi-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-2px);}
+.ceo-kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.ceo-kpi-card.green::before{background:#27AE60;}.ceo-kpi-card.red::before{background:#E74C3C;}.ceo-kpi-card.blue::before{background:#3498DB;}.ceo-kpi-card.purple::before{background:#9B59B6;}.ceo-kpi-card.orange::before{background:#F39C12;}.ceo-kpi-card.teal::before{background:#1ABC9C;}.ceo-kpi-card.indigo::before{background:#6C5CE7;}
+.ceo-kpi-num{font-size:30px;font-weight:800;line-height:1.1;margin:4px 0;}
+.ceo-kpi-label{font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.5px;}
+.ceo-kpi-sub{font-size:11px;color:var(--g3);margin-top:4px;}
+.ceo-kpi-icon{position:absolute;top:14px;right:14px;font-size:22px;opacity:.22;}
+.ceo-chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.ceo-chart-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.ceo-chart-title{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--text);}
+.ceo-widget-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px;}
+.ceo-widget-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.ceo-widget-title{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.ceo-widget-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--g5);font-size:13px;}
+.ceo-widget-row:last-child{border-bottom:none;}
+.ceo-notif-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--g5);font-size:12px;align-items:flex-start;}
+.ceo-notif-row:last-child{border-bottom:none;}
+.ceo-notif-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.ceo-header-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.ceo-section-title{font-size:13px;font-weight:700;color:var(--g2);text-transform:uppercase;letter-spacing:.6px;margin:20px 0 10px;}
+.ceo-report-bar{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;}
+.ceo-report-bar label{font-size:11px;font-weight:600;color:var(--g3);display:block;margin-bottom:3px;}
+.ceo-report-bar select,.ceo-report-bar input[type=date]{font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);}
+@media(max-width:768px){.ceo-chart-grid{grid-template-columns:1fr;}}
 /* ── SPRINTS & STORIES ───────────────────────────────────────────────────── */
 .sprint-list{display:flex;flex-direction:column;gap:12px;}
 .sprint-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
@@ -2099,7 +2126,7 @@ function buildSidebar(){
   let navItems;
   if(BUILTIN_ROLES.includes(role)){
     const items={
-      superadmin:       [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['sprints','Sprints','#8E44AD'],['sub_tickets','Requests','#16A085'],['admin','User Management','#D0D0D0'],['roles','Role Manager','#9B59B6'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
+      superadmin:       [['ceo_dashboard','Exec Dashboard','#C0392B'],['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['sprints','Sprints','#8E44AD'],['sub_tickets','Requests','#16A085'],['admin','User Management','#D0D0D0'],['roles','Role Manager','#9B59B6'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
       manager:          [['dashboard','Dashboard','var(--red2)'],['projects','Projects','#7F7F7F'],['sprints','Sprints','#8E44AD'],['sub_tickets','Requests','#16A085'],['summary','Team Summary','#D0D0D0'],['bugs','All Bugs','#4A4A4A'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
       tester:           [['dashboard','Dashboard','var(--red2)'],['sprints','Sprints','#8E44AD'],['sub_tickets','Requests','#16A085'],['bugs','All Bugs','#7F7F7F'],['mybugs','My Bugs','#D0D0D0'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
       developer:        [['dashboard','Dashboard','var(--red2)'],['sprints','Sprints','#8E44AD'],['sub_tickets','Requests','#16A085'],['mybugs','My Bugs','#7F7F7F'],['attendance','Attendance','#27AE60'],['history','History','#4A4A4A'],['messages','Messages','#E74C3C']],
@@ -2147,6 +2174,7 @@ function buildSidebar(){
     hr_candidates:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><circle cx="9" cy="6" r="3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6"/><polyline points="12,2 14,4 16,2"/></svg>`,
     hr_interviews:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><rect x="2" y="3.5" width="14" height="12" rx="1"/><line x1="2" y1="7.5" x2="16" y2="7.5"/><line x1="6" y1="1.5" x2="6" y2="5.5"/><line x1="12" y1="1.5" x2="12" y2="5.5"/><circle cx="9" cy="11.5" r="1.5"/></svg>`,
     hr_reports:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><line x1="3" y1="15" x2="3" y2="8"/><line x1="7" y1="15" x2="7" y2="4"/><line x1="11" y1="15" x2="11" y2="10"/><line x1="15" y1="15" x2="15" y2="6"/><line x1="1" y1="15" x2="17" y2="15"/></svg>`,
+    ceo_dashboard:`<svg width="18" height="18" viewBox="0 0 18 18" ${_si}><path d="M2 13L6 8l3 3 4-5 3 3"/><rect x="1" y="1" width="16" height="14" rx="1.5"/><line x1="1" y1="16" x2="17" y2="16"/></svg>`,
   };
   document.getElementById('sidebar-nav').innerHTML=navItems.map(([v,label,color])=>
     `<button class="nav-btn ${v==='dashboard'?'active':''}" id="nav-${v}" data-label="${label}" onclick="showView('${v}');closeSidebar()">
@@ -2247,10 +2275,10 @@ function showView(v){
     if (ca) ca.style.padding = '16px';
   }
   document.querySelectorAll('.nav-btn').forEach(b=>{
-    const map={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints',acc_clients:'Clients',acc_timer:'Timer',acc_eod:'EOD Reports',acc_clients_my:'My Clients',acc_eod_own:'EOD Report',hr_dashboard:'HR Dashboard',hr_jobs:'Job Openings',hr_candidates:'Candidates',hr_interviews:'Interviews',hr_reports:'Reports'};
+    const map={ceo_dashboard:'Exec Dashboard',dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints',acc_clients:'Clients',acc_timer:'Timer',acc_eod:'EOD Reports',acc_clients_my:'My Clients',acc_eod_own:'EOD Report',hr_dashboard:'HR Dashboard',hr_jobs:'Job Openings',hr_candidates:'Candidates',hr_interviews:'Interviews',hr_reports:'Reports'};
     b.classList.toggle('active',b.textContent.trim()===map[v]);
   });
-  document.getElementById('view-title').textContent={dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints',hr_dashboard:'HR Dashboard',hr_jobs:'Job Openings',hr_candidates:'Candidates',hr_interviews:'Interviews',hr_reports:'HR Reports'}[v]||v;
+  document.getElementById('view-title').textContent={ceo_dashboard:'Executive Dashboard',dashboard:'Dashboard',bugs:'All Bugs',mybugs:'My Bugs',summary:'Team Summary',admin:'User Management',projects:'Projects',history:'History',messages:'Messages',attendance:'Attendance',roles:'Role Manager',sub_tickets:'Requests',sprints:'Sprints',hr_dashboard:'HR Dashboard',hr_jobs:'Job Openings',hr_candidates:'Candidates',hr_interviews:'Interviews',hr_reports:'HR Reports'}[v]||v;
   document.getElementById('filter-bar').style.display=(v==='bugs'||v==='mybugs')?'flex':'none';
   // Animate content area on tab switch
   const ca = document.getElementById('content-area');
@@ -2282,6 +2310,7 @@ function renderView(){
   if(currentView==='acc_eod')     return renderAccEod();
   if(currentView==='sprints')       return renderSprints();
   if(currentView==='sub_tickets')   return renderSubTickets();
+  if(currentView==='ceo_dashboard') return renderCeoDashboard();
   if(currentView==='hr_dashboard')  return renderHrDashboard();
   if(currentView==='hr_jobs')       return renderHrJobs();
   if(currentView==='hr_candidates') return renderHrCandidates();
@@ -6651,6 +6680,351 @@ function _exportHrReport(format){
   const blob=new Blob([csvContent],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a'); a.href=url; a.download='hr_report.csv'; a.click(); URL.revokeObjectURL(url);
+  showToast('Report exported ✓','success');
+}
+
+// ── CEO Executive Dashboard ───────────────────────────────────────────────────
+let _ceoLoaded=false;
+async function renderCeoDashboard(){
+  const el=document.getElementById('content-area');
+  el.innerHTML=`<div style="text-align:center;padding:60px;color:var(--g3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.2-8.6"/></svg><p style="margin-top:12px">Loading Executive Dashboard…</p></div>`;
+  // fetch all data in parallel
+  const today=todayStr();
+  const [attRes,leaveRes,regRes,stRes]=await Promise.all([
+    fetch('/api/attendance/all').then(r=>r.json()).catch(()=>[]),
+    fetch('/api/leave').then(r=>r.json()).catch(()=>[]),
+    fetch('/api/attendance/regularize').then(r=>r.json()).catch(()=>[]),
+    fetch('/api/sub-tickets').then(r=>r.json()).catch(()=>[]),
+  ]);
+  const allAtt=Array.isArray(attRes)?attRes:(attRes.records||[]);
+  const allLeave=Array.isArray(leaveRes)?leaveRes:[];
+  const allReg=Array.isArray(regRes)?regRes:[];
+  const allST=Array.isArray(stRes)?stRes:(stRes.tickets||[]);
+  // attendance today
+  const todayAtt=allAtt.filter(a=>a.date===today);
+  const presentToday=todayAtt.filter(a=>a.clockIn).length;
+  const remoteToday=todayAtt.filter(a=>a.mode==='remote'||a.workMode==='remote').length;
+  const lateArrivals=todayAtt.filter(a=>{
+    if(!a.clockIn)return false;
+    const t=new Date(a.clockIn);
+    return t.getHours()>9||(t.getHours()===9&&t.getMinutes()>30);
+  }).length;
+  // leave today
+  const onLeaveToday=allLeave.filter(l=>{
+    if(l.status!=='approved')return false;
+    return l.date===today||(l.startDate<=today&&l.endDate>=today);
+  }).length;
+  // total employees
+  const totalEmp=(allUsers||[]).filter(u=>u.role!=='superadmin').length;
+  const absentToday=Math.max(0,totalEmp-presentToday-onLeaveToday);
+  // pending approvals
+  const pendLeave=allLeave.filter(l=>l.status==='pending').length;
+  const pendReg=allReg.filter(r=>r.status==='pending').length;
+  const pendST=allST.filter(t=>t.status==='open'||t.status==='pending').length;
+  const pendingTotal=pendLeave+pendReg+pendST;
+  // HR
+  const jobs=hrJobs||[];
+  const candidates=hrCandidates||[];
+  const interviews=hrInterviews||[];
+  const openJobs=jobs.filter(j=>j.status==='open'||!j.status).length;
+  const pipelineCandidates=candidates.filter(c=>c.status!=='rejected'&&c.status!=='hired').length;
+  const todayInterviews=interviews.filter(i=>i.scheduledDate===today).length;
+  const offersReleased=candidates.filter(c=>c.status==='offer').length;
+  // projects & bugs
+  const projList=allProjects||[];
+  const activeProjects=projList.filter(p=>p.status==='active'||!p.status).length;
+  const bugList=bugs||[];
+  const openBugs=bugList.filter(b=>b.status!=='closed'&&b.status!=='resolved').length;
+  // departments
+  const deptMap={};
+  (allUsers||[]).forEach(u=>{const d=u.department||u.dept||'General';deptMap[d]=(deptMap[d]||0)+1;});
+  const deptCount=Object.keys(deptMap).length;
+  // 7-day attendance trend
+  const last7=[],last7Labels=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);last7.push(allAtt.filter(a=>a.date===ds&&a.clockIn).length);last7Labels.push(d.toLocaleDateString('en',{weekday:'short'}));}
+  // 6-month monthly trend
+  const months6=[],months6Labels=[];
+  for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);const ym=d.toISOString().slice(0,7);months6.push(allAtt.filter(a=>a.date&&a.date.slice(0,7)===ym&&a.clockIn).length);months6Labels.push(d.toLocaleDateString('en',{month:'short'}));}
+  // recruitment funnel
+  const stages=['applied','screening','interview','offer','hired'];
+  const funnelCounts=stages.map(s=>candidates.filter(c=>(c.status||'applied')===s).length+(s==='applied'?candidates.filter(c=>!c.status).length:0));
+  // dept distribution
+  const deptNames=Object.keys(deptMap).slice(0,6);
+  const deptVals=deptNames.map(d=>deptMap[d]);
+  // project bug overview
+  const projBugs=projList.slice(0,6).map(p=>({name:(p.name||'').slice(0,12),open:bugList.filter(b=>b.project===p.id&&b.status!=='closed').length,closed:bugList.filter(b=>b.project===p.id&&b.status==='closed').length}));
+  // today's birthday / anniversary
+  const todayMD=today.slice(5);
+  const birthdays=(allUsers||[]).filter(u=>(u.dob||'').slice(5)===todayMD).map(u=>u.name||u.email);
+  const anniversaries=(allUsers||[]).filter(u=>(u.joinDate||'').slice(5)===todayMD&&u.joinDate!==today).map(u=>u.name||u.email);
+  // new joiners last 30 days
+  const d30=new Date();d30.setDate(d30.getDate()-30);const d30s=d30.toISOString().slice(0,10);
+  const newJoiners=(allUsers||[]).filter(u=>u.joinDate>=d30s&&u.joinDate<=today).map(u=>u.name||u.email);
+  // recent candidates
+  const recentApps=candidates.slice().sort((a,b)=>(b.appliedAt||0)-(a.appliedAt||0)).slice(0,5);
+  // today's interviews
+  const todayIntList=interviews.filter(i=>i.scheduledDate===today).slice(0,5);
+  // pending approvals list
+  const pendLeaveList=allLeave.filter(l=>l.status==='pending').slice(0,4);
+  // CEO notifications
+  const ceoNotifs=[];
+  recentApps.slice(0,3).forEach(c=>ceoNotifs.push({dot:'#3498DB',text:`New application: ${c.name||c.email||'Candidate'} for ${(jobs.find(j=>j.id===c.jobId)||{}).title||'a position'}`}));
+  todayIntList.slice(0,2).forEach(i=>ceoNotifs.push({dot:'#F39C12',text:`Interview today: ${i.candidateName||'Candidate'} at ${i.time||'TBD'}`}));
+  candidates.filter(c=>c.status==='hired').slice(-2).forEach(c=>ceoNotifs.push({dot:'#27AE60',text:`Hired: ${c.name||c.email||'Candidate'}`}));
+  pendLeaveList.slice(0,2).forEach(l=>ceoNotifs.push({dot:'#E74C3C',text:`Leave pending: ${l.userName||l.userId||'Employee'} (${l.type||'leave'})`}));
+  if(!ceoNotifs.length)ceoNotifs.push({dot:'#95A5A6',text:'No new notifications'});
+
+  // SVG helpers
+  function svgBar(vals,labels,color='#3498DB',h=110){
+    const max=Math.max(...vals,1);const w=340;const bw=Math.floor((w-20)/vals.length)-6;
+    let bars='',lbls='';
+    vals.forEach((v,i)=>{
+      const bh=Math.round((v/max)*(h-20));const x=10+i*(bw+6);const y=h-20-bh;
+      bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3" fill="${color}" opacity=".85"/>`;
+      bars+=`<text x="${x+bw/2}" y="${h-4}" text-anchor="middle" font-size="9" fill="#888">${labels[i]||''}</text>`;
+      if(v>0)bars+=`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" font-size="9" fill="#555">${v}</text>`;
+    });
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">${bars}</svg>`;
+  }
+  function svgFunnel(vals,labels){
+    const max=Math.max(...vals,1);const h=160;const w=320;
+    let out='';
+    vals.forEach((v,i)=>{
+      const bw=Math.round((v/max)*(w-60))+40;const x=(w-bw)/2;const y=8+i*28;
+      const colors=['#3498DB','#9B59B6','#F39C12','#27AE60','#E74C3C'];
+      out+=`<rect x="${x}" y="${y}" width="${bw}" height="22" rx="4" fill="${colors[i]||'#888'}" opacity=".85"/>`;
+      out+=`<text x="${w/2}" y="${y+15}" text-anchor="middle" font-size="10" fill="#fff" font-weight="600">${labels[i]||''}: ${v}</text>`;
+    });
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">${out}</svg>`;
+  }
+  function svgDonut(vals,labels,colors){
+    const total=vals.reduce((a,b)=>a+b,0)||1;const cx=80,cy=80,r=60,ri=35;
+    let path='',legend='',angle=-Math.PI/2;
+    const cols=colors||['#3498DB','#9B59B6','#27AE60','#F39C12','#E74C3C','#1ABC9C'];
+    vals.forEach((v,i)=>{
+      const sweep=(v/total)*Math.PI*2;const endAngle=angle+sweep;
+      const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
+      const x2=cx+r*Math.cos(endAngle),y2=cy+r*Math.sin(endAngle);
+      const x3=cx+ri*Math.cos(endAngle),y3=cy+ri*Math.sin(endAngle);
+      const x4=cx+ri*Math.cos(angle),y4=cy+ri*Math.sin(angle);
+      const lg=sweep>Math.PI?1:0;
+      path+=`<path d="M${x1},${y1} A${r},${r} 0 ${lg},1 ${x2},${y2} L${x3},${y3} A${ri},${ri} 0 ${lg},0 ${x4},${y4} Z" fill="${cols[i%cols.length]}" opacity=".88"/>`;
+      legend+=`<rect x="170" y="${12+i*18}" width="10" height="10" rx="2" fill="${cols[i%cols.length]}"/><text x="184" y="${21+i*18}" font-size="10" fill="#555">${(labels[i]||'').slice(0,12)} (${v})</text>`;
+      angle=endAngle;
+    });
+    const svgW=vals.length>3?330:220;
+    return `<svg viewBox="0 0 ${svgW} 170" style="width:100%;height:170px">${path}${legend}<text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="13" font-weight="700" fill="#333">${total}</text><text x="${cx}" y="${cy+18}" text-anchor="middle" font-size="9" fill="#888">total</text></svg>`;
+  }
+  function svgStackedBar(items){
+    if(!items.length)return '<p style="color:var(--g3);font-size:12px">No project data</p>';
+    const max=Math.max(...items.map(p=>p.open+p.closed),1);const h=130;const w=340;const bw=Math.floor((w-20)/items.length)-8;
+    let bars='';
+    items.forEach((p,i)=>{
+      const tot=p.open+p.closed;const totalH=Math.round((tot/max)*(h-24));
+      const openH=tot?Math.round((p.open/tot)*totalH):0;const closedH=totalH-openH;
+      const x=10+i*(bw+8);
+      bars+=`<rect x="${x}" y="${h-24-closedH}" width="${bw}" height="${closedH}" rx="2" fill="#27AE60" opacity=".85"/>`;
+      bars+=`<rect x="${x}" y="${h-24-closedH-openH}" width="${bw}" height="${openH}" rx="2" fill="#E74C3C" opacity=".85"/>`;
+      bars+=`<text x="${x+bw/2}" y="${h-8}" text-anchor="middle" font-size="8" fill="#888">${p.name}</text>`;
+      if(tot>0)bars+=`<text x="${x+bw/2}" y="${h-24-closedH-openH-3}" text-anchor="middle" font-size="9" fill="#555">${tot}</text>`;
+    });
+    bars+=`<rect x="210" y="4" width="8" height="8" rx="1" fill="#E74C3C" opacity=".85"/><text x="222" y="12" font-size="9" fill="#555">Open</text>`;
+    bars+=`<rect x="250" y="4" width="8" height="8" rx="1" fill="#27AE60" opacity=".85"/><text x="262" y="12" font-size="9" fill="#555">Closed</text>`;
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">${bars}</svg>`;
+  }
+  // attendance overview donut
+  const attOverviewVals=[presentToday,onLeaveToday,absentToday,remoteToday];
+  const attOverviewLbls=['Present','On Leave','Absent','Remote'];
+  const attOverviewCols=['#27AE60','#F39C12','#E74C3C','#3498DB'];
+  // clock
+  function liveClock(){
+    const el2=document.getElementById('ceo-live-clock');
+    if(!el2)return;
+    const n=new Date();el2.textContent=n.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+  if(window._ceoClock)clearInterval(window._ceoClock);
+  window._ceoClock=setInterval(liveClock,1000);
+  if(window._ceoRefreshTimer)clearTimeout(window._ceoRefreshTimer);
+  window._ceoRefreshTimer=setTimeout(()=>{if(currentView==='ceo_dashboard')renderCeoDashboard();},300000);
+
+  el.innerHTML=`
+<div class="ceo-header-bar">
+  <div>
+    <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.6px">Executive Overview</div>
+    <div style="font-size:22px;font-weight:800;color:var(--text)">${today}</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span id="ceo-live-clock" style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)"></span>
+    <button class="btn" onclick="renderCeoDashboard()" style="font-size:12px;padding:6px 14px">&#8635; Refresh</button>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="ceo-section-title">Key Performance Indicators</div>
+<div class="ceo-kpi-grid">
+  <div class="ceo-kpi-card green"><span class="ceo-kpi-icon">👥</span><div class="ceo-kpi-label">Total Employees</div><div class="ceo-kpi-num">${totalEmp}</div><div class="ceo-kpi-sub">Active workforce</div></div>
+  <div class="ceo-kpi-card green"><span class="ceo-kpi-icon">✅</span><div class="ceo-kpi-label">Present Today</div><div class="ceo-kpi-num">${presentToday}</div><div class="ceo-kpi-sub">${totalEmp?Math.round(presentToday/totalEmp*100):0}% attendance</div></div>
+  <div class="ceo-kpi-card red"><span class="ceo-kpi-icon">❌</span><div class="ceo-kpi-label">Absent Today</div><div class="ceo-kpi-num">${absentToday}</div><div class="ceo-kpi-sub">Not checked in</div></div>
+  <div class="ceo-kpi-card orange"><span class="ceo-kpi-icon">🏖️</span><div class="ceo-kpi-label">On Leave</div><div class="ceo-kpi-num">${onLeaveToday}</div><div class="ceo-kpi-sub">Approved leave</div></div>
+  <div class="ceo-kpi-card orange"><span class="ceo-kpi-icon">⏰</span><div class="ceo-kpi-label">Late Check-ins</div><div class="ceo-kpi-num">${lateArrivals}</div><div class="ceo-kpi-sub">After 9:30 AM</div></div>
+  <div class="ceo-kpi-card teal"><span class="ceo-kpi-icon">🏠</span><div class="ceo-kpi-label">Remote Workers</div><div class="ceo-kpi-num">${remoteToday}</div><div class="ceo-kpi-sub">Working remotely</div></div>
+  <div class="ceo-kpi-card purple"><span class="ceo-kpi-icon">💼</span><div class="ceo-kpi-label">Open Positions</div><div class="ceo-kpi-num">${openJobs}</div><div class="ceo-kpi-sub">Active job openings</div></div>
+  <div class="ceo-kpi-card blue"><span class="ceo-kpi-icon">🔄</span><div class="ceo-kpi-label">In Pipeline</div><div class="ceo-kpi-num">${pipelineCandidates}</div><div class="ceo-kpi-sub">Active candidates</div></div>
+  <div class="ceo-kpi-card blue"><span class="ceo-kpi-icon">🗓️</span><div class="ceo-kpi-label">Interviews Today</div><div class="ceo-kpi-num">${todayInterviews}</div><div class="ceo-kpi-sub">Scheduled</div></div>
+  <div class="ceo-kpi-card teal"><span class="ceo-kpi-icon">📨</span><div class="ceo-kpi-label">Offers Released</div><div class="ceo-kpi-num">${offersReleased}</div><div class="ceo-kpi-sub">Pending acceptance</div></div>
+  <div class="ceo-kpi-card red"><span class="ceo-kpi-icon">⚠️</span><div class="ceo-kpi-label">Pending Approvals</div><div class="ceo-kpi-num">${pendingTotal}</div><div class="ceo-kpi-sub">${pendLeave}L · ${pendReg}R · ${pendST}T</div></div>
+  <div class="ceo-kpi-card indigo"><span class="ceo-kpi-icon">🚀</span><div class="ceo-kpi-label">Active Projects</div><div class="ceo-kpi-num">${activeProjects}</div><div class="ceo-kpi-sub">${deptCount} departments</div></div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="ceo-section-title">Analytics &amp; Trends</div>
+<div class="ceo-chart-grid">
+  <div class="ceo-chart-card">
+    <div class="ceo-chart-title">7-Day Attendance Trend</div>
+    ${svgBar(last7,last7Labels,'#27AE60',120)}
+  </div>
+  <div class="ceo-chart-card">
+    <div class="ceo-chart-title">6-Month Attendance</div>
+    ${svgBar(months6,months6Labels,'#3498DB',120)}
+  </div>
+</div>
+<div class="ceo-chart-grid">
+  <div class="ceo-chart-card">
+    <div class="ceo-chart-title">Recruitment Pipeline Funnel</div>
+    ${svgFunnel(funnelCounts,['Applied','Screening','Interview','Offer','Hired'])}
+  </div>
+  <div class="ceo-chart-card">
+    <div class="ceo-chart-title">Department Distribution</div>
+    ${deptNames.length?svgDonut(deptVals,deptNames):'<p style="color:var(--g3);font-size:12px;padding:20px 0">No department data</p>'}
+  </div>
+</div>
+<div class="ceo-chart-grid">
+  <div class="ceo-chart-card">
+    <div class="ceo-chart-title">Project Bug Overview</div>
+    ${projBugs.length?svgStackedBar(projBugs):'<p style="color:var(--g3);font-size:12px">No project data</p>'}
+  </div>
+  <div class="ceo-chart-card">
+    <div class="ceo-chart-title">Attendance Overview Today</div>
+    ${svgDonut(attOverviewVals,attOverviewLbls,attOverviewCols)}
+  </div>
+</div>
+
+<!-- Live Widgets -->
+<div class="ceo-section-title">Live Feeds</div>
+<div class="ceo-widget-grid">
+  <div class="ceo-widget-card">
+    <div class="ceo-widget-title">🗓️ Today's Interviews <span style="font-size:11px;font-weight:400;color:var(--g3)">${todayInterviews} scheduled</span></div>
+    ${todayIntList.length?todayIntList.map(i=>`<div class="ceo-widget-row"><div style="flex:1"><strong>${i.candidateName||'Candidate'}</strong><div style="font-size:11px;color:var(--g3)">${(jobs.find(j=>j.id===i.jobId)||{}).title||'–'}</div></div><div style="font-size:11px;color:var(--g3)">${i.time||'TBD'}</div></div>`).join(''):'<div style="color:var(--g3);font-size:12px;padding:8px 0">No interviews today</div>'}
+  </div>
+  <div class="ceo-widget-card">
+    <div class="ceo-widget-title">⚠️ Pending Approvals <span style="font-size:11px;font-weight:400;color:var(--g3)">${pendingTotal}</span></div>
+    ${pendLeaveList.length?pendLeaveList.map(l=>`<div class="ceo-widget-row"><div style="flex:1"><strong>${l.userName||l.userId||'Employee'}</strong><div style="font-size:11px;color:var(--g3)">${l.type||'Leave'} · ${l.date||l.startDate||''}</div></div><span style="font-size:11px;padding:2px 7px;background:#FEF9E7;color:#F39C12;border-radius:10px">Pending</span></div>`).join(''):'<div style="color:var(--g3);font-size:12px;padding:8px 0">No pending leave approvals</div>'}
+    ${pendST>0?`<div class="ceo-widget-row"><div style="flex:1;color:var(--g3);font-size:12px">${pendST} open support ticket${pendST>1?'s':''}</div></div>`:''}
+  </div>
+  <div class="ceo-widget-card">
+    <div class="ceo-widget-title">📥 Recent Applications <span style="font-size:11px;font-weight:400;color:var(--g3)">${candidates.length} total</span></div>
+    ${recentApps.length?recentApps.map(c=>`<div class="ceo-widget-row"><div style="flex:1"><strong>${c.name||c.email||'Candidate'}</strong><div style="font-size:11px;color:var(--g3)">${(jobs.find(j=>j.id===c.jobId)||{}).title||'Unknown position'}</div></div>${c.aiScore!=null?`<span style="font-size:11px;padding:2px 7px;background:#EBF5FB;color:#3498DB;border-radius:10px">${c.aiScore}%</span>`:''}</div>`).join(''):'<div style="color:var(--g3);font-size:12px;padding:8px 0">No applications yet</div>'}
+  </div>
+  <div class="ceo-widget-card">
+    <div class="ceo-widget-title">🎂 Birthdays &amp; Anniversaries</div>
+    ${birthdays.length?birthdays.map(n=>`<div class="ceo-widget-row">🎂 <span>${n}</span></div>`).join(''):''}
+    ${anniversaries.length?anniversaries.map(n=>`<div class="ceo-widget-row">🎉 <span>${n} — Work Anniversary</span></div>`).join(''):''}
+    ${!birthdays.length&&!anniversaries.length?'<div style="color:var(--g3);font-size:12px;padding:8px 0">No birthdays or anniversaries today</div>':''}
+  </div>
+  <div class="ceo-widget-card">
+    <div class="ceo-widget-title">🆕 New Joiners <span style="font-size:11px;font-weight:400;color:var(--g3)">last 30 days</span></div>
+    ${newJoiners.length?newJoiners.slice(0,5).map(n=>`<div class="ceo-widget-row">👤 <span>${n}</span></div>`).join(''):'<div style="color:var(--g3);font-size:12px;padding:8px 0">No new joiners recently</div>'}
+    ${newJoiners.length>5?`<div style="font-size:11px;color:var(--g3);padding-top:6px">+${newJoiners.length-5} more</div>`:''}
+  </div>
+  <div class="ceo-widget-card">
+    <div class="ceo-widget-title">🔔 CEO Notifications</div>
+    ${ceoNotifs.map(n=>`<div class="ceo-notif-row"><div class="ceo-notif-dot" style="background:${n.dot}"></div><div>${n.text}</div></div>`).join('')}
+  </div>
+</div>
+
+<!-- Reports -->
+<div class="ceo-section-title">Executive Reports</div>
+<div class="ceo-report-bar" id="ceo-report-bar">
+  <div><label>From</label><input type="date" id="ceo-from" value="${today.slice(0,7)+'-01'}"></div>
+  <div><label>To</label><input type="date" id="ceo-to" value="${today}"></div>
+  <div><label>Report Type</label><select id="ceo-rtype"><option value="attendance">Attendance Summary</option><option value="recruitment">Recruitment Summary</option><option value="projects">Project Bug Summary</option><option value="approvals">Approvals Summary</option></select></div>
+  <div style="align-self:flex-end;display:flex;gap:8px">
+    <button class="btn" onclick="_generateCeoReport()">Generate</button>
+    <button class="btn btn-outline" onclick="_exportCeoReport()">Export CSV</button>
+  </div>
+</div>
+<div id="ceo-report-output" style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px;min-height:60px;"></div>
+`;
+  liveClock();
+  _generateCeoReport();
+}
+
+function _generateCeoReport(){
+  const from=(document.getElementById('ceo-from')||{}).value||'';
+  const to=(document.getElementById('ceo-to')||{}).value||'';
+  const type=(document.getElementById('ceo-rtype')||{}).value||'attendance';
+  const out=document.getElementById('ceo-report-output');
+  if(!out)return;
+  if(type==='attendance'){
+    const allAtt2=(window._ceoAttCache||([]));
+    // use global allUsers + attendance filtered by range
+    const rows=(allUsers||[]).map(u=>{
+      const emp=u.name||u.email;
+      const days=(window.allAtt||[]).filter(a=>a.userId===u.uid&&a.date>=from&&a.date<=to);
+      const p=days.filter(a=>a.clockIn).length;
+      const l=days.filter(a=>a.mode==='remote'||a.workMode==='remote').length;
+      return `<tr><td>${emp}</td><td>${p}</td><td>${l}</td><td>${days.length-p}</td></tr>`;
+    });
+    out.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px">Employee</th><th style="padding:6px 8px">Present</th><th style="padding:6px 8px">Remote</th><th style="padding:6px 8px">Absent</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  } else if(type==='recruitment'){
+    const jobs2=hrJobs||[];const cands2=hrCandidates||[];
+    const rows=jobs2.map(j=>{
+      const jc=cands2.filter(c=>c.jobId===j.id);
+      return `<tr><td style="padding:6px 8px">${j.title||'–'}</td><td style="padding:6px 8px;text-align:center">${jc.length}</td><td style="padding:6px 8px;text-align:center">${jc.filter(c=>c.status==='interview').length}</td><td style="padding:6px 8px;text-align:center">${jc.filter(c=>c.status==='offer').length}</td><td style="padding:6px 8px;text-align:center">${jc.filter(c=>c.status==='hired').length}</td></tr>`;
+    });
+    out.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px">Job</th><th style="padding:6px 8px">Applied</th><th style="padding:6px 8px">Interview</th><th style="padding:6px 8px">Offer</th><th style="padding:6px 8px">Hired</th></tr></thead><tbody>${rows.length?rows.join(''):'<tr><td colspan="5" style="text-align:center;color:var(--g3);padding:20px">No data</td></tr>'}</tbody></table>`;
+  } else if(type==='projects'){
+    const bugList2=bugs||[];const projList2=allProjects||[];
+    const rows=projList2.map(p=>`<tr><td style="padding:6px 8px">${p.name||'–'}</td><td style="padding:6px 8px;text-align:center">${bugList2.filter(b=>b.project===p.id).length}</td><td style="padding:6px 8px;text-align:center">${bugList2.filter(b=>b.project===p.id&&b.status!=='closed').length}</td><td style="padding:6px 8px;text-align:center">${bugList2.filter(b=>b.project===p.id&&b.status==='closed').length}</td></tr>`);
+    out.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px">Project</th><th style="padding:6px 8px">Total Bugs</th><th style="padding:6px 8px">Open</th><th style="padding:6px 8px">Closed</th></tr></thead><tbody>${rows.length?rows.join(''):'<tr><td colspan="4" style="text-align:center;color:var(--g3);padding:20px">No projects</td></tr>'}</tbody></table>`;
+  } else if(type==='approvals'){
+    const allLeave2=window._ceoLeaveCache||[];
+    const rows=(window._ceoLeaveCache||[]).map(l=>`<tr><td style="padding:6px 8px">${l.userName||l.userId||'–'}</td><td style="padding:6px 8px">${l.type||'leave'}</td><td style="padding:6px 8px">${l.date||l.startDate||'–'}</td><td style="padding:6px 8px"><span style="padding:2px 8px;border-radius:10px;font-size:11px;background:${l.status==='approved'?'#EAFAF1':l.status==='rejected'?'#FDEDEC':'#FEF9E7'};color:${l.status==='approved'?'#27AE60':l.status==='rejected'?'#E74C3C':'#F39C12'}">${l.status||'pending'}</span></td></tr>`);
+    out.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px">Employee</th><th style="padding:6px 8px">Type</th><th style="padding:6px 8px">Date</th><th style="padding:6px 8px">Status</th></tr></thead><tbody>${rows.length?rows.join(''):'<tr><td colspan="4" style="text-align:center;color:var(--g3);padding:20px">No leave records</td></tr>'}</tbody></table>`;
+  }
+}
+
+function _exportCeoReport(){
+  const type=(document.getElementById('ceo-rtype')||{}).value||'attendance';
+  const from=(document.getElementById('ceo-from')||{}).value||'';
+  const to=(document.getElementById('ceo-to')||{}).value||'';
+  let rows=[],header=[];
+  if(type==='attendance'){
+    header=['Employee','Present Days','Remote Days','Absent Days'];
+    (allUsers||[]).forEach(u=>{
+      const days=(window.allAtt||[]).filter(a=>a.userId===u.uid&&a.date>=from&&a.date<=to);
+      rows.push([u.name||u.email,days.filter(a=>a.clockIn).length,days.filter(a=>a.mode==='remote'||a.workMode==='remote').length,days.length-days.filter(a=>a.clockIn).length]);
+    });
+  } else if(type==='recruitment'){
+    header=['Job Title','Applied','Interview','Offer','Hired'];
+    (hrJobs||[]).forEach(j=>{
+      const jc=(hrCandidates||[]).filter(c=>c.jobId===j.id);
+      rows.push([j.title||'',jc.length,jc.filter(c=>c.status==='interview').length,jc.filter(c=>c.status==='offer').length,jc.filter(c=>c.status==='hired').length]);
+    });
+  } else if(type==='projects'){
+    header=['Project','Total Bugs','Open Bugs','Closed Bugs'];
+    (allProjects||[]).forEach(p=>{
+      const bl=(bugs||[]).filter(b=>b.project===p.id);
+      rows.push([p.name||'',bl.length,bl.filter(b=>b.status!=='closed').length,bl.filter(b=>b.status==='closed').length]);
+    });
+  } else if(type==='approvals'){
+    header=['Employee','Type','Date','Status'];
+    (window._ceoLeaveCache||[]).forEach(l=>rows.push([l.userName||l.userId||'',l.type||'leave',l.date||l.startDate||'',l.status||'pending']));
+  }
+  const csv=[header,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`ceo_${type}_report.csv`;a.click();URL.revokeObjectURL(url);
   showToast('Report exported ✓','success');
 }
 </script>
