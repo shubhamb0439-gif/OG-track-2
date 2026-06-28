@@ -2080,6 +2080,8 @@ async function launchApp(){
     currentProject={id:'__all__',name:'All Projects'};
     localStorage.setItem('bt_project',JSON.stringify(currentProject));
     document.getElementById('main-app').style.display='flex';
+    currentView='ceo_dashboard';
+    await loadHrData();
     await loadBugs();
   } else if(currentUser.role==='accounts_manager'||currentUser.role==='senior_accountant'||currentUser.role==='accountant'){
     currentProject={id:'__acc__',name:'Accounting'};
@@ -2115,9 +2117,7 @@ async function launchApp(){
     } catch(e) { bugs = []; }
     showProjectPicker();
   }
-  // Load conversations and show onboarding for first-time users
   loadConversations();
-  checkShowOnboarding();
 }
 
 function buildSidebar(){
@@ -2287,7 +2287,9 @@ function showView(v){
   ca.classList.remove('tab-enter');
   void ca.offsetWidth;
   ca.classList.add('tab-enter');
-  renderView();
+  const _hrViews=['hr_dashboard','hr_jobs','hr_candidates','hr_interviews','hr_reports','ceo_dashboard'];
+  if(_hrViews.includes(v)){loadHrData().then(()=>renderView());}
+  else{renderView();}
 }
 function renderView(){
   // Add enter animation to content area
@@ -6686,6 +6688,7 @@ function _exportHrReport(format){
 // ── CEO Executive Dashboard ───────────────────────────────────────────────────
 let _ceoLoaded=false;
 async function renderCeoDashboard(){
+  if(!_hrDataLoaded) await loadHrData();
   const el=document.getElementById('content-area');
   el.innerHTML=`<div style="text-align:center;padding:60px;color:var(--g3)"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.2-8.6"/></svg><p style="margin-top:12px">Loading Executive Dashboard…</p></div>`;
   // fetch all data in parallel
@@ -6698,6 +6701,7 @@ async function renderCeoDashboard(){
   ]);
   const allAtt=Array.isArray(attRes)?attRes:(attRes.records||[]);
   const allLeave=Array.isArray(leaveRes)?leaveRes:[];
+  window.allAtt=allAtt; window._ceoLeaveCache=allLeave;
   const allReg=Array.isArray(regRes)?regRes:[];
   const allST=Array.isArray(stRes)?stRes:(stRes.tickets||[]);
   // attendance today
