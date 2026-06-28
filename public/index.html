@@ -849,6 +849,35 @@ tr:hover .badge { transform: scale(1.08); }
   .msg-back-btn{display:none !important;}
 }
 
+
+/* ── QR SCANNER FAB (mobile only) ────────────────────────────────────────────── */
+.qr-fab{display:none;position:fixed;bottom:24px;right:20px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#C0392B,#e74c3c);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(192,57,43,.5);z-index:800;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s;}
+.qr-fab:hover{transform:scale(1.07);box-shadow:0 6px 24px rgba(192,57,43,.6);}
+.qr-fab:active{transform:scale(.95);}
+@media(max-width:768px){.qr-fab{display:flex;}}
+/* Scanner modal */
+.qr-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:900;flex-direction:column;}
+.qr-modal-bg.open{display:flex;}
+.qr-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:linear-gradient(135deg,#1a1a2e,#C0392B);flex-shrink:0;}
+.qr-modal-title{font-size:16px;font-weight:700;color:#fff;}
+.qr-modal-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:300;}
+.qr-scanner-wrap{flex:1;position:relative;overflow:hidden;}
+#qr-video{width:100%;height:100%;object-fit:cover;}
+.qr-scan-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.qr-scan-box{width:220px;height:220px;border:2px solid rgba(255,255,255,.6);border-radius:16px;position:relative;box-shadow:0 0 0 9999px rgba(0,0,0,.45);}
+.qr-scan-corner{position:absolute;width:28px;height:28px;border-color:#C0392B;border-style:solid;border-width:0;}
+.qr-scan-corner.tl{top:-2px;left:-2px;border-top-width:4px;border-left-width:4px;border-radius:6px 0 0 0;}
+.qr-scan-corner.tr{top:-2px;right:-2px;border-top-width:4px;border-right-width:4px;border-radius:0 6px 0 0;}
+.qr-scan-corner.bl{bottom:-2px;left:-2px;border-bottom-width:4px;border-left-width:4px;border-radius:0 0 0 6px;}
+.qr-scan-corner.br{bottom:-2px;right:-2px;border-bottom-width:4px;border-right-width:4px;border-radius:0 0 6px 0;}
+.qr-scan-line{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,#C0392B,transparent);animation:scanline 2s ease-in-out infinite;}
+@keyframes scanline{0%,100%{top:10px;opacity:0;}10%{opacity:1;}90%{opacity:1;}50%{top:calc(100% - 14px);}}
+.qr-modal-status{padding:16px 20px;background:#0d0d1a;flex-shrink:0;text-align:center;}
+.qr-modal-hint{font-size:13px;color:rgba(255,255,255,.6);}
+.qr-modal-result{font-size:14px;font-weight:700;padding:10px 20px;border-radius:10px;margin-top:8px;display:none;}
+.qr-modal-result.success{background:rgba(39,174,96,.15);color:#27AE60;border:1px solid rgba(39,174,96,.3);}
+.qr-modal-result.error{background:rgba(192,57,43,.12);color:#e74c3c;border:1px solid rgba(192,57,43,.3);}
+
 /* ── ATTENDANCE ──────────────────────────────────────────────────────────────── */
 .att-layout{display:flex;flex-direction:column;gap:20px;}
 .att-clock-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
@@ -4503,9 +4532,147 @@ async function renderAttendance(){
   }
   tick();
   attClockInterval=setInterval(tick,1000);
+
+  // Mobile QR FAB — inject into DOM (mobile only)
+  const _existingFab=document.getElementById('qr-fab-btn');
+  if(!_existingFab){
+    const _fab=document.createElement('button');
+    _fab.id='qr-fab-btn';
+    _fab.className='qr-fab';
+    _fab.title='Scan QR to Clock In/Out';
+    _fab.innerHTML='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h.01M14 18h.01M18 14h.01M18 18h.01M17 14v1M14 17v1"/></svg>';
+    _fab.onclick=openQrScanner;
+    document.body.appendChild(_fab);
+  }
+  const _existingModal=document.getElementById('qr-scanner-modal');
+  if(!_existingModal){
+    const _modal=document.createElement('div');
+    _modal.id='qr-scanner-modal';
+    _modal.className='qr-modal-bg';
+    _modal.innerHTML=`
+      <div class="qr-modal-header">
+        <div>
+          <div class="qr-modal-title">📷 QR Attendance Scanner</div>
+        </div>
+        <button class="qr-modal-close" onclick="closeQrScanner()">✕</button>
+      </div>
+      <div class="qr-scanner-wrap">
+        <video id="qr-video" playsinline muted autoplay></video>
+        <div class="qr-scan-frame">
+          <div class="qr-scan-box">
+            <div class="qr-scan-corner tl"></div>
+            <div class="qr-scan-corner tr"></div>
+            <div class="qr-scan-corner bl"></div>
+            <div class="qr-scan-corner br"></div>
+            <div class="qr-scan-line"></div>
+          </div>
+        </div>
+      </div>
+      <div class="qr-modal-status">
+        <div class="qr-modal-hint" id="qr-hint">Point your camera at the QR code on the screen</div>
+        <div class="qr-modal-result" id="qr-result"></div>
+      </div>`;
+    document.body.appendChild(_modal);
+  }
 }
 
 function fmtTime(iso){ return iso?new Date(iso).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—'; }
+
+// ── QR Scanner (mobile) ───────────────────────────────────────────────────────
+let _qrStream=null,_qrCanvas=null,_qrCtx=null,_qrLoop=null,_qrScanned=false;
+
+function openQrScanner(){
+  const modal=document.getElementById('qr-scanner-modal');
+  if(!modal)return;
+  modal.classList.add('open');
+  _qrScanned=false;
+  const res=document.getElementById('qr-result');
+  const hint=document.getElementById('qr-hint');
+  if(res){res.style.display='none';res.textContent='';}
+  if(hint)hint.textContent='Point your camera at the QR code on the screen';
+  _startCamera();
+}
+
+function closeQrScanner(){
+  const modal=document.getElementById('qr-scanner-modal');
+  if(modal)modal.classList.remove('open');
+  _stopCamera();
+}
+
+async function _startCamera(){
+  try{
+    _qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+    const video=document.getElementById('qr-video');
+    if(!video)return;
+    video.srcObject=_qrStream;
+    video.onloadedmetadata=()=>{
+      video.play();
+      _qrCanvas=document.createElement('canvas');
+      _qrCtx=_qrCanvas.getContext('2d');
+      _scanLoop(video);
+    };
+  }catch(e){
+    const hint=document.getElementById('qr-hint');
+    if(hint)hint.textContent='Camera access denied. Please allow camera permission.';
+  }
+}
+
+function _stopCamera(){
+  if(_qrLoop){cancelAnimationFrame(_qrLoop);_qrLoop=null;}
+  if(_qrStream){_qrStream.getTracks().forEach(t=>t.stop());_qrStream=null;}
+}
+
+function _scanLoop(video){
+  if(!_qrCanvas||!_qrCtx)return;
+  _qrCanvas.width=video.videoWidth||320;
+  _qrCanvas.height=video.videoHeight||240;
+  _qrCtx.drawImage(video,0,0,_qrCanvas.width,_qrCanvas.height);
+  try{
+    if(typeof BarcodeDetector!=='undefined'){
+      new BarcodeDetector({formats:['qr_code']}).detect(_qrCanvas).then(codes=>{
+        if(codes.length&&!_qrScanned)_handleQrResult(codes[0].rawValue);
+      }).catch(()=>{});
+    }else if(window.jsQR){
+      const img=_qrCtx.getImageData(0,0,_qrCanvas.width,_qrCanvas.height);
+      const code=jsQR(img.data,img.width,img.height);
+      if(code&&!_qrScanned)_handleQrResult(code.data);
+    }
+  }catch(e){}
+  if(!_qrScanned)_qrLoop=requestAnimationFrame(()=>_scanLoop(video));
+}
+
+async function _handleQrResult(qrData){
+  if(_qrScanned)return;
+  _qrScanned=true;
+  const hint=document.getElementById('qr-hint');
+  const res=document.getElementById('qr-result');
+  if(hint)hint.textContent='Processing…';
+  try{
+    const r=await fetch('/api/attendance/qr-scan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:qrData,userId:currentUser.id})});
+    const d=await r.json();
+    if(d.success){
+      const msg=d.action==='clockin'?'✅ Clocked In at '+new Date(d.time).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'👋 Clocked Out · Total '+d.totalHours+'h';
+      if(res){res.textContent=msg;res.className='qr-modal-result success';res.style.display='block';}
+      if(hint)hint.textContent='';
+      showToast(msg,'success');
+      _stopCamera();
+      setTimeout(()=>{closeQrScanner();renderAttendance();},2000);
+    }else{
+      if(res){res.textContent=d.error||'Scan failed';res.className='qr-modal-result error';res.style.display='block';}
+      if(hint)hint.textContent='Tap close and try again.';
+    }
+  }catch(e){
+    if(res){res.textContent='Network error. Try again.';res.className='qr-modal-result error';res.style.display='block';}
+    _qrScanned=false;
+  }
+}
+
+// Load jsQR as fallback for browsers without BarcodeDetector
+if(typeof BarcodeDetector==='undefined'&&!window.jsQR){
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+  document.head.appendChild(s);
+}
 
 async function doClockIn(){
   try{
