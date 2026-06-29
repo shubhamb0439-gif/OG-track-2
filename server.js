@@ -1380,7 +1380,7 @@ body{font-family:"Inter",system-ui,sans-serif;background:#0d0d1a;color:#fff;min-
 .qr-section{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;background:#0d0d1a}
 .qr-label{font-size:12px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:24px}
 .qr-box{background:#fff;border-radius:22px;padding:22px;box-shadow:0 0 0 4px rgba(192,57,43,.25),0 24px 64px rgba(0,0,0,.7);position:relative}
-.qr-box canvas,.qr-box img{display:block!important}
+.qr-box canvas{display:block!important;width:260px!important;height:260px!important}.qr-box img{max-width:260px;max-height:260px}
 .qr-overlay{position:absolute;inset:0;background:rgba(255,255,255,.95);border-radius:22px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-size:14px;font-weight:600;color:#C0392B;opacity:0;pointer-events:none;transition:opacity .25s}
 .qr-overlay.show{opacity:1;pointer-events:all}
 .spinner{width:36px;height:36px;border:3px solid #fde8e8;border-top:3px solid #C0392B;border-radius:50%;animation:spin .8s linear infinite}
