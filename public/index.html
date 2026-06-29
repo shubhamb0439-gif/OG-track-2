@@ -6854,7 +6854,7 @@ async function renderCeoDashboard(){
   // leave today
   const onLeaveToday=allLeave.filter(l=>{
     if(l.status!=='approved')return false;
-    return l.date===today||(l.startDate<=today&&l.endDate>=today);
+    return l.from<=today&&l.to>=today;
   }).length;
   // total employees
   const totalEmp=(allUsers||[]).filter(u=>u.role!=='superadmin').length;
@@ -6868,10 +6868,10 @@ async function renderCeoDashboard(){
   const jobs=hrJobs||[];
   const candidates=hrCandidates||[];
   const interviews=hrInterviews||[];
-  const openJobs=jobs.filter(j=>j.status==='open'||!j.status).length;
-  const pipelineCandidates=candidates.filter(c=>c.status!=='rejected'&&c.status!=='hired').length;
-  const todayInterviews=interviews.filter(i=>i.scheduledDate===today).length;
-  const offersReleased=candidates.filter(c=>c.status==='offer').length;
+  const openJobs=jobs.filter(j=>j.status==='published'||j.status==='open'||!j.status).length;
+  const pipelineCandidates=candidates.filter(c=>c.status!=='rejected'&&c.status!=='joined').length;
+  const todayInterviews=interviews.filter(i=>i.scheduledAt&&i.scheduledAt.slice(0,10)===today).length;
+  const offersReleased=candidates.filter(c=>c.status==='offer_released').length;
   // projects & bugs
   const projList=allProjects||[];
   const activeProjects=projList.filter(p=>p.status==='active'||!p.status).length;
@@ -6887,8 +6887,8 @@ async function renderCeoDashboard(){
   // 6-month monthly trend
   const months6=[],months6Labels=[];
   for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);const ym=d.toISOString().slice(0,7);months6.push(allAtt.filter(a=>a.date&&a.date.slice(0,7)===ym&&a.clockIn).length);months6Labels.push(d.toLocaleDateString('en',{month:'short'}));}
-  // recruitment funnel
-  const stages=['applied','screening','interview','offer','hired'];
+  // recruitment funnel — use actual status names from the HR module
+  const stages=['applied','ai_screened','interview_scheduled','offer_released','joined'];
   const funnelCounts=stages.map(s=>candidates.filter(c=>(c.status||'applied')===s).length+(s==='applied'?candidates.filter(c=>!c.status).length:0));
   // dept distribution
   const deptNames=Object.keys(deptMap).slice(0,6);
@@ -7033,7 +7033,7 @@ async function renderCeoDashboard(){
 <div class="ceo-chart-grid">
   <div class="ceo-chart-card">
     <div class="ceo-chart-title">Recruitment Pipeline Funnel</div>
-    ${svgFunnel(funnelCounts,['Applied','Screening','Interview','Offer','Hired'])}
+    ${svgFunnel(funnelCounts,['Applied','AI Screened','Interview','Offer','Joined'])}
   </div>
   <div class="ceo-chart-card">
     <div class="ceo-chart-title">Department Distribution</div>
@@ -7122,7 +7122,7 @@ function _generateCeoReport(){
     const jobs2=hrJobs||[];const cands2=hrCandidates||[];
     const rows=jobs2.map(j=>{
       const jc=cands2.filter(c=>c.jobId===j.id);
-      return `<tr><td style="padding:6px 8px">${j.title||'–'}</td><td style="padding:6px 8px;text-align:center">${jc.length}</td><td style="padding:6px 8px;text-align:center">${jc.filter(c=>c.status==='interview').length}</td><td style="padding:6px 8px;text-align:center">${jc.filter(c=>c.status==='offer').length}</td><td style="padding:6px 8px;text-align:center">${jc.filter(c=>c.status==='hired').length}</td></tr>`;
+      return `<tr><td style="padding:6px 8px">${j.title||'–'}</td><td style="padding:6px 8px;text-align:center">${jc.length}</td><td style="padding:6px 8px;text-align:center">${jc.filter(c=>c.status==='interview_scheduled'||c.status==='interview_completed').length}</td><td style="padding:6px 8px;text-align:center">${jc.filter(c=>c.status==='offer_released').length}</td><td style="padding:6px 8px;text-align:center">${jc.filter(c=>c.status==='joined').length}</td></tr>`;
     });
     out.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px">Job</th><th style="padding:6px 8px">Applied</th><th style="padding:6px 8px">Interview</th><th style="padding:6px 8px">Offer</th><th style="padding:6px 8px">Hired</th></tr></thead><tbody>${rows.length?rows.join(''):'<tr><td colspan="5" style="text-align:center;color:var(--g3);padding:20px">No data</td></tr>'}</tbody></table>`;
   } else if(type==='projects'){
@@ -7131,7 +7131,7 @@ function _generateCeoReport(){
     out.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px">Project</th><th style="padding:6px 8px">Total Bugs</th><th style="padding:6px 8px">Open</th><th style="padding:6px 8px">Closed</th></tr></thead><tbody>${rows.length?rows.join(''):'<tr><td colspan="4" style="text-align:center;color:var(--g3);padding:20px">No projects</td></tr>'}</tbody></table>`;
   } else if(type==='approvals'){
     const allLeave2=window._ceoLeaveCache||[];
-    const rows=(window._ceoLeaveCache||[]).map(l=>`<tr><td style="padding:6px 8px">${l.userName||l.userId||'–'}</td><td style="padding:6px 8px">${l.type||'leave'}</td><td style="padding:6px 8px">${l.date||l.startDate||'–'}</td><td style="padding:6px 8px"><span style="padding:2px 8px;border-radius:10px;font-size:11px;background:${l.status==='approved'?'#EAFAF1':l.status==='rejected'?'#FDEDEC':'#FEF9E7'};color:${l.status==='approved'?'#27AE60':l.status==='rejected'?'#E74C3C':'#F39C12'}">${l.status||'pending'}</span></td></tr>`);
+    const rows=(window._ceoLeaveCache||[]).map(l=>`<tr><td style="padding:6px 8px">${l.userName||l.userId||'–'}</td><td style="padding:6px 8px">${l.leaveType||l.type||'Leave'}</td><td style="padding:6px 8px">${l.from||l.date||'–'}</td><td style="padding:6px 8px"><span style="padding:2px 8px;border-radius:10px;font-size:11px;background:${l.status==='approved'?'#EAFAF1':l.status==='rejected'?'#FDEDEC':'#FEF9E7'};color:${l.status==='approved'?'#27AE60':l.status==='rejected'?'#E74C3C':'#F39C12'}">${l.status||'pending'}</span></td></tr>`);
     out.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:2px solid var(--border)"><th style="text-align:left;padding:6px 8px">Employee</th><th style="padding:6px 8px">Type</th><th style="padding:6px 8px">Date</th><th style="padding:6px 8px">Status</th></tr></thead><tbody>${rows.length?rows.join(''):'<tr><td colspan="4" style="text-align:center;color:var(--g3);padding:20px">No leave records</td></tr>'}</tbody></table>`;
   }
 }
