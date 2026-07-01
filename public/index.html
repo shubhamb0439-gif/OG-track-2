@@ -344,6 +344,7 @@ tr:hover td{background:#fafafa;}tr[onclick]{cursor:pointer;}tr[onclick]:hover td
 .role-badge.role-accounts_manager{background:#2c3e5022;color:#2C3E50;}
 .role-badge.role-senior_accountant{background:#8e44ad22;color:#8E44AD;}
 .role-badge.role-accountant{background:#16a08522;color:#16A085;}
+.role-badge.role-intern{background:#e8730022;color:#e87300;}
 /* ── SUBSCRIPTION TICKETS ────────────────────────────────────────────────── */
 .req-stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 18px;flex:1;min-width:110px;text-align:center;}
 .req-stat-num{font-size:24px;font-weight:700;line-height:1.2;}
@@ -1415,7 +1416,7 @@ body { transition: background .3s ease, color .3s ease; }
       <div class="field"><label>Full Name</label><input type="text" id="r-name" placeholder="Your name"></div>
       <div class="field"><label>Email</label><input type="email" id="r-email" placeholder="you@example.com"></div>
       <div class="field"><label>Password</label><input type="password" id="r-pass" placeholder="Min 6 characters"></div>
-      <div class="field"><label>Role</label><select id="r-role"><option value="developer">Developer</option><option value="tester">Tester</option><option value="manager">Manager</option><option value="accountant">Accountant</option><option value="senior_accountant">Senior Accountant</option><option value="accounts_manager">Accounts Manager</option><option value="hr">HR</option></select></div>
+      <div class="field"><label>Role</label><select id="r-role"><option value="developer">Developer</option><option value="tester">Tester</option><option value="manager">Manager</option><option value="intern">Intern</option><option value="accountant">Accountant</option><option value="senior_accountant">Senior Accountant</option><option value="accounts_manager">Accounts Manager</option><option value="hr">HR</option></select></div>
       <button class="auth-btn" onclick="doRegister()">Request Access</button>
       <div class="pending-msg" id="pending-msg">✅ Registration submitted! Pending Super Admin approval.</div>
     </div>
@@ -1865,6 +1866,7 @@ let editingProjectId = null;
 let accClients      = [];
 let accTimeEntries  = [];
 let accEodReports   = [];
+let accEodRoutes    = [];
 let accTimerInterval = null;
 let editingClientId  = null;
 let stoppingEntryId  = null;
@@ -2100,7 +2102,7 @@ async function launchApp(){
   initSidebarCollapse();
   // Show project switcher bar only for bug-tracker roles
   const projBar=document.getElementById('sidebar-project-bar');
-  const _hideBar=currentUser.role==='superadmin'||currentUser.role==='accounts_manager'||currentUser.role==='senior_accountant'||currentUser.role==='accountant'||currentUser.role==='hr';
+  const _hideBar=currentUser.role==='superadmin'||currentUser.role==='accounts_manager'||currentUser.role==='senior_accountant'||currentUser.role==='accountant'||currentUser.role==='intern'||currentUser.role==='hr';
   if(projBar) projBar.style.display=_hideBar?'none':'block';
   connectSocket();
   requestNotifPermission();
@@ -2112,7 +2114,7 @@ async function launchApp(){
     currentView='ceo_dashboard';
     await loadHrData();
     await loadBugs();
-  } else if(currentUser.role==='accounts_manager'||currentUser.role==='senior_accountant'||currentUser.role==='accountant'){
+  } else if(currentUser.role==='accounts_manager'||currentUser.role==='senior_accountant'||currentUser.role==='accountant'||currentUser.role==='intern'){
     currentProject={id:'__acc__',name:'Accounting'};
     localStorage.setItem('bt_project',JSON.stringify(currentProject));
     document.getElementById('new-bug-btn').style.display='none';
@@ -2163,7 +2165,7 @@ async function launchApp(){
 
 function buildSidebar(){
   const role=currentUser.role;
-  const BUILTIN_ROLES=['superadmin','manager','developer','tester','senior_accountant','accountant','accounts_manager','hr'];
+  const BUILTIN_ROLES=['superadmin','manager','developer','tester','senior_accountant','accountant','accounts_manager','hr','intern'];
   let navItems;
   if(BUILTIN_ROLES.includes(role)){
     const items={
@@ -2174,6 +2176,7 @@ function buildSidebar(){
       accounts_manager: [['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
       senior_accountant:[['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','Clients','#8E44AD'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Reports','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
       accountant:       [['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','My Clients','#16A085'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Report','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
+      intern:           [['dashboard','Dashboard','var(--red2)'],['sub_tickets','Requests','#16A085'],['acc_clients','My Clients','#16A085'],['acc_timer','Timer','#E74C3C'],['acc_eod','EOD Report','#F39C12'],['attendance','Attendance','#27AE60'],['messages','Messages','#E74C3C']],
       hr:               [['hr_dashboard','HR Dashboard','#C0392B'],['hr_jobs','Job Openings','#8E44AD'],['hr_candidates','Candidates','#2980B9'],['hr_interviews','Interviews','#F39C12'],['hr_reports','Reports','#27AE60'],['attendance','Attendance','#16A085'],['messages','Messages','#E74C3C']],
     };
     navItems=items[role]||[];
@@ -2365,7 +2368,7 @@ function renderView(){
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 function renderDashboard(){
   const role=currentUser.role;
-  if(role==='accounts_manager'||role==='senior_accountant'||role==='accountant') return renderAccDashboard();
+  if(role==='accounts_manager'||role==='senior_accountant'||role==='accountant'||role==='intern') return renderAccDashboard();
   if(role==='hr') return renderHrDashboard();
   let base=bugs;
   if(role==='developer') base=bugs.filter(b=>b.assignee===currentUser.name);
@@ -2782,7 +2785,7 @@ function renderManagerSummary(){
 // ── Admin ─────────────────────────────────────────────────────────────────────
 function renderAdmin(){
   const users=allUsers.filter(u=>u.role!=='superadmin');
-  const builtinRoles=['manager','developer','tester','accounts_manager','senior_accountant','accountant','hr'];
+  const builtinRoles=['manager','developer','tester','accounts_manager','senior_accountant','accountant','intern','hr'];
   const customRoleOpts=allCustomRoles.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
   const allRoleOpts=builtinRoles.map(r=>`<option value="${r}">${r}</option>`).join('')+customRoleOpts;
   const rows=users.map(u=>{
@@ -4822,13 +4825,14 @@ function hideLoading(showAuth=false){
 async function loadAccData(){
   try{
     const today=todayStr();
-    const [cr,tr,er]=await Promise.all([
+    const [cr,tr,er,rt]=await Promise.all([
       fetch('/api/clients').then(r=>r.json()),
       fetch('/api/time-entries?accountantId='+currentUser.id+'&date='+today).then(r=>r.json()),
       fetch('/api/eod-reports').then(r=>r.json()),
+      fetch('/api/eod-routes').then(r=>r.json()),
     ]);
-    accClients=cr; accTimeEntries=tr; accEodReports=er;
-  }catch(e){ accClients=[];accTimeEntries=[];accEodReports=[]; }
+    accClients=cr; accTimeEntries=tr; accEodReports=er; accEodRoutes=rt;
+  }catch(e){ accClients=[];accTimeEntries=[];accEodReports=[];accEodRoutes=[]; }
 }
 
 function todayStr(){
@@ -4883,7 +4887,7 @@ function renderAccDashboard(){
   if(role==='accounts_manager'||role==='senior_accountant'){
     const pending=accEodReports.filter(r=>r.status==='submitted');
     const reviewedToday=accEodReports.filter(r=>r.status==='reviewed'&&r.date===today);
-    const accountants=allUsers.filter(u=>u.role==='accountant'&&u.status==='active');
+    const accountants=allUsers.filter(u=>(u.role==='accountant'||u.role==='intern')&&u.status==='active');
     html+=`<div class="stats-grid" style="margin-bottom:20px">
       <div class="stat-card"><div class="label">Total Clients</div><div class="value grey">${accClients.length}</div></div>
       <div class="stat-card"><div class="label">Accountants</div><div class="value grey">${accountants.length}</div></div>
@@ -5020,7 +5024,7 @@ function renderAccTimer(){
 // ── EOD Report Page ───────────────────────────────────────────────────────────
 function renderAccEod(){
   const role=currentUser.role;
-  if(role==='accounts_manager'||role==='senior_accountant') renderSeniorEod(); else renderAccountantEod();
+  if(role==='accounts_manager'||role==='senior_accountant') renderSeniorEod(); else renderAccountantEod(); // accountant + intern
 }
 
 function renderAccountantEod(){
@@ -5084,6 +5088,24 @@ function renderAccountantEod(){
         ${report.reviewNote?`<div style="margin-top:6px;font-size:13px"><strong>Senior's note:</strong> ${report.reviewNote}</div>`:''}
       </div>`}
     `}
+    ${(()=>{
+      const past=accEodReports.filter(r=>r.accountantId===currentUser.id&&r.date!==today).sort((a,b)=>b.date.localeCompare(a.date));
+      if(!past.length) return '';
+      return `<div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border)">
+        <h3 style="font-size:13px;font-weight:600;color:var(--g2);margin:0 0 14px;text-transform:uppercase;letter-spacing:.5px">Past Reports</h3>
+        ${past.map(r=>`<div style="padding:12px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--border);margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+            <div style="font-weight:600;font-size:14px">${r.date}</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-weight:700;color:var(--red);font-size:13px">${fmtDuration(r.totalDuration||0)}</span>
+              <span style="padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;background:${r.status==='reviewed'?'#27AE60':'#F39C12'};color:#fff">${r.status==='reviewed'?'Reviewed':'Pending'}</span>
+            </div>
+          </div>
+          ${(r.clientSummary||[]).map(cs=>`<div style="font-size:12px;color:var(--g3);padding:3px 0;border-bottom:1px solid var(--border)">${cs.clientName} — ${fmtDuration(cs.duration)}</div>`).join('')}
+          ${r.reviewNote?`<div style="margin-top:6px;font-size:12px;color:var(--g2)"><strong>Note:</strong> ${r.reviewNote}</div>`:''}
+        </div>`).join('')}
+      </div>`;
+    })()}
   `;
 }
 
@@ -5141,7 +5163,12 @@ function renderSeniorEod(){
   let selDate=today;
   const existing=document.getElementById('eod-date-filter');
   if(existing) selDate=existing.value;
-  const canSeeReport=r=>role==='accounts_manager'||(r.accountantRole||'accountant')==='accountant';
+  const canSeeReport=r=>{
+    if(role==='accounts_manager') return true;
+    const rt=accEodRoutes.find(x=>x.accountantId===r.accountantId);
+    if(rt) return rt.reviewerId===currentUser.id;
+    return (r.accountantRole||'accountant')==='accountant';
+  };
   const dates=[...new Set([today,...accEodReports.filter(canSeeReport).map(r=>r.date)])].sort((a,b)=>b.localeCompare(a));
   const filtered=accEodReports.filter(r=>r.date===selDate&&canSeeReport(r));
   const pendingCount=accEodReports.filter(r=>r.status==='submitted'&&canSeeReport(r)).length;
@@ -5204,7 +5231,58 @@ function renderSeniorEod(){
           `<div style="font-size:12px;color:#27AE60;font-weight:600;margin-top:4px">✓ Submitted</div>`}
       `}
     </div>
+    ${role==='accounts_manager'?(()=>{
+      const reportableUsers=allUsers.filter(u=>(u.role==='accountant'||u.role==='intern')&&u.status==='active');
+      const reviewers=allUsers.filter(u=>(u.role==='senior_accountant'||u.role==='accounts_manager')&&u.status==='active');
+      if(!reportableUsers.length) return '';
+      return `<div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border)">
+        <h3 style="font-size:13px;font-weight:600;color:var(--g2);margin:0 0 4px;text-transform:uppercase;letter-spacing:.5px">EOD Report Routing</h3>
+        <div style="font-size:12px;color:var(--g3);margin-bottom:14px">Configure which reviewer receives each team member's EOD reports.</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          ${reportableUsers.map(u=>{
+            const rt=accEodRoutes.find(x=>x.accountantId===u.id);
+            return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:9px;flex-wrap:wrap">
+              <div>
+                <div style="font-weight:600;font-size:14px">${u.name}</div>
+                <div style="font-size:11px;color:var(--g3)">${u.role==='intern'?'Intern':'Accountant'}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span style="font-size:12px;color:var(--g3)">Reviews go to:</span>
+                <select id="rt-sel-${u.id}" style="padding:5px 8px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--white);color:var(--dark);outline:none">
+                  <option value="">— All reviewers (default) —</option>
+                  ${reviewers.map(r=>`<option value="${r.id}" ${rt&&rt.reviewerId===r.id?'selected':''}>${r.name} (${r.role==='accounts_manager'?'Mgr':'Senior'})</option>`).join('')}
+                </select>
+                <button class="btn-primary" style="padding:5px 12px;font-size:12px" onclick="saveEodRoute('${u.id}','${u.name}')">Save</button>
+                ${rt?`<button class="action-btn" style="font-size:12px;color:var(--red);border-color:var(--red)" onclick="removeEodRoute('${rt.id}')">✕ Clear</button>`:''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    })():''}
   `;
+}
+
+// ── EOD Routing helpers ───────────────────────────────────────────────────────
+async function saveEodRoute(accountantId, accountantName) {
+  const sel = document.getElementById('rt-sel-'+accountantId);
+  if (!sel) return;
+  const reviewerId = sel.value;
+  if (!reviewerId) { showToast('Select a reviewer first','error'); return; }
+  const reviewer = allUsers.find(u => u.id === reviewerId);
+  const r = await fetch('/api/eod-routes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ accountantId, accountantName, reviewerId, reviewerName: reviewer?.name||'' }) });
+  const saved = await r.json();
+  accEodRoutes = accEodRoutes.filter(x => x.accountantId !== accountantId);
+  accEodRoutes.push(saved);
+  showToast('Routing saved — '+accountantName+' → '+reviewer?.name, 'success');
+  renderAccEod();
+}
+
+async function removeEodRoute(routeId) {
+  await fetch('/api/eod-routes/'+routeId, { method:'DELETE' });
+  accEodRoutes = accEodRoutes.filter(x => x.id !== routeId);
+  showToast('Route cleared — reports will go to all reviewers', 'success');
+  renderAccEod();
 }
 
 // ── Client CRUD ───────────────────────────────────────────────────────────────
@@ -5215,12 +5293,12 @@ function openClientModal(id){
   document.getElementById('cm-name').value=c?.name||'';
   document.getElementById('cm-desc').value=c?.description||'';
   document.getElementById('cm-industry').value=c?.industry||'';
-  const accs=allUsers.filter(u=>(u.role==='accountant'||u.role==='senior_accountant'||u.role==='accounts_manager')&&u.status==='active');
+  const accs=allUsers.filter(u=>(u.role==='accountant'||u.role==='intern'||u.role==='senior_accountant'||u.role==='accounts_manager')&&u.status==='active');
   const assigned=c?.assignedTo||[];
   document.getElementById('cm-assign').innerHTML=accs.length?
     accs.map((u,i)=>`<label class="ms-option" for="cm-a${i}">
       <input type="checkbox" id="cm-a${i}" value="${u.name}" ${assigned.includes(u.name)?'checked':''}>
-      <span>${u.name} <span style="font-size:11px;color:var(--g3)">(${u.role==='accounts_manager'?'Accounts Manager':u.role==='senior_accountant'?'Senior':'Accountant'})</span></span>
+      <span>${u.name} <span style="font-size:11px;color:var(--g3)">(${u.role==='accounts_manager'?'Accounts Manager':u.role==='senior_accountant'?'Senior':u.role==='intern'?'Intern':'Accountant'})</span></span>
     </label>`).join(''):
     '<div style="font-size:12px;color:var(--g3);padding:8px">No accountants registered yet</div>';
   document.getElementById('client-modal').classList.add('open');

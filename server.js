@@ -456,6 +456,36 @@ app.post('/api/attendance/clockout', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Auto clock-out at 22:00 ───────────────────────────────────────────────────
+function scheduleAutoClockout() {
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(22, 0, 0, 0);
+  if (now >= next) next.setDate(next.getDate() + 1);
+  setTimeout(async () => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const clockoutTime = new Date(); clockoutTime.setHours(22, 0, 0, 0);
+      const clockoutISO = clockoutTime.toISOString();
+      const snap = await db.collection('attendance').where('date', '==', today).get();
+      const batch = db.batch();
+      let count = 0;
+      snap.forEach(doc => {
+        const d = doc.data();
+        if (d.clockIn && !d.clockOut) {
+          const hrs = parseFloat(((new Date(clockoutISO) - new Date(d.clockIn)) / 3600000).toFixed(2));
+          batch.update(doc.ref, { clockOut: clockoutISO, totalHours: hrs, autoClockout: true });
+          count++;
+        }
+      });
+      if (count > 0) await batch.commit();
+      console.log(`[Auto clock-out] ${count} employee(s) auto-clocked out at 22:00`);
+    } catch(e) { console.error('[Auto clock-out] Error:', e.message); }
+    scheduleAutoClockout();
+  }, next - now);
+}
+scheduleAutoClockout();
+
 app.get('/api/attendance/today/:userId', async (req, res) => {
   try {
     const today = new Date().toISOString().slice(0, 10);
@@ -746,6 +776,34 @@ app.patch('/api/eod-reports/:id', async (req, res) => {
     const saved = { id: snap.id, ...snap.data() };
     io.emit('eodReport:updated', saved);
     res.json(saved);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── EOD Routing ───────────────────────────────────────────────────────────────
+app.get('/api/eod-routes', async (req, res) => {
+  try {
+    const snap = await db.collection('eodRoutes').get();
+    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/eod-routes', async (req, res) => {
+  try {
+    const { accountantId, accountantName, reviewerId, reviewerName } = req.body;
+    const existing = await db.collection('eodRoutes').where('accountantId', '==', accountantId).get();
+    const batch = db.batch();
+    existing.forEach(doc => batch.delete(doc.ref));
+    const ref = db.collection('eodRoutes').doc();
+    batch.set(ref, { accountantId, accountantName, reviewerId, reviewerName, updatedAt: new Date().toISOString() });
+    await batch.commit();
+    res.json({ id: ref.id, accountantId, accountantName, reviewerId, reviewerName });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/eod-routes/:id', async (req, res) => {
+  try {
+    await db.collection('eodRoutes').doc(req.params.id).delete();
+    res.json({ success: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
