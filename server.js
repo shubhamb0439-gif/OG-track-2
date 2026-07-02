@@ -888,7 +888,7 @@ app.get('/api/sub-tickets', async (req, res) => {
     const { userId, role } = req.query;
     const snap = await db.collection('sub_tickets').orderBy('createdAt', 'desc').get();
     let tickets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const viewAll = ['superadmin','manager','accounts_manager','senior_accountant'].includes(role);
+    const viewAll = ['superadmin','manager','accounts_manager'].includes(role);
     if (!viewAll && userId) tickets = tickets.filter(t => t.raisedById === userId);
     res.json(tickets);
   } catch(e) { res.status(500).json({ error: e.message }); }

@@ -5458,7 +5458,7 @@ async function renderSubTickets(){
     await loadSubTickets();
   }
   const role=currentUser.role;
-  const canManage=['superadmin','manager','accounts_manager','senior_accountant'].includes(role);
+  const canManage=['superadmin','manager','accounts_manager'].includes(role);
   const now=new Date();
   const monthStr=now.toISOString().slice(0,7); // "2026-06"
   const monthName=now.toLocaleString('default',{month:'long',year:'numeric'});
@@ -5580,7 +5580,7 @@ function _renderSubTicketsAnalytics(){
   const ca=document.getElementById('content-area');
   if(!ca) return;
   const role=currentUser.role;
-  const canManage=['superadmin','manager','accounts_manager','senior_accountant'].includes(role);
+  const canManage=['superadmin','manager','accounts_manager'].includes(role);
   const now=new Date();
   const thisMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
   const thisYear=String(now.getFullYear());
@@ -5741,7 +5741,7 @@ function viewSubTicket(id){
   const t=subTickets.find(x=>x.id===id);
   if(!t)return;
   const role=currentUser.role;
-  const canManage=['superadmin','manager','accounts_manager','senior_accountant'].includes(role);
+  const canManage=['superadmin','manager','accounts_manager'].includes(role);
   const cycleLabel=t.billingCycle==='monthly'?'/ month':t.billingCycle==='annual'?'/ year':'(one-time)';
   document.getElementById('subtd-title').textContent=t.ticketId+' — '+t.name;
   document.getElementById('subtd-body').innerHTML=`
