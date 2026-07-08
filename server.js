@@ -276,6 +276,10 @@ app.patch('/api/bugs/:id', async (req, res) => {
       io.emit('notification', { ...base, to:'developer', icon:'🎉', msg:`${pname}Bug ${id} verified & closed` });
       io.emit('notification', { ...base, to:'manager',   icon:'🎉', msg:`${pname}"${bug.title}" closed` });
     }
+    if (updates.status === 'Hold') {
+      io.emit('notification', { ...base, to:'tester',  icon:'⏸', msg:`${pname}Bug ${id} put on hold: "${bug.title}"` });
+      io.emit('notification', { ...base, to:'manager', icon:'⏸', msg:`${pname}"${bug.title}" put on hold` });
+    }
     if (fc) {
       io.emit('notification', { ...base, to:'tester',  icon:'📝', msg:`${pname}Dev noted a change on ${id}: "${fc}"` });
       io.emit('notification', { ...base, to:'manager', icon:'📝', msg:`${pname}Further change on "${bug.title}"` });
