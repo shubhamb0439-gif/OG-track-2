@@ -1578,6 +1578,11 @@ body { transition: background .3s ease, color .3s ease; }
       <div class="form-row">
         <div class="form-group"><label>Reporter</label><input type="text" id="f-reporter" readonly style="background:var(--g5)"></div>
       </div>
+      <div class="form-row full"><div class="form-group">
+        <label>Attachments (images/videos)</label>
+        <input type="file" id="f-attachments" accept="image/*,video/*" multiple onchange="handleBugAttachInput(this)">
+        <div id="f-attach-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+      </div></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('new-bug-modal');this.closest('.modal').querySelector('h2').textContent='Raise New Bug';this.nextElementSibling.textContent='Raise Bug';this.nextElementSibling.onclick=saveBug;">Cancel</button>
@@ -1910,6 +1915,7 @@ let _subFilter     = 'all';
 let _editSubTicketId = null;
 let notifications  = [];
 let openDetailId   = null;
+let newBugAttachments = [];
 let currentView    = 'dashboard';
 let dashFilter     = null;
 let dashSeverity   = '';
@@ -2982,6 +2988,9 @@ async function linkUserCompany(userId){
 function openNewBugModal(){
   ['f-title','f-desc','f-steps','f-expected','f-actual','f-component'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-repro-rate').value='';
+  newBugAttachments=[];
+  document.getElementById('f-attachments').value='';
+  renderBugAttachPreview();
   document.getElementById('f-severity').value='High';
   document.getElementById('f-priority').value='High';
   document.getElementById('f-reporter').value=currentUser.name;
@@ -3026,6 +3035,39 @@ function handleStepsKeydown(e,ta){
     ta.selectionStart=ta.selectionEnd=pos+1+next.length;
   }
 }
+function renderBugAttachPreview(){
+  const box=document.getElementById('f-attach-preview');if(!box)return;
+  box.innerHTML=newBugAttachments.map((a,i)=>`
+    <div style="position:relative">
+      ${a.type&&a.type.startsWith('video/')
+        ?`<video src="${a.url}" style="width:80px;height:64px;border-radius:6px;object-fit:cover;background:#000"></video>`
+        :`<img src="${a.url}" style="width:80px;height:64px;border-radius:6px;object-fit:cover">`}
+      <button type="button" onclick="removeBugAttachment(${i})" title="Remove" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;border:none;background:var(--red);color:#fff;font-size:11px;line-height:1;cursor:pointer">✕</button>
+    </div>`).join('');
+}
+function removeBugAttachment(i){
+  newBugAttachments.splice(i,1);
+  renderBugAttachPreview();
+}
+async function handleBugAttachInput(input){
+  const files=[...input.files];
+  if(!files.length)return;
+  for(const file of files){
+    if(file.size>20*1024*1024){showToast(`"${file.name}" is too large — max 20MB`,'alert');continue;}
+    if(!file.type.startsWith('image/')&&!file.type.startsWith('video/')){showToast(`"${file.name}" must be an image or video`,'alert');continue;}
+    try{
+      showToast('Uploading...','alert');
+      const fd=new FormData();fd.append('file',file);
+      const r=await fetch('/api/upload',{method:'POST',body:fd});
+      if(!r.ok){showToast(`Upload failed: ${file.name}`,'alert');continue;}
+      const {url,name,type}=await r.json();
+      newBugAttachments.push({url,name,type});
+    }catch(e){showToast(`Upload failed: ${file.name}`,'alert');}
+  }
+  input.value='';
+  renderBugAttachPreview();
+  showToast('Attachment(s) added','success');
+}
 async function saveBug(){
   const title=document.getElementById('f-title').value.trim();
   const comp=document.getElementById('f-component').value.trim();
@@ -3042,6 +3084,7 @@ async function saveBug(){
     reporter:currentUser.name,
     projectId:currentProject?.id||'default',
     projectName:currentProject?.name||'',
+    attachments:newBugAttachments,
     companyId:currentUser.companyId||undefined};
   try{await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});closeModal('new-bug-modal');showToast('Bug raised','success');}
   catch(e){showToast('Failed to save','alert');}
@@ -3066,6 +3109,9 @@ function openEditBugModal(id){
   const devs=allUsers.filter(u=>u.role==='developer'&&u.status==='active');
   const sel=document.getElementById('f-assignee');
   sel.innerHTML='<option value="">— Unassigned —</option>'+devs.map(u=>`<option${bug.assignee===u.name?' selected':''}>${u.name}</option>`).join('');
+  newBugAttachments=[...(bug.attachments||[])];
+  document.getElementById('f-attachments').value='';
+  renderBugAttachPreview();
   document.getElementById('new-bug-modal').classList.add('open');
 }
 async function updateBug(id){
@@ -3082,6 +3128,7 @@ async function updateBug(id){
     priority:document.getElementById('f-priority').value,
     reproRate:document.getElementById('f-repro-rate').value,
     assignee:document.getElementById('f-assignee').value,
+    attachments:newBugAttachments,
     audit:[...(bug.audit||[]),{who:currentUser.name,action:'Bug edited',when:new Date().toISOString(),note:''}]};
   try{
     await patchBug(id,payload);
@@ -3141,6 +3188,14 @@ function viewBug(id){
     </div>
     <div class="detail-section"><h4>Description</h4><p style="font-size:13px;line-height:1.6">${bug.description||'—'}</p></div>
     <div class="detail-section"><h4>Steps to reproduce</h4><pre style="font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--g2)">${bug.steps||'—'}</pre></div>
+    ${(bug.attachments&&bug.attachments.length)?`<div class="detail-section"><h4>Attachments</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${bug.attachments.map(a=>a.type&&a.type.startsWith('video/')
+          ?`<video src="${a.url}" controls style="max-width:220px;max-height:170px;border-radius:8px;background:#000"></video>`
+          :`<img src="${a.url}" alt="${a.name||''}" style="max-width:170px;max-height:150px;border-radius:8px;cursor:pointer;object-fit:cover" onclick="window.open('${a.url}','_blank')">`
+        ).join('')}
+      </div>
+    </div>`:''}
     <div class="detail-section"><h4>Expected vs Actual</h4>
       <div class="detail-grid">
         <div class="detail-field"><div class="dl">Expected</div><div class="dv">${bug.expected||'—'}</div></div>
