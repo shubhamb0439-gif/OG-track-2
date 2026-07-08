@@ -1610,6 +1610,7 @@ body { transition: background .3s ease, color .3s ease; }
         <div class="form-group" style="max-width:140px"><label>Short Code * <span style="font-size:11px;color:var(--g3)">(used in Bug IDs)</span></label><input type="text" id="pm-code" placeholder="e.g. XR" maxlength="5" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');this.dataset.userEdited='true'"></div>
       </div>
       <div class="form-row full"><div class="form-group"><label>Description</label><textarea id="pm-desc" placeholder="What is this project about?" style="min-height:55px"></textarea></div></div>
+      <div class="form-row"><div class="form-group" style="max-width:200px"><label>Deadline</label><input type="date" id="pm-deadline"></div></div>
       <!-- Managers always shown -->
       <div class="form-row full"><div class="form-group"><label>Assign Managers</label><div class="multi-select" id="pm-managers"></div></div></div>
       <!-- Devs and Testers: shown to manager, hidden for superadmin (manager assigns them) -->
@@ -2666,14 +2667,23 @@ function renderProjects(){
 
   const canCreate = role==='superadmin'||role==='manager';
 
+  const CLOSED_LIKE=['Resolved','Fixed','Closed',"Won't Fix",'Wont Fix','Not a Bug','Expected Behavior','NAB'];
   const cards=myProjects.map(p=>{
     const pb=bugs.filter(b=>b.projectId===p.id);
     const canEdit = role==='superadmin'||(role==='manager'&&(p.managers||[]).includes(currentUser.name));
-    return `<div class="pcard">
+    const backlog=pb.filter(b=>!CLOSED_LIKE.includes(b.status)).length;
+    const deadlineDate=p.deadline?new Date(p.deadline+'T00:00:00'):null;
+    const isOverdue=deadlineDate&&backlog>0&&deadlineDate<new Date(new Date().toDateString());
+    const deadlineLabel=deadlineDate?deadlineDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'No deadline set';
+    return `<div class="pcard"${isOverdue?' style="border-color:var(--red)"':''}>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
         <div class="pcard-name">${p.name}</div>
       </div>
       <div class="pcard-desc">${p.description||'No description'}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px;margin-bottom:6px">
+        <span style="color:${isOverdue?'var(--red)':'var(--g3)'};font-weight:${isOverdue?'600':'400'}">📅 ${deadlineLabel}${isOverdue?' — Overdue':''}</span>
+        <span style="color:${backlog>0?'var(--red)':'#27AE60'};font-weight:600">${backlog>0?`🔴 ${backlog} backlog`:'✓ No backlog'}</span>
+      </div>
       <div class="pcard-stats">
         <span class="pcard-stat pcard-open">${pb.filter(b=>b.status==='Open').length} open</span>
         <span class="pcard-stat pcard-prog">${pb.filter(b=>b.status==='In Progress').length} in progress</span>
@@ -2716,6 +2726,7 @@ function openProjectModal(){
   codeEl.removeAttribute('data-user-edited');
   codeEl.readOnly=false;
   document.getElementById('pm-desc').value='';
+  document.getElementById('pm-deadline').value='';
   setupProjectModalForRole([],[],[]);
   document.getElementById('project-modal').classList.add('open');
 }
@@ -2729,6 +2740,7 @@ function editProject(id){
   codeEl.dataset.userEdited='true';
   codeEl.readOnly=!!p.shortCode; // lock if already set (bugs use this prefix)
   document.getElementById('pm-desc').value=p.description||'';
+  document.getElementById('pm-deadline').value=p.deadline||'';
   setupProjectModalForRole(p.developers||[],p.testers||[],p.managers||[]);
   document.getElementById('project-modal').classList.add('open');
 }
@@ -2810,6 +2822,7 @@ async function saveProject(){
       name,
       shortCode,
       description:document.getElementById('pm-desc').value,
+      deadline:document.getElementById('pm-deadline').value,
       managers:getChecked('pm-managers'),
       // Preserve existing devs/testers if editing
       developers:existing?.developers||[],
@@ -2821,6 +2834,7 @@ async function saveProject(){
       name,
       shortCode,
       description:document.getElementById('pm-desc').value,
+      deadline:document.getElementById('pm-deadline').value,
       developers:getChecked('pm-devs'),
       testers:getChecked('pm-testers'),
       managers:getChecked('pm-managers'),
@@ -7398,10 +7412,24 @@ async function renderCeoDashboard(){
   const todayInterviews=interviews.filter(i=>i.scheduledAt&&i.scheduledAt.slice(0,10)===today).length;
   const offersReleased=candidates.filter(c=>c.status==='offer_released').length;
   // projects & bugs
+  const CLOSED_LIKE=['Resolved','Fixed','Closed',"Won't Fix",'Wont Fix','Not a Bug','Expected Behavior','NAB'];
   const projList=allProjects||[];
   const activeProjects=projList.filter(p=>p.status==='active'||!p.status).length;
   const bugList=bugs||[];
-  const openBugs=bugList.filter(b=>b.status!=='closed'&&b.status!=='resolved').length;
+  const openBugs=bugList.filter(b=>!CLOSED_LIKE.includes(b.status)).length;
+  const today0=new Date(new Date().toDateString());
+  const projectDeadlines=projList.map(p=>{
+    const backlog=bugList.filter(b=>b.projectId===p.id&&!CLOSED_LIKE.includes(b.status)).length;
+    const deadlineDate=p.deadline?new Date(p.deadline+'T00:00:00'):null;
+    const overdue=!!(deadlineDate&&backlog>0&&deadlineDate<today0);
+    return {name:p.name,deadline:p.deadline,deadlineDate,backlog,overdue};
+  }).sort((a,b)=>{
+    if(a.overdue!==b.overdue) return a.overdue?-1:1;
+    if(!a.deadlineDate&&!b.deadlineDate) return b.backlog-a.backlog;
+    if(!a.deadlineDate) return 1;
+    if(!b.deadlineDate) return -1;
+    return a.deadlineDate-b.deadlineDate;
+  });
   // departments
   const deptMap={};
   (allUsers||[]).forEach(u=>{const d=u.department||u.dept||'General';deptMap[d]=(deptMap[d]||0)+1;});
@@ -7419,7 +7447,7 @@ async function renderCeoDashboard(){
   const deptNames=Object.keys(deptMap).slice(0,6);
   const deptVals=deptNames.map(d=>deptMap[d]);
   // project bug overview
-  const projBugs=projList.slice(0,6).map(p=>({name:(p.name||'').slice(0,12),open:bugList.filter(b=>b.project===p.id&&b.status!=='closed').length,closed:bugList.filter(b=>b.project===p.id&&b.status==='closed').length}));
+  const projBugs=projList.slice(0,6).map(p=>({name:(p.name||'').slice(0,12),open:bugList.filter(b=>b.projectId===p.id&&!CLOSED_LIKE.includes(b.status)).length,closed:bugList.filter(b=>b.projectId===p.id&&CLOSED_LIKE.includes(b.status)).length}));
   // today's birthday / anniversary
   const todayMD=today.slice(5);
   const birthdays=(allUsers||[]).filter(u=>(u.dob||'').slice(5)===todayMD).map(u=>u.name||u.email);
@@ -7541,6 +7569,7 @@ async function renderCeoDashboard(){
   <div class="ceo-kpi-card teal"><span class="ceo-kpi-icon">📨</span><div class="ceo-kpi-label">Offers Released</div><div class="ceo-kpi-num">${offersReleased}</div><div class="ceo-kpi-sub">Pending acceptance</div></div>
   <div class="ceo-kpi-card red"><span class="ceo-kpi-icon">⚠️</span><div class="ceo-kpi-label">Pending Approvals</div><div class="ceo-kpi-num">${pendingTotal}</div><div class="ceo-kpi-sub">${pendLeave}L · ${pendReg}R · ${pendST}T</div></div>
   <div class="ceo-kpi-card indigo"><span class="ceo-kpi-icon">🚀</span><div class="ceo-kpi-label">Active Projects</div><div class="ceo-kpi-num">${activeProjects}</div><div class="ceo-kpi-sub">${deptCount} departments</div></div>
+  <div class="ceo-kpi-card red"><span class="ceo-kpi-icon">🐛</span><div class="ceo-kpi-label">Open Bugs</div><div class="ceo-kpi-num">${openBugs}</div><div class="ceo-kpi-sub">${projectDeadlines.filter(p=>p.overdue).length} project(s) overdue</div></div>
 </div>
 
 <!-- Charts Row 1 -->
@@ -7606,6 +7635,10 @@ async function renderCeoDashboard(){
   <div class="ceo-widget-card">
     <div class="ceo-widget-title">🔔 CEO Notifications</div>
     ${ceoNotifs.map(n=>`<div class="ceo-notif-row"><div class="ceo-notif-dot" style="background:${n.dot}"></div><div>${n.text}</div></div>`).join('')}
+  </div>
+  <div class="ceo-widget-card">
+    <div class="ceo-widget-title">📅 Project Deadlines &amp; Backlog</div>
+    ${projectDeadlines.length?projectDeadlines.map(p=>`<div class="ceo-widget-row"><div style="flex:1"><strong>${p.name}</strong><div style="font-size:11px;color:${p.overdue?'var(--red)':'var(--g3)'}">${p.deadlineDate?p.deadlineDate.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'No deadline set'}${p.overdue?' — Overdue':''}</div></div><span style="font-size:11px;padding:2px 7px;border-radius:10px;background:${p.backlog>0?'#FDEDEC':'#EAFAF1'};color:${p.backlog>0?'var(--red)':'#27AE60'}">${p.backlog} backlog</span></div>`).join(''):'<div style="color:var(--g3);font-size:12px;padding:8px 0">No projects yet</div>'}
   </div>
 </div>
 
