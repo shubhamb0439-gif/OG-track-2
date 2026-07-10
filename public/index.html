@@ -94,6 +94,7 @@
 [data-theme="dark"] .table-toolbar h3 { color:#F0F0F0; }
 [data-theme="dark"] .stat-card .label { color:#6A6A6A; }
 [data-theme="dark"] .stat-card .value.grey { color:#D0D0D0; }
+[data-theme="dark"] .stat-card .value.green { color:#2ECC71; }
 [data-theme="dark"] .detail-section h4 { color:#6A6A6A; }
 [data-theme="dark"] .detail-field .dl { color:#6A6A6A; }
 [data-theme="dark"] .detail-field .dv { color:#D0D0D0; }
@@ -268,7 +269,7 @@ body{font-family:var(--font);background:var(--g5);color:var(--dark);font-size:14
 .stat-card.clickable.active{border-color:var(--red);border-width:2px;}
 .stat-card .label{font-size:10px;color:var(--g3);text-transform:uppercase;letter-spacing:.4px;}
 .stat-card .value{font-size:22px;font-weight:600;margin-top:4px;}
-.stat-card .value.red{color:var(--red);}.stat-card .value.grey{color:var(--g2);}
+.stat-card .value.red{color:var(--red);}.stat-card .value.grey{color:var(--g2);}.stat-card .value.green{color:#27AE60;}
 
 /* ── SEARCH ── */
 .search-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
@@ -1555,7 +1556,7 @@ body { transition: background .3s ease, color .3s ease; }
 <div class="modal-overlay" id="new-bug-modal">
   <div class="modal">
     <div class="modal-header"><h2>Raise New Bug</h2><button class="modal-close" onclick="closeModal('new-bug-modal')">×</button></div>
-    <div class="modal-body">
+    <div class="modal-body" onpaste="handleBugAttachPaste(event)">
       <div class="form-row full"><div class="form-group"><label>Project</label><input type="text" id="f-project" readonly style="background:var(--g5)"></div></div>
       <div class="form-row">
         <div class="form-group"><label>Title *</label><input type="text" id="f-title" placeholder="Short description"></div>
@@ -1572,20 +1573,23 @@ body { transition: background .3s ease, color .3s ease; }
         <div class="form-group"><label>Priority</label><select id="f-priority"><option>Low</option><option>Medium</option><option selected>High</option><option>Critical</option></select></div>
       </div>
       <div class="form-row">
+        <div class="form-group"><label>Platform</label><select id="f-platform"><option value="">— Select —</option><option>iOS</option><option>Android</option><option>Desktop</option></select></div>
         <div class="form-group"><label>Repro Rate</label><select id="f-repro-rate"><option value="">— Select —</option><option>100%</option><option>80%</option><option>60%</option><option>40%</option><option>20%</option><option>10%</option><option>Once</option></select></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label>Assign To (Dev)</label><select id="f-assignee"><option value="">— Unassigned —</option></select></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Reporter</label><input type="text" id="f-reporter" readonly style="background:var(--g5)"></div>
       </div>
       <div class="form-row full"><div class="form-group">
-        <label>Attachments (images/videos)</label>
+        <label>Attachments (images/videos) — or paste with Ctrl+V</label>
         <input type="file" id="f-attachments" accept="image/*,video/*" multiple onchange="handleBugAttachInput(this)">
         <div id="f-attach-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
       </div></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('new-bug-modal');this.closest('.modal').querySelector('h2').textContent='Raise New Bug';this.nextElementSibling.textContent='Raise Bug';this.nextElementSibling.onclick=saveBug;">Cancel</button>
+      <button class="btn btn-ghost" onclick="cancelBugForm()">Cancel</button>
       <button class="btn btn-primary" onclick="saveBug()">Raise Bug</button>
     </div>
   </div>
@@ -1594,7 +1598,7 @@ body { transition: background .3s ease, color .3s ease; }
 <!-- Bug Detail Modal -->
 <div class="modal-overlay" id="detail-modal">
   <div class="modal">
-    <div class="modal-header"><h2 id="detail-title">Bug Detail</h2><button class="modal-close" onclick="closeModal('detail-modal')">×</button></div>
+    <div class="modal-header"><h2 id="detail-title">Bug Detail</h2><button class="modal-close" onclick="closeDetailModal()">×</button></div>
     <div class="modal-body" id="detail-body"></div>
     <div class="modal-footer" id="detail-footer"></div>
   </div>
@@ -1829,6 +1833,57 @@ body { transition: background .3s ease, color .3s ease; }
   </div>
 </div>
 
+<!-- Hold Reason Modal -->
+<div class="modal-overlay" id="hold-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header" style="border-bottom:none;padding-bottom:8px">
+      <h2 style="color:#7d5a00">⏸ Put Bug on Hold</h2>
+      <button class="modal-close" onclick="cancelHold()">×</button>
+    </div>
+    <div class="modal-body" style="padding-top:0">
+      <div class="form-group"><label>Reason for hold *</label><textarea id="hold-reason-input" placeholder="Explain why this bug is being put on hold..." style="min-height:80px"></textarea></div>
+    </div>
+    <div class="modal-footer" style="justify-content:flex-end;gap:10px;border-top:1px solid var(--border)">
+      <button class="btn btn-ghost" onclick="cancelHold()">Cancel</button>
+      <button class="btn btn-primary" style="background:#7d5a00" id="hold-confirm-btn" onclick="">⏸ Hold Bug</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mark Resolved Modal -->
+<div class="modal-overlay" id="fix-summary-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header" style="border-bottom:none;padding-bottom:8px">
+      <h2 style="color:var(--g2)">✅ Mark Resolved</h2>
+      <button class="modal-close" onclick="cancelMarkFixed()">×</button>
+    </div>
+    <div class="modal-body" style="padding-top:0">
+      <div class="form-group"><label>Describe what was fixed *</label><textarea id="fix-summary-input" placeholder="Describe what was fixed..." style="min-height:80px"></textarea></div>
+    </div>
+    <div class="modal-footer" style="justify-content:flex-end;gap:10px;border-top:1px solid var(--border)">
+      <button class="btn btn-ghost" onclick="cancelMarkFixed()">Cancel</button>
+      <button class="btn btn-primary" id="fix-summary-confirm-btn" onclick="">✅ Mark Resolved</button>
+    </div>
+  </div>
+</div>
+
+<!-- Resolution Reason Modal (Not a Bug / Expected Behavior / Won't Fix) -->
+<div class="modal-overlay" id="resolve-reason-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header" style="border-bottom:none;padding-bottom:8px">
+      <h2 id="resolve-reason-title" style="color:var(--g2)"></h2>
+      <button class="modal-close" onclick="cancelResolveReason()">×</button>
+    </div>
+    <div class="modal-body" style="padding-top:0">
+      <div class="form-group"><label>Reason *</label><textarea id="resolve-reason-input" placeholder="Explain why this bug is being marked this way..." style="min-height:80px"></textarea></div>
+    </div>
+    <div class="modal-footer" style="justify-content:flex-end;gap:10px;border-top:1px solid var(--border)">
+      <button class="btn btn-ghost" onclick="cancelResolveReason()">Cancel</button>
+      <button class="btn btn-primary" id="resolve-reason-confirm-btn" onclick="">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- Import Preview Modal -->
 <div class="modal-overlay" id="import-modal">
   <div class="modal" style="max-width:740px">
@@ -2044,6 +2099,11 @@ function doLogout(){
   sessionStorage.clear();
   currentUser=null;currentProject=null;bugs=[];allUsers=[];allProjects=[];
   conversations=[];activeConvoId=null;totalUnread=0;
+  // Reset view/filter state so the next login never inherits a page the new user
+  // may not be permitted to see (currentView is a plain global, not tied to currentUser).
+  currentView='dashboard';openDetailId=null;
+  dashFilter=null;dashSeverity='';dashStatus='';dashComponent='';
+  searchQuery='';tableSearch='';histSearch='';histBugFilter='';histWhoFilter='';
 
   // Hide all screens
   document.getElementById('main-app').style.display='none';
@@ -2507,7 +2567,7 @@ function renderDashboard(){
   }
   let stats='';
   if(role==='developer') stats=`<div class="stats-grid">${card('Assigned',base.length,'grey','')}${card('Open',open,'red','Open')}${card('In Progress',prog,'grey','In Progress')}${card('Resolved',fixed,'grey','Resolved')}</div>`;
-  else if(role==='tester') stats=`<div class="stats-grid">${card('Raised',base.length,'grey','')}${card('Open',open,'red','Open')}${card('Retest',fixed,'grey','Resolved')}${card('Closed',closed,'grey','Closed')}</div>`;
+  else if(role==='tester') stats=`<div class="stats-grid">${card('Raised',base.length,'grey','')}${card('Open',open,'red','Open')}${card('Resolved',fixed,'green','Resolved')}${card('Closed',closed,'grey','Closed')}</div>`;
   else stats=`<div class="stats-grid">${card('Total',bugs.length,'grey','')}${card('Open',bugs.filter(b=>b.status==='Open').length,'red','Open')}${card('In Progress',bugs.filter(b=>b.status==='In Progress').length,'grey','In Progress')}${card('Closed',bugs.filter(b=>b.status==='Closed').length,'grey','Closed')}</div>`;
 
   let filtered=[...base];
@@ -2551,13 +2611,13 @@ function renderDashboard(){
     <div class="table-wrap"><div class="table-toolbar"><h3>${filtered.length} bug${filtered.length!==1?'s':''}</h3></div><div class="table-scroll">${tableHTML(filtered,role==='superadmin'||role==='manager')}</div></div>
     ${role==='developer'?(()=>{
       const myAll=bugs.filter(b=>b.assignee===currentUser.name);
-      const reopened=myAll.filter(b=>(b.audit||[]).some(a=>a.action==='Reopened after retest'));
+      const reopened=myAll.filter(b=>b.status==='Open'&&(b.audit||[]).some(a=>a.action==='Reopened after retest'||a.action==='Reopened by Tester'));
       const closedByTester=myAll.filter(b=>b.status==='Closed');
       function resolutionTable(list){
         if(!list.length) return '<div style="padding:12px 16px;font-size:13px;color:var(--g3);font-style:italic">None</div>';
         return `<div class="table-scroll"><table><thead><tr><th>ID</th><th>Title</th><th class="hide-mobile">Component</th><th>Status</th><th class="hide-mobile">Tester Action</th><th class="hide-mobile">When</th></tr></thead><tbody>${
           list.map(b=>{
-            const testerEntry=(b.audit||[]).filter(a=>a.action==='Reopened after retest'||a.action==='Verified & Closed').pop();
+            const testerEntry=(b.audit||[]).filter(a=>a.action==='Reopened after retest'||a.action==='Reopened by Tester'||a.action==='Verified & Closed').pop();
             return `<tr onclick="viewBug('${b.id}')" style="cursor:pointer">
               <td style="color:var(--g3);font-size:11px;white-space:nowrap">${b.id}</td>
               <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.title}</td>
@@ -3002,6 +3062,7 @@ async function linkUserCompany(userId){
 function openNewBugModal(){
   ['f-title','f-desc','f-steps','f-expected','f-actual','f-component'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-repro-rate').value='';
+  document.getElementById('f-platform').value='';
   newBugAttachments=[];
   document.getElementById('f-attachments').value='';
   renderBugAttachPreview();
@@ -3063,24 +3124,36 @@ function removeBugAttachment(i){
   newBugAttachments.splice(i,1);
   renderBugAttachPreview();
 }
-async function handleBugAttachInput(input){
-  const files=[...input.files];
+async function uploadBugAttachmentFiles(files){
   if(!files.length)return;
+  let added=0;
   for(const file of files){
-    if(file.size>20*1024*1024){showToast(`"${file.name}" is too large — max 20MB`,'alert');continue;}
-    if(!file.type.startsWith('image/')&&!file.type.startsWith('video/')){showToast(`"${file.name}" must be an image or video`,'alert');continue;}
+    if(file.size>20*1024*1024){showToast(`"${file.name||'file'}" is too large — max 20MB`,'alert');continue;}
+    if(!file.type.startsWith('image/')&&!file.type.startsWith('video/')){showToast(`"${file.name||'file'}" must be an image or video`,'alert');continue;}
     try{
       showToast('Uploading...','alert');
       const fd=new FormData();fd.append('file',file);
       const r=await fetch('/api/upload',{method:'POST',body:fd});
-      if(!r.ok){showToast(`Upload failed: ${file.name}`,'alert');continue;}
+      if(!r.ok){showToast(`Upload failed: ${file.name||'file'}`,'alert');continue;}
       const {url,name,type}=await r.json();
       newBugAttachments.push({url,name,type});
-    }catch(e){showToast(`Upload failed: ${file.name}`,'alert');}
+      added++;
+    }catch(e){showToast(`Upload failed: ${file.name||'file'}`,'alert');}
   }
-  input.value='';
   renderBugAttachPreview();
-  showToast('Attachment(s) added','success');
+  if(added) showToast('Attachment(s) added','success');
+}
+async function handleBugAttachInput(input){
+  const files=[...input.files];
+  await uploadBugAttachmentFiles(files);
+  input.value='';
+}
+async function handleBugAttachPaste(e){
+  const items=[...(e.clipboardData?.items||[])];
+  const files=items.filter(i=>i.kind==='file'&&(i.type.startsWith('image/')||i.type.startsWith('video/'))).map(i=>i.getAsFile()).filter(Boolean);
+  if(!files.length)return; // no pasted media — let normal text paste into the focused field proceed
+  e.preventDefault();
+  await uploadBugAttachmentFiles(files);
 }
 async function saveBug(){
   const title=document.getElementById('f-title').value.trim();
@@ -3093,6 +3166,7 @@ async function saveBug(){
     actual:document.getElementById('f-actual').value,
     severity:document.getElementById('f-severity').value,
     priority:document.getElementById('f-priority').value,
+    platform:document.getElementById('f-platform').value,
     reproRate:document.getElementById('f-repro-rate').value,
     assignee:document.getElementById('f-assignee').value,
     reporter:currentUser.name,
@@ -3106,6 +3180,7 @@ async function saveBug(){
 
 function openEditBugModal(id){
   const bug=bugs.find(b=>b.id===id);if(!bug)return;
+  closeModal('detail-modal'); // avoid stacking the edit form behind the still-open detail modal
   document.getElementById('new-bug-modal').querySelector('h2').textContent='Edit Bug';
   document.querySelector('#new-bug-modal .btn-primary').textContent='Save Changes';
   document.querySelector('#new-bug-modal .btn-primary').onclick=()=>updateBug(id);
@@ -3117,6 +3192,7 @@ function openEditBugModal(id){
   document.getElementById('f-actual').value=bug.actual||'';
   document.getElementById('f-severity').value=bug.severity||'High';
   document.getElementById('f-priority').value=bug.priority||'High';
+  document.getElementById('f-platform').value=bug.platform||'';
   document.getElementById('f-repro-rate').value=bug.reproRate||'';
   document.getElementById('f-reporter').value=bug.reporter||'';
   document.getElementById('f-project').value=bug.projectName||'—';
@@ -3127,6 +3203,13 @@ function openEditBugModal(id){
   document.getElementById('f-attachments').value='';
   renderBugAttachPreview();
   document.getElementById('new-bug-modal').classList.add('open');
+}
+function cancelBugForm(){
+  closeModal('new-bug-modal');
+  document.getElementById('new-bug-modal').querySelector('h2').textContent='Raise New Bug';
+  document.querySelector('#new-bug-modal .btn-primary').textContent='Raise Bug';
+  document.querySelector('#new-bug-modal .btn-primary').onclick=saveBug;
+  if(openDetailId) viewBug(openDetailId); // return to the bug detail we were editing from, if any
 }
 async function updateBug(id){
   const title=document.getElementById('f-title').value.trim();
@@ -3140,6 +3223,7 @@ async function updateBug(id){
     actual:document.getElementById('f-actual').value,
     severity:document.getElementById('f-severity').value,
     priority:document.getElementById('f-priority').value,
+    platform:document.getElementById('f-platform').value,
     reproRate:document.getElementById('f-repro-rate').value,
     assignee:document.getElementById('f-assignee').value,
     attachments:newBugAttachments,
@@ -3177,7 +3261,9 @@ function viewBug(id){
   const canStart  =isDevCapable&&bug.status==='Open';
   const canResolve=isDevCapable&&bug.status==='In Progress';
   const canRetest =isTesterCapable&&(bug.status==='Resolved'||bug.status==='Fixed');
-  const canReopen =isDevCapable&&['Wont Fix','Not a Bug','Expected Behavior','Resolved','Fixed','Closed','Hold'].includes(bug.status);
+  const canTesterReopen=isTesterCapable&&bug.status==='Closed';
+  // Once Closed, only the tester (canTesterReopen) may change status — devs/managers lose that ability.
+  const canReopen =isDevCapable&&['Wont Fix','Not a Bug','Expected Behavior','Resolved','Fixed','Hold'].includes(bug.status);
   const canHold   =isDevCapable&&(bug.status==='Open'||bug.status==='In Progress');
   const canResume =isDevCapable&&bug.status==='Hold';
   const canComment=isDevCapable||isTesterCapable||isMgr;
@@ -3192,6 +3278,7 @@ function viewBug(id){
         <div class="detail-field"><div class="dl">Severity</div><div class="dv"><span class="${badgeClass('sev',bug.severity)}">${bug.severity}</span></div></div>
         <div class="detail-field"><div class="dl">Priority</div><div class="dv"><span class="${badgeClass('sev',bug.priority)}">${bug.priority}</span></div></div>
         <div class="detail-field"><div class="dl">Component</div><div class="dv">${bug.component}</div></div>
+        <div class="detail-field"><div class="dl">Platform</div><div class="dv">${bug.platform||'<span style="color:var(--g4)">—</span>'}</div></div>
         <div class="detail-field"><div class="dl">Assigned To</div><div class="dv">${bug.assignee||'Unassigned'}</div></div>
         <div class="detail-field"><div class="dl">Reporter</div><div class="dv">${bug.reporter}</div></div>
         <div class="detail-field"><div class="dl">Repro Rate</div><div class="dv">${isTesterCapable?`<select onchange="patchBug('${bug.id}',{reproRate:this.value,updatedAt:new Date().toISOString()})" style="padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px"><option value="">— Select —</option>${['100%','80%','60%','40%','20%','10%','Once'].map(o=>`<option${bug.reproRate===o?' selected':''}>${o}</option>`).join('')}</select>`:bug.reproRate||'<span style="color:var(--g4)">—</span>'}</div></div>
@@ -3216,10 +3303,6 @@ function viewBug(id){
         <div class="detail-field"><div class="dl">Actual</div><div class="dv">${bug.actual||'—'}</div></div>
       </div>
     </div>
-    <div class="detail-section"><h4>Fix summary</h4>
-      ${canResolve?`<textarea id="fix-summary-input" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;min-height:70px;resize:vertical" placeholder="Describe what was fixed...">${bug.fixSummary||''}</textarea>`
-        :`<p style="font-size:13px;line-height:1.6">${bug.fixSummary||'<span style="color:var(--g4)">No fix summary yet</span>'}</p>`}
-    </div>
     <div class="detail-section"><h4>Comments</h4>
       <div class="changes-box">
         ${(bug.furtherChanges||[]).length
@@ -3232,15 +3315,6 @@ function viewBug(id){
       </div>
       ${canComment?`<div style="margin-top:8px;display:flex;gap:8px"><input type="text" id="further-change-input" placeholder="Add a comment..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:0"><button class="btn btn-ghost btn-sm" onclick="addFurtherChange('${bug.id}')">Post</button></div>`:''}
     </div>
-    ${isDevCapable?`<div class="detail-section"><h4>Developer Notes</h4>
-      <div class="changes-box">
-        ${(bug.developerNotes||[]).length
-          ?(bug.developerNotes||[]).map(n=>`<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e0e0e0"><div style="font-size:12px;font-weight:500">${n.who} <span style="font-size:10px;background:#eaf0fb;color:#1a5276;border-radius:3px;padding:1px 4px;margin-left:4px">developer</span> <span style="font-weight:400;color:var(--g3)">· ${fmt(n.when)}</span></div><div style="font-size:13px;margin-top:2px">${n.note}</div></div>`).join('')
-          :'<span style="color:var(--g3);font-style:italic">No developer notes yet</span>'}
-      </div>
-      <div style="margin-top:8px;display:flex;gap:8px"><input type="text" id="dev-note-input" placeholder="Add a developer note..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:0"><button class="btn btn-ghost btn-sm" onclick="addDeveloperNote('${bug.id}')">Post</button></div>
-    </div>`:''}
-
     <div class="detail-section"><h4>Activity log</h4>
       ${(bug.audit||[]).map(a=>`<div class="audit-item"><div class="audit-dot ${a.action.includes('Fixed')||a.action.includes('Resolved')?'dark':a.action.includes('raised')||a.action.includes('Reopened')?'red':''}"></div><div class="audit-content"><div class="who">${a.who}</div><div class="what">${a.action}${a.note?' — <em>'+a.note+'</em>':''}</div><div class="when">${fmt(a.when)}</div></div></div>`).join('')}
     </div>`;
@@ -3259,7 +3333,7 @@ function viewBug(id){
   footer.appendChild(left);
   const right=document.createElement('div');right.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
   if(canStart){const b=document.createElement('button');b.className='btn btn-ghost btn-sm';b.textContent='Start working';b.onclick=()=>patchBug(bug.id,{status:'In Progress',audit:[...(bug.audit||[]),{who:currentUser.name,action:'Status changed to "In Progress"',when:new Date().toISOString(),note:''}]});right.appendChild(b);}
-  if(canHold){const b=document.createElement('button');b.className='btn btn-ghost btn-sm';b.style.cssText='border-color:#7d5a00;color:#7d5a00';b.textContent='⏸ Hold';b.onclick=()=>holdBug(bug.id);right.appendChild(b);}
+  if(canHold){const b=document.createElement('button');b.className='btn btn-ghost btn-sm';b.style.cssText='border-color:#7d5a00;color:#7d5a00';b.textContent='⏸ Hold';b.onclick=()=>openHoldModal(bug.id);right.appendChild(b);}
   if(canResume){const b=document.createElement('button');b.className='btn btn-ghost btn-sm';b.textContent='▶ Resume';b.onclick=()=>changeStatusTo(bug.id,'In Progress');right.appendChild(b);}
   if(canResolve){
     // Dropdown resolve options
@@ -3269,9 +3343,9 @@ function viewBug(id){
       <button class="btn btn-primary btn-sm" onclick="toggleResolveMenu('${bug.id}')">Resolve ▾</button>
       <div id="resolve-menu" style="display:none;position:absolute;bottom:38px;right:0;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:170px;z-index:10;overflow:hidden">
         <div onclick="markFixed('${bug.id}')"           style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✅ Mark Resolved</div>
-        <div onclick="resolveAs('${bug.id}','Not a Bug')"     style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">🚫 Not a Bug</div>
-        <div onclick="resolveAs('${bug.id}','Expected Behavior')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✔ Expected Behavior</div>
-        <div onclick="resolveAs('${bug.id}','Wont Fix')"     style="padding:10px 14px;cursor:pointer;font-size:13px">🔕 Won't Fix</div>
+        <div onclick="openResolveReasonModal('${bug.id}','Not a Bug')"     style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">🚫 Not a Bug</div>
+        <div onclick="openResolveReasonModal('${bug.id}','Expected Behavior')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✔ Expected Behavior</div>
+        <div onclick="openResolveReasonModal('${bug.id}','Wont Fix')"     style="padding:10px 14px;cursor:pointer;font-size:13px">🔕 Won't Fix</div>
       </div>`;
     right.appendChild(wrap);
   }
@@ -3284,9 +3358,9 @@ function viewBug(id){
         <div onclick="changeStatusTo('${bug.id}','Open')"       style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">🔄 Reopen as Open</div>
         <div onclick="changeStatusTo('${bug.id}','In Progress')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">▶ Set In Progress</div>
         <div onclick="markFixed('${bug.id}')"                   style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✅ Mark Resolved</div>
-        <div onclick="resolveAs('${bug.id}','Not a Bug')"       style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">🚫 Not a Bug</div>
-        <div onclick="resolveAs('${bug.id}','Expected Behavior')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✔ Expected Behavior</div>
-        <div onclick="resolveAs('${bug.id}','Wont Fix')"        style="padding:10px 14px;cursor:pointer;font-size:13px">🔕 Won't Fix</div>
+        <div onclick="openResolveReasonModal('${bug.id}','Not a Bug')"       style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">🚫 Not a Bug</div>
+        <div onclick="openResolveReasonModal('${bug.id}','Expected Behavior')" style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--g5)">✔ Expected Behavior</div>
+        <div onclick="openResolveReasonModal('${bug.id}','Wont Fix')"        style="padding:10px 14px;cursor:pointer;font-size:13px">🔕 Won't Fix</div>
       </div>`;
     right.appendChild(wrap);
   }
@@ -3294,9 +3368,16 @@ function viewBug(id){
     const br=document.createElement('button');br.className='btn btn-ghost btn-sm';br.textContent='✗ Still broken';br.onclick=()=>retestedStatus(bug.id,'Open');right.appendChild(br);
     const bc=document.createElement('button');bc.className='btn btn-primary btn-sm';bc.textContent='✓ Close';bc.onclick=()=>retestedStatus(bug.id,'Closed');right.appendChild(bc);
   }
-  const cl=document.createElement('button');cl.className='btn btn-ghost btn-sm';cl.textContent='Close';cl.onclick=()=>{closeModal('detail-modal');openDetailId=null;};right.appendChild(cl);
+  if(canTesterReopen){
+    const bt=document.createElement('button');bt.className='btn btn-ghost btn-sm';bt.style.cssText='border-color:var(--red);color:var(--red)';bt.textContent='↩ Reopen';bt.onclick=()=>retestedStatus(bug.id,'Open');right.appendChild(bt);
+  }
+  const cl=document.createElement('button');cl.className='btn btn-ghost btn-sm';cl.textContent='Close';cl.onclick=closeDetailModal;right.appendChild(cl);
   footer.appendChild(right);
   document.getElementById('detail-modal').classList.add('open');
+}
+function closeDetailModal(){
+  closeModal('detail-modal');
+  openDetailId=null;
 }
 
 async function patchBug(id,updates){
@@ -3309,11 +3390,24 @@ async function patchBug(id,updates){
   }
   catch(e){showToast('Update failed','alert');}
 }
-async function markFixed(id){
+function markFixed(id){
   closeResolveMenu();
+  closeReopenMenu();
+  document.getElementById('fix-summary-input').value='';
+  const btn=document.getElementById('fix-summary-confirm-btn');
+  if(btn) btn.onclick=()=>confirmMarkFixed(id);
+  document.getElementById('fix-summary-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('fix-summary-input')?.focus(),0);
+}
+function cancelMarkFixed(){
+  document.getElementById('fix-summary-modal').classList.remove('open');
+}
+async function confirmMarkFixed(id){
+  const summary=document.getElementById('fix-summary-input')?.value?.trim();
+  if(!summary){showToast('Please describe what was fixed','alert');return;}
   const bug=bugs.find(b=>b.id===id);
-  const summary=document.getElementById('fix-summary-input')?.value||'';
-  await patchBug(id,{status:'Resolved',fixSummary:summary,audit:[...(bug.audit||[]),{who:currentUser.name,action:'Marked as Resolved',when:new Date().toISOString(),note:summary?`Fix: ${summary}`:''}]});
+  await patchBug(id,{status:'Resolved',fixSummary:summary,audit:[...(bug.audit||[]),{who:currentUser.name,action:'Marked as Resolved',when:new Date().toISOString(),note:`Fix: ${summary}`}]});
+  closeModal('fix-summary-modal');
   showToast('Bug marked Resolved — tester notified','success');
 }
 
@@ -3347,36 +3441,52 @@ document.addEventListener('click',function(e){
     closeReopenMenu();
 });
 
+function openHoldModal(id){
+  document.getElementById('hold-reason-input').value='';
+  const btn=document.getElementById('hold-confirm-btn');
+  if(btn) btn.onclick=()=>holdBug(id);
+  document.getElementById('hold-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('hold-reason-input')?.focus(),0);
+}
+function cancelHold(){
+  document.getElementById('hold-modal').classList.remove('open');
+}
 async function holdBug(id){
-  const commentInput=document.getElementById('further-change-input');
+  const commentInput=document.getElementById('hold-reason-input');
   const comment=commentInput?.value?.trim();
-  if(!comment){showToast('Please add a comment explaining why this bug is on hold','alert');return;}
+  if(!comment){showToast('Please add a reason explaining why this bug is on hold','alert');return;}
   const bug=bugs.find(b=>b.id===id);
   const now=new Date().toISOString();
   const entry={who:currentUser.name,role:currentUser.role,note:comment,when:now};
   await patchBug(id,{status:'Hold',furtherChanges:[...(bug.furtherChanges||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Comment added',when:now,note:comment},{who:currentUser.name,action:'Put on Hold',when:now,note:''}],_furtherChange:comment});
+  closeModal('hold-modal');
   showToast('Bug put on hold','success');
 }
-async function resolveAs(id, resolution){
+function openResolveReasonModal(id, resolution){
   closeResolveMenu();
-  const requiresComment = resolution==='Not a Bug'||resolution==='Wont Fix'||resolution==='Expected Behavior';
-  if(requiresComment){
-    const commentInput=document.getElementById('further-change-input');
-    const comment=commentInput?.value?.trim();
-    if(!comment){showToast(`Please add a comment explaining why before marking as "${resolution}"`, 'alert');return;}
-    const bug=bugs.find(b=>b.id===id);
-    const now=new Date().toISOString();
-    const entry={who:currentUser.name,role:currentUser.role,note:comment,when:now};
-    const actionMap={'Not a Bug':'Marked as Not a Bug','Wont Fix':'Marked as Won\'t Fix','Expected Behavior':'Marked as Expected Behavior'};
-    const action=actionMap[resolution];
-    await patchBug(id,{status:resolution,furtherChanges:[...(bug.furtherChanges||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Comment added',when:now,note:comment},{who:currentUser.name,action,when:now,note:''}],_furtherChange:comment});
-    showToast(`Bug marked: ${resolution}`,'success');
-    return;
-  }
+  closeReopenMenu();
+  const titles={'Not a Bug':'🚫 Mark as Not a Bug','Expected Behavior':'✔ Mark as Expected Behavior','Wont Fix':'🔕 Mark as Won\'t Fix'};
+  document.getElementById('resolve-reason-title').textContent=titles[resolution]||resolution;
+  document.getElementById('resolve-reason-input').value='';
+  const btn=document.getElementById('resolve-reason-confirm-btn');
+  if(btn) btn.onclick=()=>confirmResolveReason(id,resolution);
+  document.getElementById('resolve-reason-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('resolve-reason-input')?.focus(),0);
+}
+function cancelResolveReason(){
+  document.getElementById('resolve-reason-modal').classList.remove('open');
+}
+async function confirmResolveReason(id, resolution){
+  const commentInput=document.getElementById('resolve-reason-input');
+  const comment=commentInput?.value?.trim();
+  if(!comment){showToast(`Please add a reason before marking as "${resolution}"`, 'alert');return;}
   const bug=bugs.find(b=>b.id===id);
-  const actionMap={'Expected Behavior':'Marked as Expected Behavior'};
-  const action=actionMap[resolution]||`Marked as ${resolution}`;
-  await patchBug(id,{status:resolution,audit:[...(bug.audit||[]),{who:currentUser.name,action,when:new Date().toISOString(),note:''}]});
+  const now=new Date().toISOString();
+  const entry={who:currentUser.name,role:currentUser.role,note:comment,when:now};
+  const actionMap={'Not a Bug':'Marked as Not a Bug','Wont Fix':'Marked as Won\'t Fix','Expected Behavior':'Marked as Expected Behavior'};
+  const action=actionMap[resolution];
+  await patchBug(id,{status:resolution,furtherChanges:[...(bug.furtherChanges||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Comment added',when:now,note:comment},{who:currentUser.name,action,when:now,note:''}],_furtherChange:comment});
+  closeModal('resolve-reason-modal');
   showToast(`Bug marked: ${resolution}`,'success');
 }
 async function retestedStatus(id,result){
@@ -3390,7 +3500,7 @@ async function retestedStatus(id,result){
   const bug=bugs.find(b=>b.id===id);
   const now=new Date().toISOString();
   const entry={who:currentUser.name,role:currentUser.role,note:comment,when:now};
-  const action=result==='Closed'?'Verified & Closed':'Reopened after retest';
+  const action=result==='Closed'?'Verified & Closed':(bug.status==='Closed'?'Reopened by Tester':'Reopened after retest');
   await patchBug(id,{status:result,_retested:true,_source:'retest',furtherChanges:[...(bug.furtherChanges||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Comment added',when:now,note:comment},{who:currentUser.name,action,when:now,note:''}],_furtherChange:comment});
   showToast(result==='Closed'?'Bug closed':'Bug reopened','success');
 }
@@ -3400,13 +3510,6 @@ async function addFurtherChange(id){
   const bug=bugs.find(b=>b.id===id);
   const entry={who:currentUser.name,role:currentUser.role,note,when:new Date().toISOString()};
   await patchBug(id,{furtherChanges:[...(bug.furtherChanges||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Comment added',when:entry.when,note}],_furtherChange:note});
-}
-async function addDeveloperNote(id){
-  const input=document.getElementById('dev-note-input');
-  const note=input?.value?.trim();if(!note)return;
-  const bug=bugs.find(b=>b.id===id);
-  const entry={who:currentUser.name,note,when:new Date().toISOString()};
-  await patchBug(id,{developerNotes:[...(bug.developerNotes||[]),entry],audit:[...(bug.audit||[]),{who:currentUser.name,action:'Developer note added',when:entry.when,note}]});
 }
 function confirmDelete(id){
   const bug = bugs.find(b => b.id === id);
