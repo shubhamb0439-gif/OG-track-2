@@ -2623,7 +2623,7 @@ function renderDashboard(){
               <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.title}</td>
               <td class="hide-mobile">${b.component}</td>
               <td><span class="${badgeClass('status',b.status)}">${b.status}</span></td>
-              <td class="hide-mobile" style="font-size:12px">${testerEntry?testerEntry.action+' by '+testerEntry.who:'—'}</td>
+              <td class="hide-mobile" style="font-size:12px">${testerEntry?testerEntry.action.replace(/ by Tester$/,'')+' by '+testerEntry.who:'—'}</td>
               <td class="hide-mobile" style="font-size:11px;color:var(--g3)">${testerEntry?fmt(testerEntry.when).split(',')[0]:'—'}</td>
             </tr>`;
           }).join('')
