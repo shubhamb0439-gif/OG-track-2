@@ -610,7 +610,7 @@ app.patch('/api/attendance/regularize/:id', async (req, res) => {
 
 // ── QR ATTENDANCE ─────────────────────────────────────────────────────────────
 const QR_SECRET = process.env.QR_SECRET || 'ogtrack-qr-att-2024';
-const QR_WINDOW_SECS = 30;
+const QR_WINDOW_SECS = 3600; // 1 hour
 
 function qrCurrentWindow() { return Math.floor(Date.now() / (QR_WINDOW_SECS * 1000)); }
 function qrSign(w) { return crypto.createHmac('sha256', QR_SECRET).update(String(w)).digest('hex').slice(0, 16); }
@@ -1585,7 +1585,7 @@ body{font-family:"Inter",system-ui,sans-serif;background:#0d0d1a;color:#fff;min-
       </div>
       <div class="cdown-lbl">seconds until refresh</div>
     </div>
-    <div class="qr-hint">Valid for 30 seconds · 1st scan = Clock In · 2nd scan = Clock Out</div>
+    <div class="qr-hint">Valid for 1 hour · 1st scan = Clock In · 2nd scan = Clock Out</div>
   </div>
   <div class="feed-section">
     <div class="feed-hdr">
@@ -1601,15 +1601,15 @@ body{font-family:"Inter",system-ui,sans-serif;background:#0d0d1a;color:#fff;min-
 </div>
 <div class="qr-toast" id="qr-toast"></div>
 <script>
-var qrCode=null,currentToken=null,countdown=30,cTimer=null;
+var qrCode=null,currentToken=null,countdown=30,cTimer=null,qrWindowSecs=30;
 var CIRC=2*Math.PI*30;
 function fmtT(iso){if(!iso)return"—";return new Date(iso).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});}
 function toast(msg,type){var t=document.getElementById("qr-toast");t.textContent=msg;t.className="qr-toast "+(type||"");t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove("show");},3500);}
 function liveClock(){var n=new Date();var c=document.getElementById("live-clock");var d=document.getElementById("feed-date");if(c)c.textContent=n.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",second:"2-digit"});if(d)d.textContent=n.toLocaleDateString("en-GB",{weekday:"long",day:"2-digit",month:"long"});}
-function updateCdown(){var ring=document.getElementById("cdown-ring");var num=document.getElementById("cdown-num");if(ring)ring.style.strokeDashoffset=CIRC*(1-countdown/30);if(num)num.textContent=countdown;if(ring)ring.style.stroke=countdown<=6?"#F39C12":"#C0392B";}
+function updateCdown(){var ring=document.getElementById("cdown-ring");var num=document.getElementById("cdown-num");if(ring)ring.style.strokeDashoffset=CIRC*(1-countdown/qrWindowSecs);if(num)num.textContent=countdown;if(ring)ring.style.stroke=countdown<=6?"#F39C12":"#C0392B";}
 function renderQR(token){var wrap=document.getElementById("qr-canvas");if(!wrap)return;wrap.innerHTML="";qrCode=new QRCode(wrap,{text:token,width:260,height:260,colorDark:"#0d0d1a",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});}
-async function refreshQR(){var ov=document.getElementById("qr-overlay");if(ov)ov.classList.add("show");try{var res=await fetch("/api/attendance/qr-token");var data=await res.json();currentToken=data.token;countdown=data.remaining;renderQR(currentToken);updateCdown();}catch(e){}if(ov)ov.classList.remove("show");}
-function startCdown(){if(cTimer)clearInterval(cTimer);cTimer=setInterval(async function(){countdown--;if(countdown<=0){countdown=30;await refreshQR();}updateCdown();},1000);}
+async function refreshQR(){var ov=document.getElementById("qr-overlay");if(ov)ov.classList.add("show");try{var res=await fetch("/api/attendance/qr-token");var data=await res.json();currentToken=data.token;countdown=data.remaining;qrWindowSecs=data.windowSecs||qrWindowSecs;renderQR(currentToken);updateCdown();}catch(e){}if(ov)ov.classList.remove("show");}
+function startCdown(){if(cTimer)clearInterval(cTimer);cTimer=setInterval(async function(){countdown--;if(countdown<=0){countdown=qrWindowSecs;await refreshQR();}updateCdown();},1000);}
 async function fetchFeed(){try{var res=await fetch("/api/attendance/qr-recent");var data=await res.json();var list=document.getElementById("feed-list");var si=document.getElementById("stat-in");var so=document.getElementById("stat-out");if(!list)return;if(si)si.textContent=data.length;if(so)so.textContent=data.filter(function(r){return r.clockOut;}).length;if(!data.length){list.innerHTML='<div class="feed-empty">No check-ins yet today</div>';return;}list.innerHTML=data.map(function(r){var init=(r.userName||"?").charAt(0).toUpperCase();var isOut=!!r.clockOut;var timeOut=r.clockOut?fmtT(r.clockOut):"";var badge=isOut?'<span class="badge-out">Out</span>':'<span class="badge-in">In</span>';return'<div class="feed-item"><div class="feed-av">'+init+'</div><div style="flex:1;min-width:0"><div class="feed-name">'+r.userName+'</div><div class="feed-time">In '+fmtT(r.clockIn)+(r.clockOut?' · Out '+timeOut+(r.totalHours?' · '+r.totalHours+'h':''):'')+ '</div></div>'+badge+'</div>'}).join("");}catch(e){}}
 (async function init(){setInterval(liveClock,1000);liveClock();await refreshQR();startCdown();await fetchFeed();setInterval(fetchFeed,5000);})();
 <\/script>
